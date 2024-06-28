@@ -2,25 +2,62 @@
 
 package model
 
-type Mutation struct {
+type ForgotPasswordRequestInput struct {
+	Email string `json:"email"`
 }
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type LoginRequestInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	Image       string `json:"image"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
+	HasPassword bool   `json:"hasPassword"`
+	Token       string `json:"token"`
+}
+
+type Mutation struct {
 }
 
 type Query struct {
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type ResetPasswordRequestInput struct {
+	Email           string `json:"email"`
+	NewPassword     string `json:"newPassword"`
+	ConfirmPassword string `json:"confirmPassword"`
 }
 
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type Response struct {
+	Message string `json:"message"`
+}
+
+type SignUpRequestInput struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type SocialLoginRequestInput struct {
+	SocialID string  `json:"socialId"`
+	Type     string  `json:"type"`
+	Email    *string `json:"email,omitempty"`
+	Name     string  `json:"name"`
+}
+
+type VerifyOtpForResetPasswordRequestInput struct {
+	Email string `json:"email"`
+	Otp   string `json:"otp"`
+}
+
+type ChangePasswordRequestInput struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+	ConfirmPassword string `json:"confirmPassword"`
 }

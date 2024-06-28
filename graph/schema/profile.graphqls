@@ -1,0 +1,13 @@
+type Query {
+  user: LoginResponse!
+}
+
+extend type Mutation {
+  changePassword(input: changePasswordRequestInput!): Response!
+}
+
+input changePasswordRequestInput {
+  currentPassword: String!
+  newPassword: String!
+  confirmPassword: String!
+}
