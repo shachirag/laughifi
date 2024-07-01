@@ -8,6 +8,8 @@ import (
 	"context"
 	"laughifi/graph/model"
 	"laughifi/handlers/friends"
+
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // UpdateStatus is the resolver for the updateStatus field.
@@ -28,18 +30,18 @@ func (r *mutationResolver) SendFriendRequest(ctx context.Context, input model.Se
 	return friends, nil
 }
 
-// GetFriends is the resolver for the getFriends field.
-func (r *queryResolver) GetFriends(ctx context.Context, page int, limit int) (*model.FriendPaginationResponse, error) {
-	friends, err := friends.GetFriends(ctx, r.DB, page, limit)
+// GetLaughifiUsers is the resolver for the getLaughifiUsers field.
+func (r *queryResolver) GetLaughifiUsers(ctx context.Context, page int, limit int, search *string) (*model.LaughifiUserPaginationResponse, error) {
+	friends, err := friends.GetLaughifiCustomers(ctx, r.DB, page, limit, *search)
 	if err != nil {
-		return nil, err
+		return nil, gqlerror.Errorf("failed: %v", err)
 	}
 	return friends, nil
 }
 
-// GetLaughifiUsers is the resolver for the getLaughifiUsers field.
-func (r *queryResolver) GetLaughifiUsers(ctx context.Context, page int, limit int, search *string) (*model.LaughifiUserPaginationResponse, error) {
-	friends, err := friends.GetLaughifiCustomers(ctx, r.DB, page, limit, *search)
+// GetFriends is the resolver for the getFriends field.
+func (r *queryResolver) GetFriends(ctx context.Context, page int, limit int) (*model.FriendPaginationResponse, error) {
+	friends, err := friends.GetFriends(ctx, r.DB, page, limit)
 	if err != nil {
 		return nil, err
 	}

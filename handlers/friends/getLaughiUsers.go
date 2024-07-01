@@ -17,6 +17,7 @@ import (
 )
 
 func GetLaughifiCustomers(ctx context.Context, db *database.DB, page int, limit int, search string) (*model.LaughifiUserPaginationResponse, error) {
+
 	if page < 1 {
 		page = 1
 	}
@@ -31,22 +32,24 @@ func GetLaughifiCustomers(ctx context.Context, db *database.DB, page int, limit 
 		return nil, err
 	}
 
+	fmt.Println(user.Id)
+
 	friendIDs, err := fetchLaughifiUsersIDs(ctx, db)
 	if err != nil {
 		return nil, gqlerror.Errorf("Failed to fetch friend IDs: %v", err)
 	}
 
-	excludeIDs := append(friendIDs, user.Id)
+	// excludeIDs := append(friendIDs, user.Id)
 
-	fmt.Println("excludeIds", excludeIDs)
+	// fmt.Println("excludeIds", excludeIDs)
 
 	filter := bson.M{
 		"_id": bson.M{
-			"$nin": excludeIDs,
+			"$nin": friendIDs,
 		},
 	}
 
-	if search != "" {
+	if search != "blank" {
 		filter["name"] = primitive.Regex{Pattern: search, Options: "i"}
 	}
 

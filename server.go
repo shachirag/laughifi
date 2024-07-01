@@ -61,7 +61,7 @@ func main() {
 			"VerifyOtpForSignup":        false,
 			"SocialLoginCustomer":       false,
 			"VerifyOtpForResetPassword": false,
-			"GetLaughifiCustomers":          true,
+			"GetLaughifiCustomers":      true,
 			"GetTemplates":              true,
 			"SendFriendRequest":         true,
 			"GetFriendRequests":         true,

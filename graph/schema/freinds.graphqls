@@ -21,12 +21,8 @@ type LaughifiUserPaginationResponse {
 }
 
 extend type Query {
+  getLaughifiUsers(page: Int!, limit: Int!, search: String): LaughifiUserPaginationResponse!
   getFriends(page: Int!, limit: Int!): FriendPaginationResponse!
-  getLaughifiUsers(
-    page: Int!
-    limit: Int!
-    search: String
-  ): LaughifiUserPaginationResponse!
   getFriendsRequests: [Friend!]!
 }
 
