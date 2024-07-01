@@ -2,7 +2,6 @@ package friends
 
 import (
 	"context"
-	"fmt"
 	"laughifi/database"
 	"laughifi/entity"
 	"laughifi/graph/model"
@@ -32,20 +31,16 @@ func GetLaughifiCustomers(ctx context.Context, db *database.DB, page int, limit 
 		return nil, err
 	}
 
-	fmt.Println(user.Id)
-
 	friendIDs, err := fetchLaughifiUsersIDs(ctx, db)
 	if err != nil {
 		return nil, gqlerror.Errorf("Failed to fetch friend IDs: %v", err)
 	}
 
-	// excludeIDs := append(friendIDs, user.Id)
-
-	// fmt.Println("excludeIds", excludeIDs)
+	excludeIDs := append(friendIDs, user.Id)
 
 	filter := bson.M{
 		"_id": bson.M{
-			"$nin": friendIDs,
+			"$nin": excludeIDs,
 		},
 	}
 
