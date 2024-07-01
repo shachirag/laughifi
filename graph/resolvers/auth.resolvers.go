@@ -29,12 +29,21 @@ func (r *mutationResolver) SocialLogin(ctx context.Context, input model.SocialLo
 }
 
 // Signup is the resolver for the signup field.
-func (r *mutationResolver) Signup(ctx context.Context, input model.SignUpRequestInput) (*model.LoginResponse, error) {
-	signupPayload, err := auth.Signup(ctx, r.DB, input)
+func (r *mutationResolver) Signup(ctx context.Context, input model.SignUpRequestInput) (*model.Response, error) {
+	signupPayload, err := auth.Signup(ctx, r.DB, r.SESClient, input)
 	if err != nil {
 		return nil, err
 	}
 	return signupPayload, nil
+}
+
+// VerifyOtpForSignup is the resolver for the verifyOtpForSignup field.
+func (r *mutationResolver) VerifyOtpForSignup(ctx context.Context, input model.VerifyOtpForSignUpRequestInput) (*model.LoginResponse, error) {
+	verifyOtpForSignupPayload, err := auth.VerifyOtpForSignup(ctx, r.DB, input)
+	if err != nil {
+		return nil, err
+	}
+	return verifyOtpForSignupPayload, nil
 }
 
 // ForgotPassword is the resolver for the forgotPassword field.

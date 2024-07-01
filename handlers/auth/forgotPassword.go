@@ -5,6 +5,7 @@ import (
 	"laughifi/database"
 	"laughifi/entity"
 	"laughifi/graph/model"
+	"laughifi/utils"
 	"strings"
 	"time"
 
@@ -34,11 +35,11 @@ func ForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Client,
 		return nil, gqlerror.Errorf("Internal server error while fetching the user.")
 	}
 
-	// otp := utils.Generate6DigitOtp()
+	otp := utils.Generate6DigitOtp()
 
 	otpData := entity.OtpEntity{
 		Id:        primitive.NewObjectID(),
-		Otp:       "111111",
+		Otp:       otp,
 		Email:     smallEmail,
 		CreatedAt: time.Now().UTC(),
 	}
@@ -48,10 +49,10 @@ func ForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Client,
 		return nil, gqlerror.Errorf("Failed to store OTP in the database")
 	}
 
-	// _, err = utils.SendEmail(sesClient, user.Name, otp)
-	// if err != nil {
-	// 	return nil, gqlerror.Errorf("Internal server error while sending the email")
-	// }
+	_, err = utils.SendEmail(sesClient, user.Name, otp)
+	if err != nil {
+		return nil, gqlerror.Errorf("Internal server error while sending the email")
+	}
 
 	return &model.Response{
 		Message: "Otp Sent Successfully",

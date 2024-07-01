@@ -3,10 +3,10 @@ type Query {
 }
 
 extend type Mutation {
-  changePassword(input: changePasswordRequestInput!): Response!
+  changePassword(input: ChangePasswordRequestInput!): Response!
 }
 
-input changePasswordRequestInput {
+input ChangePasswordRequestInput {
   currentPassword: String!
   newPassword: String!
   confirmPassword: String!

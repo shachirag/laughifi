@@ -1,7 +1,8 @@
 type Mutation {
   login(input: LoginRequestInput!): LoginResponse!
   socialLogin(input: SocialLoginRequestInput!): LoginResponse!
-  signup(input: SignUpRequestInput!): LoginResponse!
+  signup(input: SignUpRequestInput!): Response!
+  verifyOtpForSignup(input: VerifyOtpForSignUpRequestInput!): LoginResponse!
   forgotPassword(input: ForgotPasswordRequestInput!): Response!
   verifyOtpForResetPassword(
     input: VerifyOtpForResetPasswordRequestInput!
@@ -22,9 +23,14 @@ input SocialLoginRequestInput {
 }
 
 input SignUpRequestInput {
+  email: String!
+}
+
+input VerifyOtpForSignUpRequestInput {
   name: String!
   email: String!
   password: String!
+  otp: String!
 }
 
 input ForgotPasswordRequestInput {

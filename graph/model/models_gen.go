@@ -2,8 +2,36 @@
 
 package model
 
+type ChangePasswordRequestInput struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+	ConfirmPassword string `json:"confirmPassword"`
+}
+
 type ForgotPasswordRequestInput struct {
 	Email string `json:"email"`
+}
+
+type Friend struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Image string `json:"image"`
+}
+
+type FriendPaginationResponse struct {
+	Total       int       `json:"total"`
+	PerPage     int       `json:"perPage"`
+	CurrentPage int       `json:"currentPage"`
+	TotalPages  int       `json:"totalPages"`
+	Friends     []*Friend `json:"friends"`
+}
+
+type LaughifiUserPaginationResponse struct {
+	Total       int       `json:"total"`
+	PerPage     int       `json:"perPage"`
+	CurrentPage int       `json:"currentPage"`
+	TotalPages  int       `json:"totalPages"`
+	Users       []*Friend `json:"users"`
 }
 
 type LoginRequestInput struct {
@@ -38,10 +66,12 @@ type Response struct {
 	Message string `json:"message"`
 }
 
+type SendFriendRequestInput struct {
+	UserIds []string `json:"userIds"`
+}
+
 type SignUpRequestInput struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email string `json:"email"`
 }
 
 type SocialLoginRequestInput struct {
@@ -51,13 +81,33 @@ type SocialLoginRequestInput struct {
 	Name     string  `json:"name"`
 }
 
+type Template struct {
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Topic    string `json:"topic"`
+	Template string `json:"template"`
+}
+
+type TemplatePaginationResponse struct {
+	Total       int         `json:"total"`
+	PerPage     int         `json:"perPage"`
+	CurrentPage int         `json:"currentPage"`
+	TotalPages  int         `json:"totalPages"`
+	Templates   []*Template `json:"templates"`
+}
+
+type UpdateStatusRequestInput struct {
+	Status string `json:"Status"`
+}
+
 type VerifyOtpForResetPasswordRequestInput struct {
 	Email string `json:"email"`
 	Otp   string `json:"otp"`
 }
 
-type ChangePasswordRequestInput struct {
-	CurrentPassword string `json:"currentPassword"`
-	NewPassword     string `json:"newPassword"`
-	ConfirmPassword string `json:"confirmPassword"`
+type VerifyOtpForSignUpRequestInput struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Otp      string `json:"otp"`
 }

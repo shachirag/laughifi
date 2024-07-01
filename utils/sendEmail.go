@@ -21,7 +21,7 @@ func SendEmail(sesClient *ses.Client, to string, link string) (*ses.SendEmailOut
 	input := &ses.SendEmailInput{
 		Destination: &types.Destination{
 			ToAddresses: []string{
-				"selfchallenge@yopmail.com",
+				"laughifi@yopmail.com",
 			},
 		},
 		Message: &types.Message{

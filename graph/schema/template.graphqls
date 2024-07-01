@@ -1,0 +1,22 @@
+type Template {
+  id: ID!
+  title: String!
+  topic: String!
+  template: String!
+}
+
+type TemplatePaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  templates: [Template!]!
+}
+
+extend type Query {
+  getTemplates(
+    page: Int!
+    limit: Int!
+    topic: String
+  ): TemplatePaginationResponse!
+}
