@@ -21,7 +21,7 @@ func LoginCustomer(ctx context.Context, db *database.DB, input model.LoginReques
 
 	smallEmail := strings.ToLower(input.Email)
 
-	filter := bson.M{"email": smallEmail, "isDeleted": false}
+	filter := bson.M{"email": smallEmail}
 
 	var customer entity.CustomerEntity
 	err := customerColl.FindOne(ctx, filter).Decode(&customer)

@@ -66,6 +66,7 @@ func ChangePassword(ctx context.Context, db *database.DB, input model.ChangePass
 	if updateRes.MatchedCount == 0 {
 		return nil, gqlerror.Errorf("User not found")
 	}
+	
 	return &model.Response{
 		Message: "Password Changed Successfully",
 	}, nil

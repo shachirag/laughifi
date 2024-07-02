@@ -52,15 +52,17 @@ func main() {
 		}
 
 		authRequiredOperations := map[string]bool{
-			"ChangePassword":            true,
-			"GetUserData":               true,
 			"LoginCustomer":             false,
+			"ResendOtp":                 false,
 			"ForgotPassword":            false,
 			"ResetPassword":             false,
 			"Signup":                    false,
 			"VerifyOtpForSignup":        false,
 			"SocialLoginCustomer":       false,
 			"VerifyOtpForResetPassword": false,
+			"ChangePassword":            true,
+			"GetUserData":               true,
+			"EditCustomer":              true,
 			"GetLaughifiCustomers":      true,
 			"GetTemplates":              true,
 			"SendFriendRequest":         true,

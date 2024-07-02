@@ -21,7 +21,7 @@ func ResetPassword(ctx context.Context, db *database.DB, input model.ResetPasswo
 
 	smallEmail := strings.ToLower(input.Email)
 
-	err := customerColl.FindOne(ctx, bson.M{"email": smallEmail, "isDeleted": false}).Decode(&user)
+	err := customerColl.FindOne(ctx, bson.M{"email": smallEmail}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, gqlerror.Errorf("No user found with the provided email.")

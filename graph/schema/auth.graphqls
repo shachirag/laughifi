@@ -1,8 +1,11 @@
+scalar Upload
+
 type Mutation {
   login(input: LoginRequestInput!): LoginResponse!
   socialLogin(input: SocialLoginRequestInput!): LoginResponse!
   signup(input: SignUpRequestInput!): Response!
   verifyOtpForSignup(input: VerifyOtpForSignUpRequestInput!): LoginResponse!
+  resendOtp(input: ResendOtpRequestInput!): Response!
   forgotPassword(input: ForgotPasswordRequestInput!): Response!
   verifyOtpForResetPassword(
     input: VerifyOtpForResetPasswordRequestInput!
@@ -13,6 +16,10 @@ type Mutation {
 input LoginRequestInput {
   email: String!
   password: String!
+}
+
+input ResendOtpRequestInput {
+  email: String!
 }
 
 input SocialLoginRequestInput {

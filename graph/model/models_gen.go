@@ -2,10 +2,20 @@
 
 package model
 
+import (
+	"github.com/99designs/gqlgen/graphql"
+)
+
 type ChangePasswordRequestInput struct {
 	CurrentPassword string `json:"currentPassword"`
 	NewPassword     string `json:"newPassword"`
 	ConfirmPassword string `json:"confirmPassword"`
+}
+
+type EditProfileRequestInput struct {
+	Name                string          `json:"name"`
+	OldProfileImageURL  string          `json:"oldProfileImageUrl"`
+	NewProfileImageFile *graphql.Upload `json:"newProfileImageFile,omitempty"`
 }
 
 type ForgotPasswordRequestInput struct {
@@ -54,6 +64,10 @@ type Mutation struct {
 }
 
 type Query struct {
+}
+
+type ResendOtpRequestInput struct {
+	Email string `json:"email"`
 }
 
 type ResetPasswordRequestInput struct {

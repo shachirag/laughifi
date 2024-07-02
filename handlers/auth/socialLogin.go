@@ -31,9 +31,9 @@ func SocialLoginCustomer(ctx context.Context, db *database.DB, input model.Socia
 	filter := bson.M{}
 	switch input.Type {
 	case "apple":
-		filter = bson.M{"socialDetails.appleId": input.SocialID, "isDeleted": false}
+		filter = bson.M{"socialDetails.appleId": input.SocialID}
 	case "google":
-		filter = bson.M{"socialDetails.googleId": input.SocialID, "isDeleted": false}
+		filter = bson.M{"socialDetails.googleId": input.SocialID}
 	default:
 		return nil, gqlerror.Errorf("Unsupported social login type")
 	}
@@ -46,7 +46,7 @@ func SocialLoginCustomer(ctx context.Context, db *database.DB, input model.Socia
 	err = customerColl.FindOne(ctx, filter).Decode(&customer)
 	if err != nil {
 		if err == mongo.ErrNoDocuments && input.Email != nil {
-			filter = bson.M{"email": smallEmail, "isDeleted": false}
+			filter = bson.M{"email": smallEmail}
 			err = customerColl.FindOne(ctx, filter).Decode(&customer)
 			if err != nil {
 				if err == mongo.ErrNoDocuments {
@@ -134,7 +134,7 @@ func socialSignup(ctx context.Context, db *database.DB, data *model.SocialLoginR
 		smallEmail = strings.ToLower(*data.Email)
 	}
 
-	filter := bson.M{"email": smallEmail, "isDeleted": false}
+	filter := bson.M{"email": smallEmail}
 	exists, err := userColl.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, gqlerror.Errorf("Error checking existing user: " + err.Error())

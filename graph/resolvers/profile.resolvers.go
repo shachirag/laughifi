@@ -19,6 +19,15 @@ func (r *mutationResolver) ChangePassword(ctx context.Context, input model.Chang
 	return changePasswordPayload, nil
 }
 
+// EditProfile is the resolver for the editProfile field.
+func (r *mutationResolver) EditProfile(ctx context.Context, input model.EditProfileRequestInput) (*model.Response, error) {
+	editUserData, err := auth.EditCustomer(ctx, r.DB, input)
+	if err != nil {
+		return nil, err
+	}
+	return editUserData, nil
+}
+
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context) (*model.LoginResponse, error) {
 	getUserData, err := auth.GetUserData(ctx, r.DB)

@@ -46,6 +46,15 @@ func (r *mutationResolver) VerifyOtpForSignup(ctx context.Context, input model.V
 	return verifyOtpForSignupPayload, nil
 }
 
+// ResendOtp is the resolver for the resendOtp field.
+func (r *mutationResolver) ResendOtp(ctx context.Context, input model.ResendOtpRequestInput) (*model.Response, error) {
+	resendOtpPayload, err := auth.ResendOtp(ctx, r.DB, r.SESClient, input)
+	if err != nil {
+		return nil, err
+	}
+	return resendOtpPayload, nil
+}
+
 // ForgotPassword is the resolver for the forgotPassword field.
 func (r *mutationResolver) ForgotPassword(ctx context.Context, input model.ForgotPasswordRequestInput) (*model.Response, error) {
 	ForgotPasswordPayload, err := auth.ForgotPassword(ctx, r.DB, r.SESClient, input)

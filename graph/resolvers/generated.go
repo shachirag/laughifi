@@ -81,8 +81,10 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		ChangePassword            func(childComplexity int, input model.ChangePasswordRequestInput) int
+		EditProfile               func(childComplexity int, input model.EditProfileRequestInput) int
 		ForgotPassword            func(childComplexity int, input model.ForgotPasswordRequestInput) int
 		Login                     func(childComplexity int, input model.LoginRequestInput) int
+		ResendOtp                 func(childComplexity int, input model.ResendOtpRequestInput) int
 		ResetPassword             func(childComplexity int, input model.ResetPasswordRequestInput) int
 		SendFriendRequest         func(childComplexity int, input model.SendFriendRequestInput) int
 		Signup                    func(childComplexity int, input model.SignUpRequestInput) int
@@ -125,12 +127,14 @@ type MutationResolver interface {
 	SocialLogin(ctx context.Context, input model.SocialLoginRequestInput) (*model.LoginResponse, error)
 	Signup(ctx context.Context, input model.SignUpRequestInput) (*model.Response, error)
 	VerifyOtpForSignup(ctx context.Context, input model.VerifyOtpForSignUpRequestInput) (*model.LoginResponse, error)
+	ResendOtp(ctx context.Context, input model.ResendOtpRequestInput) (*model.Response, error)
 	ForgotPassword(ctx context.Context, input model.ForgotPasswordRequestInput) (*model.Response, error)
 	VerifyOtpForResetPassword(ctx context.Context, input model.VerifyOtpForResetPasswordRequestInput) (*model.Response, error)
 	ResetPassword(ctx context.Context, input model.ResetPasswordRequestInput) (*model.Response, error)
 	UpdateStatus(ctx context.Context, userID string, input model.UpdateStatusRequestInput) (*model.Response, error)
 	SendFriendRequest(ctx context.Context, input model.SendFriendRequestInput) (*model.Response, error)
 	ChangePassword(ctx context.Context, input model.ChangePasswordRequestInput) (*model.Response, error)
+	EditProfile(ctx context.Context, input model.EditProfileRequestInput) (*model.Response, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context) (*model.LoginResponse, error)
@@ -318,6 +322,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ChangePassword(childComplexity, args["input"].(model.ChangePasswordRequestInput)), true
 
+	case "Mutation.editProfile":
+		if e.complexity.Mutation.EditProfile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_editProfile_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EditProfile(childComplexity, args["input"].(model.EditProfileRequestInput)), true
+
 	case "Mutation.forgotPassword":
 		if e.complexity.Mutation.ForgotPassword == nil {
 			break
@@ -341,6 +357,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.LoginRequestInput)), true
+
+	case "Mutation.resendOtp":
+		if e.complexity.Mutation.ResendOtp == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_resendOtp_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ResendOtp(childComplexity, args["input"].(model.ResendOtpRequestInput)), true
 
 	case "Mutation.resetPassword":
 		if e.complexity.Mutation.ResetPassword == nil {
@@ -555,8 +583,10 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputChangePasswordRequestInput,
+		ec.unmarshalInputEditProfileRequestInput,
 		ec.unmarshalInputForgotPasswordRequestInput,
 		ec.unmarshalInputLoginRequestInput,
+		ec.unmarshalInputResendOtpRequestInput,
 		ec.unmarshalInputResetPasswordRequestInput,
 		ec.unmarshalInputSendFriendRequestInput,
 		ec.unmarshalInputSignUpRequestInput,
@@ -661,11 +691,14 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema/auth.graphqls", Input: `type Mutation {
+	{Name: "../schema/auth.graphqls", Input: `scalar Upload
+
+type Mutation {
   login(input: LoginRequestInput!): LoginResponse!
   socialLogin(input: SocialLoginRequestInput!): LoginResponse!
   signup(input: SignUpRequestInput!): Response!
   verifyOtpForSignup(input: VerifyOtpForSignUpRequestInput!): LoginResponse!
+  resendOtp(input: ResendOtpRequestInput!): Response!
   forgotPassword(input: ForgotPasswordRequestInput!): Response!
   verifyOtpForResetPassword(
     input: VerifyOtpForResetPasswordRequestInput!
@@ -676,6 +709,10 @@ var sources = []*ast.Source{
 input LoginRequestInput {
   email: String!
   password: String!
+}
+
+input ResendOtpRequestInput {
+  email: String!
 }
 
 input SocialLoginRequestInput {
@@ -773,6 +810,7 @@ input SendFriendRequestInput {
 
 extend type Mutation {
   changePassword(input: ChangePasswordRequestInput!): Response!
+  editProfile(input: EditProfileRequestInput!): Response!
 }
 
 input ChangePasswordRequestInput {
@@ -780,7 +818,12 @@ input ChangePasswordRequestInput {
   newPassword: String!
   confirmPassword: String!
 }
-`, BuiltIn: false},
+
+input EditProfileRequestInput {
+  name: String!
+  oldProfileImageUrl: String!
+  newProfileImageFile: Upload
+}`, BuiltIn: false},
 	{Name: "../schema/template.graphqls", Input: `type Template {
   id: ID!
   title: String!
@@ -826,6 +869,21 @@ func (ec *executionContext) field_Mutation_changePassword_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_editProfile_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.EditProfileRequestInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNEditProfileRequestInput2laughifiᚋgraphᚋmodelᚐEditProfileRequestInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_forgotPassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -848,6 +906,21 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNLoginRequestInput2laughifiᚋgraphᚋmodelᚐLoginRequestInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_resendOtp_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ResendOtpRequestInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNResendOtpRequestInput2laughifiᚋgraphᚋmodelᚐResendOtpRequestInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2331,6 +2404,65 @@ func (ec *executionContext) fieldContext_Mutation_verifyOtpForSignup(ctx context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_resendOtp(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_resendOtp(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ResendOtp(rctx, fc.Args["input"].(model.ResendOtpRequestInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Response)
+	fc.Result = res
+	return ec.marshalNResponse2ᚖlaughifiᚋgraphᚋmodelᚐResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_resendOtp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "message":
+				return ec.fieldContext_Response_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_resendOtp_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_forgotPassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_forgotPassword(ctx, field)
 	if err != nil {
@@ -2679,6 +2811,65 @@ func (ec *executionContext) fieldContext_Mutation_changePassword(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_changePassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_editProfile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_editProfile(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().EditProfile(rctx, fc.Args["input"].(model.EditProfileRequestInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Response)
+	fc.Result = res
+	return ec.marshalNResponse2ᚖlaughifiᚋgraphᚋmodelᚐResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_editProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "message":
+				return ec.fieldContext_Response_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_editProfile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5393,6 +5584,47 @@ func (ec *executionContext) unmarshalInputChangePasswordRequestInput(ctx context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputEditProfileRequestInput(ctx context.Context, obj interface{}) (model.EditProfileRequestInput, error) {
+	var it model.EditProfileRequestInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "oldProfileImageUrl", "newProfileImageFile"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "oldProfileImageUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("oldProfileImageUrl"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OldProfileImageURL = data
+		case "newProfileImageFile":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newProfileImageFile"))
+			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NewProfileImageFile = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputForgotPasswordRequestInput(ctx context.Context, obj interface{}) (model.ForgotPasswordRequestInput, error) {
 	var it model.ForgotPasswordRequestInput
 	asMap := map[string]interface{}{}
@@ -5448,6 +5680,33 @@ func (ec *executionContext) unmarshalInputLoginRequestInput(ctx context.Context,
 				return it, err
 			}
 			it.Password = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputResendOtpRequestInput(ctx context.Context, obj interface{}) (model.ResendOtpRequestInput, error) {
+	var it model.ResendOtpRequestInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"email"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "email":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Email = data
 		}
 	}
 
@@ -6002,6 +6261,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "resendOtp":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_resendOtp(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "forgotPassword":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_forgotPassword(ctx, field)
@@ -6040,6 +6306,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "changePassword":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_changePassword(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "editProfile":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_editProfile(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -6725,6 +6998,11 @@ func (ec *executionContext) unmarshalNChangePasswordRequestInput2laughifiᚋgrap
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNEditProfileRequestInput2laughifiᚋgraphᚋmodelᚐEditProfileRequestInput(ctx context.Context, v interface{}) (model.EditProfileRequestInput, error) {
+	res, err := ec.unmarshalInputEditProfileRequestInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNForgotPasswordRequestInput2laughifiᚋgraphᚋmodelᚐForgotPasswordRequestInput(ctx context.Context, v interface{}) (model.ForgotPasswordRequestInput, error) {
 	res, err := ec.unmarshalInputForgotPasswordRequestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6891,6 +7169,11 @@ func (ec *executionContext) marshalNLoginResponse2ᚖlaughifiᚋgraphᚋmodelᚐ
 		return graphql.Null
 	}
 	return ec._LoginResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNResendOtpRequestInput2laughifiᚋgraphᚋmodelᚐResendOtpRequestInput(ctx context.Context, v interface{}) (model.ResendOtpRequestInput, error) {
+	res, err := ec.unmarshalInputResendOtpRequestInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNResetPasswordRequestInput2laughifiᚋgraphᚋmodelᚐResetPasswordRequestInput(ctx context.Context, v interface{}) (model.ResetPasswordRequestInput, error) {
@@ -7317,6 +7600,22 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	res := graphql.MarshalString(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (*graphql.Upload, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalUpload(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v *graphql.Upload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalUpload(*v)
 	return res
 }
 
