@@ -1,4 +1,4 @@
-	package database
+package database
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -18,12 +17,6 @@ var (
 
 type DB struct {
 	client *mongo.Client
-}
-
-func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
 }
 
 func Connect() *DB {

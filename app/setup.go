@@ -6,7 +6,6 @@ import (
 )
 
 func SetupAndRunApp() error {
-	// loaded the env config
 	err := config.LoadENV()
 	if err != nil {
 		return err
