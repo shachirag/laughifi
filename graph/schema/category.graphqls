@@ -1,0 +1,35 @@
+extend type Mutation {
+  category(input: CategoryRequestInput!): Response!
+  editCategory(id: ID!, input: EditCategoryRequestInput!): Response!
+  deleteCategory(id: ID!): Response!
+}
+
+input CategoryRequestInput {
+  category: String!
+}
+
+input EditCategoryRequestInput {
+  category: String!
+}
+
+extend type Query {
+  getCategories(
+    page: Int!
+    limit: Int!
+    search: String
+  ): CategoriesPaginationResponse!
+  getCategory(id: ID!): Category!
+}
+
+type CategoriesPaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  categories: [Category!]!
+}
+
+type Category {
+  id: ID!
+  category: String!
+}

@@ -66,11 +66,11 @@ func (r *mutationResolver) ForgotPassword(ctx context.Context, input model.Forgo
 
 // VerifyOtpForResetPassword is the resolver for the verifyOtpForResetPassword field.
 func (r *mutationResolver) VerifyOtpForResetPassword(ctx context.Context, input model.VerifyOtpForResetPasswordRequestInput) (*model.Response, error) {
-	VerifyOtpPayload, err := auth.VerifyOtpForResetPassword(ctx, r.DB, input)
+	verifyOtpPayload, err := auth.VerifyOtpForResetPassword(ctx, r.DB, input)
 	if err != nil {
 		return nil, err
 	}
-	return VerifyOtpPayload, nil
+	return verifyOtpPayload, nil
 }
 
 // ResetPassword is the resolver for the resetPassword field.

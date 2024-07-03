@@ -6,6 +6,29 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+type AdminEditProfileRequestInput struct {
+	FirstName           string          `json:"firstName"`
+	LastName            string          `json:"lastName"`
+	OldProfileImageURL  string          `json:"oldProfileImageUrl"`
+	NewProfileImageFile *graphql.Upload `json:"newProfileImageFile,omitempty"`
+}
+
+type AdminLoginRequestInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type AdminLoginResponse struct {
+	ID        string `json:"id"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Image     string `json:"image"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	Token     string `json:"token"`
+}
+
 type AnswersData struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -16,10 +39,31 @@ type AnswersInput struct {
 	Value string `json:"value"`
 }
 
+type CategoriesPaginationResponse struct {
+	Total       int         `json:"total"`
+	PerPage     int         `json:"perPage"`
+	CurrentPage int         `json:"currentPage"`
+	TotalPages  int         `json:"totalPages"`
+	Categories  []*Category `json:"categories"`
+}
+
+type Category struct {
+	ID       string `json:"id"`
+	Category string `json:"category"`
+}
+
+type CategoryRequestInput struct {
+	Category string `json:"category"`
+}
+
 type ChangePasswordRequestInput struct {
 	CurrentPassword string `json:"currentPassword"`
 	NewPassword     string `json:"newPassword"`
 	ConfirmPassword string `json:"confirmPassword"`
+}
+
+type EditCategoryRequestInput struct {
+	Category string `json:"category"`
 }
 
 type EditProfileRequestInput struct {

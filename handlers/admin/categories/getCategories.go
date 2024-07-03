@@ -1,0 +1,91 @@
+package category
+
+import (
+	"context"
+	"laughifi/database"
+	"laughifi/entity"
+	"laughifi/graph/model"
+	"math"
+
+	"github.com/vektah/gqlparser/v2/gqlerror"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+func GetCategories(ctx context.Context, db *database.DB, page int, limit int, search string) (*model.CategoriesPaginationResponse, error) {
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 15
+	}
+
+	categoryColl := db.GetCollection("category")
+
+	filter := bson.M{
+		"isDeleted": false,
+	}
+
+	if search != "blank" {
+		filter["name"] = primitive.Regex{Pattern: search, Options: "i"}
+	}
+
+	skip := (page - 1) * limit
+	findOptions := options.Find().SetSkip(int64(skip)).SetLimit(int64(limit)).SetSort(bson.M{"updatedAt": -1})
+
+	cursor, err := categoryColl.Find(ctx, filter, findOptions)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return &model.CategoriesPaginationResponse{
+				Total:       0,
+				PerPage:     limit,
+				CurrentPage: page,
+				TotalPages:  0,
+				Categories:  []*model.Category{},
+			}, nil
+		}
+		return nil, gqlerror.Errorf("Failed to fetch filled categories")
+	}
+	defer cursor.Close(ctx)
+
+	templateColl := db.GetCollection("category")
+	templateCursor, err := templateColl.Find(ctx, filter)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to fetch categories")
+	}
+	defer templateCursor.Close(ctx)
+
+	var categories []*model.Category
+	for cursor.Next(ctx) {
+		var category entity.CategoryEntity
+		err := cursor.Decode(&category)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to decode categories")
+		}
+
+		categoriesRes := model.Category{
+			ID:       category.Id.Hex(),
+			Category: category.Name,
+		}
+
+		categories = append(categories, &categoriesRes)
+	}
+
+	totalCount, err := categoryColl.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to count filled categories")
+	}
+
+	response := model.CategoriesPaginationResponse{
+		Total:       int(totalCount),
+		PerPage:     limit,
+		CurrentPage: page,
+		TotalPages:  int(math.Ceil(float64(totalCount) / float64(limit))),
+		Categories:  categories,
+	}
+
+	return &response, nil
+}

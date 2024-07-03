@@ -13,23 +13,23 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func EditCustomer(ctx context.Context, db *database.DB, input model.EditProfileRequestInput) (*model.Response, error) {
+func EditAdmin(ctx context.Context, db *database.DB, input model.AdminEditProfileRequestInput) (*model.Response, error) {
 	var (
-		customerColl = db.GetCollection("customer")
+		adminColl = db.GetCollection("admin")
 	)
 
-	userData, err := utils.ExtractUserFromContext(ctx, db)
+	adminData, err := utils.ExtractAdminFromContext(ctx, db)
 	if err != nil {
 		return nil, err
 	}
 
-	filter := bson.M{"_id": userData.Id}
+	filter := bson.M{"_id": adminData.Id}
 
 	var imageURL string
 	if input.NewProfileImageFile != nil {
 		file := input.NewProfileImageFile.File
 		id := primitive.NewObjectID()
-		fileName := fmt.Sprintf("customer/%v-profilepic.jpg", id.Hex())
+		fileName := fmt.Sprintf("admin/%v-profilepic.jpg", id.Hex())
 
 		imageURL, err = utils.UploadToS3(fileName, file)
 		if err != nil {
@@ -41,19 +41,20 @@ func EditCustomer(ctx context.Context, db *database.DB, input model.EditProfileR
 
 	update := bson.M{
 		"$set": bson.M{
-			"name":      input.Name,
+			"firstName": input.FirstName,
+			"lastName":  input.LastName,
 			"image":     imageURL,
 			"updatedAt": time.Now().UTC(),
 		},
 	}
 
-	updateRes, err := customerColl.UpdateOne(ctx, filter, update)
+	updateRes, err := adminColl.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to update user")
+		return nil, gqlerror.Errorf("Failed to update admin")
 	}
 
 	if updateRes.MatchedCount == 0 {
-		return nil, gqlerror.Errorf("No User found")
+		return nil, gqlerror.Errorf("No admin found")
 	}
 
 	return &model.Response{

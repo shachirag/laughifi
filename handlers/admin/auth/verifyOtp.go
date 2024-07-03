@@ -26,12 +26,12 @@ func VerifyOtpForResetPassword(ctx context.Context, db *database.DB, input model
 
 	smallEmail := strings.ToLower(input.Email)
 
-	err := db.GetCollection("customer").FindOne(ctx, bson.M{"email": smallEmail}).Decode(&user)
+	err := db.GetCollection("admin").FindOne(ctx, bson.M{"email": smallEmail}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, gqlerror.Errorf("user not found")
+			return nil, gqlerror.Errorf("admin not found")
 		}
-		return nil, gqlerror.Errorf("Internal server error while fetching the user.")
+		return nil, gqlerror.Errorf("Internal server error while fetching the admin.")
 	}
 
 	err = otpColl.FindOne(ctx, bson.M{"email": smallEmail}, options.FindOne().SetSort(bson.M{"createdAt": -1})).Decode(&otpData)

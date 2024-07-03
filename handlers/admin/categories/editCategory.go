@@ -1,11 +1,9 @@
-package auth
+package category
 
 import (
 	"context"
-	"fmt"
 	"laughifi/database"
 	"laughifi/graph/model"
-	"laughifi/utils"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -13,51 +11,36 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func EditCustomer(ctx context.Context, db *database.DB, input model.EditProfileRequestInput) (*model.Response, error) {
+func EditCategory(ctx context.Context, db *database.DB, categoryId string, input model.EditCategoryRequestInput) (*model.Response, error) {
 	var (
-		customerColl = db.GetCollection("customer")
+		categoryColl = db.GetCollection("category")
 	)
 
-	userData, err := utils.ExtractUserFromContext(ctx, db)
+	categoryObjID, err := primitive.ObjectIDFromHex(categoryId)
 	if err != nil {
-		return nil, err
+		return nil, gqlerror.Errorf("invalid category Id")
 	}
 
-	filter := bson.M{"_id": userData.Id}
-
-	var imageURL string
-	if input.NewProfileImageFile != nil {
-		file := input.NewProfileImageFile.File
-		id := primitive.NewObjectID()
-		fileName := fmt.Sprintf("customer/%v-profilepic.jpg", id.Hex())
-
-		imageURL, err = utils.UploadToS3(fileName, file)
-		if err != nil {
-			return nil, gqlerror.Errorf("Failed to upload image")
-		}
-	} else {
-		imageURL = input.OldProfileImageURL
-	}
+	filter := bson.M{"_id": categoryObjID}
 
 	update := bson.M{
 		"$set": bson.M{
-			"name":      input.Name,
-			"image":     imageURL,
+			"name":      input.Category,
 			"updatedAt": time.Now().UTC(),
 		},
 	}
 
-	updateRes, err := customerColl.UpdateOne(ctx, filter, update)
+	updateRes, err := categoryColl.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to update user")
+		return nil, gqlerror.Errorf("Failed to update category")
 	}
 
 	if updateRes.MatchedCount == 0 {
-		return nil, gqlerror.Errorf("No User found")
+		return nil, gqlerror.Errorf("No category found")
 	}
 
 	return &model.Response{
-		Message: "Profile Updated Successfully",
+		Message: "Category Updated Successfully",
 	}, nil
 }
 

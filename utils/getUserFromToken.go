@@ -47,14 +47,28 @@ func ExtractUserFromContext(ctx context.Context, db *database.DB) (*entity.Custo
 	return &user, nil
 }
 
-// func ExtractDeviceIDFromContext(ctx context.Context) (string, error) {
-// 	claims, err := ExtractClaimsFromContext(ctx)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	deviceID, ok := claims["Id"].(string)
-// 	if !ok {
-// 		return "", fiber.NewError(fiber.StatusInternalServerError, "SessionId not found in token claims")
-// 	}
-// 	return deviceID, nil
-// }
+func ExtractAdminFromContext(ctx context.Context, db *database.DB) (*entity.AdminEntity, error) {
+	claims, err := ExtractClaimsFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	userIDHex, ok := claims["Id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("admin ID not found in token claims")
+	}
+
+	adminID, err := primitive.ObjectIDFromHex(userIDHex)
+	if err != nil {
+		return nil, fmt.Errorf("invalid admin ID format in token claims")
+	}
+
+	var admin entity.AdminEntity
+	adminColl := db.GetCollection("admin")
+	err = adminColl.FindOne(ctx, bson.M{"_id": adminID}).Decode(&admin)
+	if err != nil {
+		return nil, fiber.NewError(fiber.StatusInternalServerError, "failed to fetch admin details: "+err.Error())
+	}
+
+	return &admin, nil
+}
