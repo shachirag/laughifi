@@ -7,7 +7,7 @@ package graph
 import (
 	"context"
 	"laughifi/graph/model"
-	"laughifi/handlers/friends"
+	"laughifi/handlers/user/friends"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )

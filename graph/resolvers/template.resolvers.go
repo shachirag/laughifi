@@ -7,8 +7,17 @@ package graph
 import (
 	"context"
 	"laughifi/graph/model"
-	"laughifi/handlers/templates"
+	"laughifi/handlers/user/templates"
 )
+
+// FilledTemplate is the resolver for the filledTemplate field.
+func (r *mutationResolver) FilledTemplate(ctx context.Context, input model.FilledTemplateRequestInput) (*model.Response, error) {
+	filledTemplates, err := templates.FilledTemplates(ctx, r.DB, input)
+	if err != nil {
+		return nil, err
+	}
+	return filledTemplates, nil
+}
 
 // GetTemplates is the resolver for the getTemplates field.
 func (r *queryResolver) GetTemplates(ctx context.Context, page int, limit int, topic *string) (*model.TemplatePaginationResponse, error) {
@@ -17,4 +26,13 @@ func (r *queryResolver) GetTemplates(ctx context.Context, page int, limit int, t
 		return nil, err
 	}
 	return templates, nil
+}
+
+// GetSavedTemplates is the resolver for the getSavedTemplates field.
+func (r *queryResolver) GetSavedTemplates(ctx context.Context, page int, limit int) (*model.SavedTemplatePaginationResponse, error) {
+	getFilledTemplates, err := templates.GetFilledTemplates(ctx, r.DB, page, limit)
+	if err != nil {
+		return nil, err
+	}
+	return getFilledTemplates, nil
 }

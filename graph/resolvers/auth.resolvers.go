@@ -7,7 +7,7 @@ package graph
 import (
 	"context"
 	"laughifi/graph/model"
-	"laughifi/handlers/auth"
+	"laughifi/handlers/user/auth"
 )
 
 // Login is the resolver for the login field.

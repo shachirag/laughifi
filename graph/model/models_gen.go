@@ -6,6 +6,16 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+type AnswersData struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+type AnswersInput struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type ChangePasswordRequestInput struct {
 	CurrentPassword string `json:"currentPassword"`
 	NewPassword     string `json:"newPassword"`
@@ -16,6 +26,11 @@ type EditProfileRequestInput struct {
 	Name                string          `json:"name"`
 	OldProfileImageURL  string          `json:"oldProfileImageUrl"`
 	NewProfileImageFile *graphql.Upload `json:"newProfileImageFile,omitempty"`
+}
+
+type FilledTemplateRequestInput struct {
+	TemplateID string          `json:"templateId"`
+	Answers    []*AnswersInput `json:"answers"`
 }
 
 type ForgotPasswordRequestInput struct {
@@ -78,6 +93,23 @@ type ResetPasswordRequestInput struct {
 
 type Response struct {
 	Message string `json:"message"`
+}
+
+type SavedTemplatePaginationResponse struct {
+	Total          int                   `json:"total"`
+	PerPage        int                   `json:"perPage"`
+	CurrentPage    int                   `json:"currentPage"`
+	TotalPages     int                   `json:"totalPages"`
+	SavedTemplates []*SavedTemplatesData `json:"savedTemplates"`
+}
+
+type SavedTemplatesData struct {
+	ID         string         `json:"id"`
+	TemplateID string         `json:"templateId"`
+	Title      string         `json:"title"`
+	Topic      string         `json:"topic"`
+	Template   string         `json:"template"`
+	Answers    []*AnswersData `json:"answers"`
 }
 
 type SendFriendRequestInput struct {

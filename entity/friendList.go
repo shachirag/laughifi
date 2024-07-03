@@ -16,5 +16,5 @@ type FriendListEntity struct {
 
 type FriendsList struct {
 	Id     primitive.ObjectID `json:"id" bson:"id"`
-	Status string             `json:"status"`
+	Status string             `json:"status" bson:"status"`
 }

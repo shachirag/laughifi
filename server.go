@@ -69,6 +69,8 @@ func main() {
 			"GetFriendRequests":         true,
 			"GetFriends":                true,
 			"AcceptRejectRequest":       true,
+			"FilledTemplates":           true,
+			"GetFilledTemplates":        true,
 		}
 		if authRequiredOperations[opName] {
 			middleware.ValidateJWT(srv).ServeHTTP(w, r)

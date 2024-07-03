@@ -19,4 +19,41 @@ extend type Query {
     limit: Int!
     topic: String
   ): TemplatePaginationResponse!
+  getSavedTemplates(page: Int!, limit: Int!): SavedTemplatePaginationResponse!
+}
+
+extend type Mutation {
+  filledTemplate(input: FilledTemplateRequestInput!): Response!
+}
+
+input AnswersInput {
+  key: String!
+  value: String!
+}
+
+input FilledTemplateRequestInput {
+  templateId: ID!
+  answers: [AnswersInput!]!
+}
+
+type SavedTemplatesData {
+  id: ID!
+  templateId: ID!
+  title: String!
+  topic: String!
+  template: String!
+  answers: [AnswersData!]!
+}
+
+type AnswersData {
+  key: String!
+  value: String!
+}
+
+type SavedTemplatePaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  savedTemplates: [SavedTemplatesData!]!
 }
