@@ -9,6 +9,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func EditCategory(ctx context.Context, db *database.DB, categoryId string, input model.EditCategoryRequestInput) (*model.Response, error) {
@@ -23,20 +24,49 @@ func EditCategory(ctx context.Context, db *database.DB, categoryId string, input
 
 	filter := bson.M{"_id": categoryObjID}
 
-	update := bson.M{
-		"$set": bson.M{
-			"name":      input.Category,
-			"updatedAt": time.Now().UTC(),
-		},
-	}
-
-	updateRes, err := categoryColl.UpdateOne(ctx, filter, update)
+	session, err := db.GetMongoClient().StartSession()
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to update category")
+		return nil, gqlerror.Errorf("Failed to start session")
+	}
+	defer session.EndSession(ctx)
+
+	callback := func(sessCtx mongo.SessionContext) (interface{}, error) {
+
+		update := bson.M{
+			"$set": bson.M{
+				"name":      input.Category,
+				"updatedAt": time.Now().UTC(),
+			},
+		}
+
+		updateRes, err := categoryColl.UpdateOne(ctx, filter, update)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to update category")
+		}
+
+		if updateRes.MatchedCount == 0 {
+			return nil, gqlerror.Errorf("No category found")
+		}
+
+		templatesFilter := bson.M{"category.id": categoryObjID}
+		templatesUpdate := bson.M{
+			"$set": bson.M{
+				"category.name": input.Category,
+				"updatedAt":     time.Now().UTC(),
+			},
+		}
+
+		_, err = db.GetCollection("templates").UpdateMany(ctx, templatesFilter, templatesUpdate)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to update templates with the new category name")
+		}
+
+		return nil, nil
 	}
 
-	if updateRes.MatchedCount == 0 {
-		return nil, gqlerror.Errorf("No category found")
+	_, err = session.WithTransaction(ctx, callback)
+	if err != nil {
+		return nil, gqlerror.Errorf("Transaction failed: %v", err)
 	}
 
 	return &model.Response{

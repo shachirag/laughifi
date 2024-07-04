@@ -55,3 +55,7 @@ func (db *DB) GetCollection(name string) *mongo.Collection {
 func (db *DB) Context() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), 30*time.Second)
 }
+
+func (db *DB) GetMongoClient() *mongo.Client {
+	return db.client
+}

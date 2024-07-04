@@ -39,11 +39,11 @@ func (r *mutationResolver) DeleteCategory(ctx context.Context, id string) (*mode
 
 // GetCategories is the resolver for the getCategories field.
 func (r *queryResolver) GetCategories(ctx context.Context, page int, limit int, search *string) (*model.CategoriesPaginationResponse, error) {
-	deleteCategoryData, err := category.GetCategories(ctx, r.DB, page, limit, *search)
+	geCategoryData, err := category.GetCategories(ctx, r.DB, page, limit, *search)
 	if err != nil {
 		return nil, err
 	}
-	return deleteCategoryData, nil
+	return geCategoryData, nil
 }
 
 // GetCategory is the resolver for the getCategory field.

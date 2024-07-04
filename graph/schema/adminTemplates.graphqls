@@ -1,0 +1,53 @@
+extend type Mutation {
+  adminTemplate(input: AdminTemplateRequestInput!): Response!
+  editAdminTemplate(id: ID!, input: EditAdminTemplateRequestInput!): Response!
+  deleteAdminTemplate(id: ID!): Response!
+}
+
+input AdminTemplateRequestInput {
+  categoryId: ID!
+  title: String!
+  template: String!
+}
+
+input EditAdminTemplateRequestInput {
+  categoryId: ID!
+  title: String!
+  template: String!
+}
+
+extend type Query {
+  getAdminTemplates(
+    page: Int!
+    limit: Int!
+    search: String
+  ): AdminTemplatePaginationResponse!
+  getAdminTemplate(id: ID!): AdminTemplate!
+  getAllCategories: [GetAllCategories!]!
+}
+
+type AdminTemplatePaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  adminTemplates: [AdminTemplates!]!
+}
+
+type AdminTemplates {
+  id: ID!
+  category: String!
+  template: String!
+}
+
+type AdminTemplate {
+  id: ID!
+  category: String!
+  title: String!
+  template: String!
+}
+
+type GetAllCategories {
+  id: ID!
+  category: String!
+}

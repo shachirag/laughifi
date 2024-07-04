@@ -1,0 +1,9 @@
+extend type Query {
+  getDashboardData: GetDashboardData!
+}
+
+type GetDashboardData {
+  templatesCount: Int!
+  wouldYouRatherCount: Int!
+  categoryCount: Int!
+}

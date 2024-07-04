@@ -29,6 +29,33 @@ type AdminLoginResponse struct {
 	Token     string `json:"token"`
 }
 
+type AdminTemplate struct {
+	ID       string `json:"id"`
+	Category string `json:"category"`
+	Title    string `json:"title"`
+	Template string `json:"template"`
+}
+
+type AdminTemplatePaginationResponse struct {
+	Total          int               `json:"total"`
+	PerPage        int               `json:"perPage"`
+	CurrentPage    int               `json:"currentPage"`
+	TotalPages     int               `json:"totalPages"`
+	AdminTemplates []*AdminTemplates `json:"adminTemplates"`
+}
+
+type AdminTemplateRequestInput struct {
+	CategoryID string `json:"categoryId"`
+	Title      string `json:"title"`
+	Template   string `json:"template"`
+}
+
+type AdminTemplates struct {
+	ID       string `json:"id"`
+	Category string `json:"category"`
+	Template string `json:"template"`
+}
+
 type AnswersData struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -62,6 +89,12 @@ type ChangePasswordRequestInput struct {
 	ConfirmPassword string `json:"confirmPassword"`
 }
 
+type EditAdminTemplateRequestInput struct {
+	CategoryID string `json:"categoryId"`
+	Title      string `json:"title"`
+	Template   string `json:"template"`
+}
+
 type EditCategoryRequestInput struct {
 	Category string `json:"category"`
 }
@@ -70,6 +103,11 @@ type EditProfileRequestInput struct {
 	Name                string          `json:"name"`
 	OldProfileImageURL  string          `json:"oldProfileImageUrl"`
 	NewProfileImageFile *graphql.Upload `json:"newProfileImageFile,omitempty"`
+}
+
+type EditWouldYouRatherRequestInput struct {
+	Question string   `json:"question"`
+	Options  []string `json:"options"`
 }
 
 type FilledTemplateRequestInput struct {
@@ -93,6 +131,17 @@ type FriendPaginationResponse struct {
 	CurrentPage int       `json:"currentPage"`
 	TotalPages  int       `json:"totalPages"`
 	Friends     []*Friend `json:"friends"`
+}
+
+type GetAllCategories struct {
+	ID       string `json:"id"`
+	Category string `json:"category"`
+}
+
+type GetDashboardData struct {
+	TemplatesCount      int `json:"templatesCount"`
+	WouldYouRatherCount int `json:"wouldYouRatherCount"`
+	CategoryCount       int `json:"categoryCount"`
 }
 
 type LaughifiUserPaginationResponse struct {
@@ -200,4 +249,28 @@ type VerifyOtpForSignUpRequestInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Otp      string `json:"otp"`
+}
+
+type WouldYouRatherRequestInput struct {
+	Question string   `json:"question"`
+	Options  []string `json:"options"`
+}
+
+type WouldYouRathers struct {
+	ID       string `json:"id"`
+	Question string `json:"question"`
+}
+
+type WouldYouRathersDetail struct {
+	ID       string   `json:"id"`
+	Question string   `json:"question"`
+	Options  []string `json:"options"`
+}
+
+type WouldYouRathersPaginationResponse struct {
+	Total           int                `json:"total"`
+	PerPage         int                `json:"perPage"`
+	CurrentPage     int                `json:"currentPage"`
+	TotalPages      int                `json:"totalPages"`
+	WouldYouRathers []*WouldYouRathers `json:"wouldYouRathers"`
 }

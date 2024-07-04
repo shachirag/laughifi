@@ -12,13 +12,23 @@ import (
 
 func DeletedCategoryData(ctx context.Context, db *database.DB, categoryId string) (*model.Response, error) {
 
-	categoryObjIdID, err := primitive.ObjectIDFromHex(categoryId)
+	categoryObjID, err := primitive.ObjectIDFromHex(categoryId)
 	if err != nil {
 		return nil, gqlerror.Errorf("invalid category Id")
 	}
 
+	templateFilter := bson.M{"category.id": categoryObjID}
+	templateCount, err := db.GetCollection("templates").CountDocuments(ctx, templateFilter)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to check associated templates: %s", err.Error())
+	}
+
+	if templateCount > 0 {
+		return nil, gqlerror.Errorf("Cannot delete category. Templates are associated with this category.")
+	}
+
 	filter := bson.M{
-		"_id": categoryObjIdID,
+		"_id": categoryObjID,
 	}
 
 	update := bson.M{

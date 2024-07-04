@@ -1,0 +1,43 @@
+extend type Mutation {
+  wouldYouRather(input: WouldYouRatherRequestInput!): Response!
+  editWouldYouRather(id: ID!, input: EditWouldYouRatherRequestInput!): Response!
+  deleteWouldYouRather(id: ID!): Response!
+}
+
+input WouldYouRatherRequestInput {
+  question: String!
+  options: [String!]!
+}
+
+input EditWouldYouRatherRequestInput {
+  question: String!
+  options: [String!]!
+}
+
+extend type Query {
+  getWouldYouRathers(
+    page: Int!
+    limit: Int!
+    search: String
+  ): WouldYouRathersPaginationResponse!
+  getWouldYouRather(id: ID!): WouldYouRathersDetail!
+}
+
+type WouldYouRathersPaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  wouldYouRathers: [WouldYouRathers!]!
+}
+
+type WouldYouRathers {
+  id: ID!
+  question: String!
+}
+
+type WouldYouRathersDetail {
+  id: ID!
+  question: String!
+  options: [String!]!
+}

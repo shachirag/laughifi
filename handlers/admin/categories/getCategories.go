@@ -51,13 +51,6 @@ func GetCategories(ctx context.Context, db *database.DB, page int, limit int, se
 	}
 	defer cursor.Close(ctx)
 
-	templateColl := db.GetCollection("category")
-	templateCursor, err := templateColl.Find(ctx, filter)
-	if err != nil {
-		return nil, gqlerror.Errorf("Failed to fetch categories")
-	}
-	defer templateCursor.Close(ctx)
-
 	var categories []*model.Category
 	for cursor.Next(ctx) {
 		var category entity.CategoryEntity
