@@ -20,8 +20,8 @@ func (r *mutationResolver) FilledTemplate(ctx context.Context, input model.Fille
 }
 
 // GetTemplates is the resolver for the getTemplates field.
-func (r *queryResolver) GetTemplates(ctx context.Context, page int, limit int, topic *string) (*model.TemplatePaginationResponse, error) {
-	templates, err := templates.GetTemplates(ctx, r.DB, page, limit, *topic)
+func (r *queryResolver) GetTemplates(ctx context.Context, page int, limit int, category *string) (*model.TemplatePaginationResponse, error) {
+	templates, err := templates.GetTemplates(ctx, r.DB, page, limit, *category)
 	if err != nil {
 		return nil, err
 	}

@@ -200,7 +200,7 @@ type SavedTemplatesData struct {
 	ID         string         `json:"id"`
 	TemplateID string         `json:"templateId"`
 	Title      string         `json:"title"`
-	Topic      string         `json:"topic"`
+	Category   string         `json:"category"`
 	Template   string         `json:"template"`
 	Answers    []*AnswersData `json:"answers"`
 }
@@ -223,7 +223,7 @@ type SocialLoginRequestInput struct {
 type Template struct {
 	ID       string `json:"id"`
 	Title    string `json:"title"`
-	Topic    string `json:"topic"`
+	Category string `json:"category"`
 	Template string `json:"template"`
 }
 

@@ -53,7 +53,7 @@ func GetTemplates(ctx context.Context, db *database.DB, page int, limit int, top
 		templateRes := model.Template{
 			ID:       template.Id.Hex(),
 			Title:    template.Title,
-			Topic:    template.Topic,
+			Category: template.Topic,
 			Template: template.Template,
 		}
 

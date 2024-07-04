@@ -183,7 +183,7 @@ type ComplexityRoot struct {
 		GetFriendsRequests func(childComplexity int) int
 		GetLaughifiUsers   func(childComplexity int, page int, limit int, search *string) int
 		GetSavedTemplates  func(childComplexity int, page int, limit int) int
-		GetTemplates       func(childComplexity int, page int, limit int, topic *string) int
+		GetTemplates       func(childComplexity int, page int, limit int, category *string) int
 		GetWouldYouRather  func(childComplexity int, id string) int
 		GetWouldYouRathers func(childComplexity int, page int, limit int, search *string) int
 		User               func(childComplexity int) int
@@ -203,18 +203,18 @@ type ComplexityRoot struct {
 
 	SavedTemplatesData struct {
 		Answers    func(childComplexity int) int
+		Category   func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Template   func(childComplexity int) int
 		TemplateID func(childComplexity int) int
 		Title      func(childComplexity int) int
-		Topic      func(childComplexity int) int
 	}
 
 	Template struct {
+		Category func(childComplexity int) int
 		ID       func(childComplexity int) int
 		Template func(childComplexity int) int
 		Title    func(childComplexity int) int
-		Topic    func(childComplexity int) int
 	}
 
 	TemplatePaginationResponse struct {
@@ -287,7 +287,7 @@ type QueryResolver interface {
 	GetLaughifiUsers(ctx context.Context, page int, limit int, search *string) (*model.LaughifiUserPaginationResponse, error)
 	GetFriends(ctx context.Context, page int, limit int) (*model.FriendPaginationResponse, error)
 	GetFriendsRequests(ctx context.Context) ([]*model.Friend, error)
-	GetTemplates(ctx context.Context, page int, limit int, topic *string) (*model.TemplatePaginationResponse, error)
+	GetTemplates(ctx context.Context, page int, limit int, category *string) (*model.TemplatePaginationResponse, error)
 	GetSavedTemplates(ctx context.Context, page int, limit int) (*model.SavedTemplatePaginationResponse, error)
 	GetWouldYouRathers(ctx context.Context, page int, limit int, search *string) (*model.WouldYouRathersPaginationResponse, error)
 	GetWouldYouRather(ctx context.Context, id string) (*model.WouldYouRathersDetail, error)
@@ -1155,7 +1155,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.GetTemplates(childComplexity, args["page"].(int), args["limit"].(int), args["topic"].(*string)), true
+		return e.complexity.Query.GetTemplates(childComplexity, args["page"].(int), args["limit"].(int), args["category"].(*string)), true
 
 	case "Query.getWouldYouRather":
 		if e.complexity.Query.GetWouldYouRather == nil {
@@ -1237,6 +1237,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SavedTemplatesData.Answers(childComplexity), true
 
+	case "SavedTemplatesData.category":
+		if e.complexity.SavedTemplatesData.Category == nil {
+			break
+		}
+
+		return e.complexity.SavedTemplatesData.Category(childComplexity), true
+
 	case "SavedTemplatesData.id":
 		if e.complexity.SavedTemplatesData.ID == nil {
 			break
@@ -1265,12 +1272,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SavedTemplatesData.Title(childComplexity), true
 
-	case "SavedTemplatesData.topic":
-		if e.complexity.SavedTemplatesData.Topic == nil {
+	case "Template.category":
+		if e.complexity.Template.Category == nil {
 			break
 		}
 
-		return e.complexity.SavedTemplatesData.Topic(childComplexity), true
+		return e.complexity.Template.Category(childComplexity), true
 
 	case "Template.id":
 		if e.complexity.Template.ID == nil {
@@ -1292,13 +1299,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Template.Title(childComplexity), true
-
-	case "Template.topic":
-		if e.complexity.Template.Topic == nil {
-			break
-		}
-
-		return e.complexity.Template.Topic(childComplexity), true
 
 	case "TemplatePaginationResponse.currentPage":
 		if e.complexity.TemplatePaginationResponse.CurrentPage == nil {
@@ -1806,7 +1806,7 @@ input EditProfileRequestInput {
 	{Name: "../schema/template.graphqls", Input: `type Template {
   id: ID!
   title: String!
-  topic: String!
+  category: String!
   template: String!
 }
 
@@ -1822,7 +1822,7 @@ extend type Query {
   getTemplates(
     page: Int!
     limit: Int!
-    topic: String
+    category: String
   ): TemplatePaginationResponse!
   getSavedTemplates(page: Int!, limit: Int!): SavedTemplatePaginationResponse!
 }
@@ -1845,7 +1845,7 @@ type SavedTemplatesData {
   id: ID!
   templateId: ID!
   title: String!
-  topic: String!
+  category: String!
   template: String!
   answers: [AnswersData!]!
 }
@@ -2584,14 +2584,14 @@ func (ec *executionContext) field_Query_getTemplates_args(ctx context.Context, r
 	}
 	args["limit"] = arg1
 	var arg2 *string
-	if tmp, ok := rawArgs["topic"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("topic"))
+	if tmp, ok := rawArgs["category"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("category"))
 		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["topic"] = arg2
+	args["category"] = arg2
 	return args, nil
 }
 
@@ -7525,7 +7525,7 @@ func (ec *executionContext) _Query_getTemplates(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetTemplates(rctx, fc.Args["page"].(int), fc.Args["limit"].(int), fc.Args["topic"].(*string))
+		return ec.resolvers.Query().GetTemplates(rctx, fc.Args["page"].(int), fc.Args["limit"].(int), fc.Args["category"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8169,8 +8169,8 @@ func (ec *executionContext) fieldContext_SavedTemplatePaginationResponse_savedTe
 				return ec.fieldContext_SavedTemplatesData_templateId(ctx, field)
 			case "title":
 				return ec.fieldContext_SavedTemplatesData_title(ctx, field)
-			case "topic":
-				return ec.fieldContext_SavedTemplatesData_topic(ctx, field)
+			case "category":
+				return ec.fieldContext_SavedTemplatesData_category(ctx, field)
 			case "template":
 				return ec.fieldContext_SavedTemplatesData_template(ctx, field)
 			case "answers":
@@ -8314,8 +8314,8 @@ func (ec *executionContext) fieldContext_SavedTemplatesData_title(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _SavedTemplatesData_topic(ctx context.Context, field graphql.CollectedField, obj *model.SavedTemplatesData) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_SavedTemplatesData_topic(ctx, field)
+func (ec *executionContext) _SavedTemplatesData_category(ctx context.Context, field graphql.CollectedField, obj *model.SavedTemplatesData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SavedTemplatesData_category(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -8328,7 +8328,7 @@ func (ec *executionContext) _SavedTemplatesData_topic(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Topic, nil
+		return obj.Category, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8345,7 +8345,7 @@ func (ec *executionContext) _SavedTemplatesData_topic(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_SavedTemplatesData_topic(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_SavedTemplatesData_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SavedTemplatesData",
 		Field:      field,
@@ -8540,8 +8540,8 @@ func (ec *executionContext) fieldContext_Template_title(_ context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Template_topic(ctx context.Context, field graphql.CollectedField, obj *model.Template) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Template_topic(ctx, field)
+func (ec *executionContext) _Template_category(ctx context.Context, field graphql.CollectedField, obj *model.Template) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Template_category(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -8554,7 +8554,7 @@ func (ec *executionContext) _Template_topic(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Topic, nil
+		return obj.Category, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8571,7 +8571,7 @@ func (ec *executionContext) _Template_topic(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Template_topic(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Template_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Template",
 		Field:      field,
@@ -8847,8 +8847,8 @@ func (ec *executionContext) fieldContext_TemplatePaginationResponse_templates(_ 
 				return ec.fieldContext_Template_id(ctx, field)
 			case "title":
 				return ec.fieldContext_Template_title(ctx, field)
-			case "topic":
-				return ec.fieldContext_Template_topic(ctx, field)
+			case "category":
+				return ec.fieldContext_Template_category(ctx, field)
 			case "template":
 				return ec.fieldContext_Template_template(ctx, field)
 			}
@@ -13320,8 +13320,8 @@ func (ec *executionContext) _SavedTemplatesData(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "topic":
-			out.Values[i] = ec._SavedTemplatesData_topic(ctx, field, obj)
+		case "category":
+			out.Values[i] = ec._SavedTemplatesData_category(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -13379,8 +13379,8 @@ func (ec *executionContext) _Template(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "topic":
-			out.Values[i] = ec._Template_topic(ctx, field, obj)
+		case "category":
+			out.Values[i] = ec._Template_category(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

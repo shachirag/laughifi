@@ -114,7 +114,7 @@ func GetFilledTemplates(ctx context.Context, db *database.DB, page int, limit in
 			TemplateID: filledTemplate.TemplateId.Hex(),
 			Title:      template.Title,
 			Template:   template.Template,
-			Topic:      template.Topic,
+			Category:   template.Topic,
 			Answers:    answers,
 		}
 
