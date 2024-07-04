@@ -39,7 +39,7 @@ func EditCategory(ctx context.Context, db *database.DB, categoryId string, input
 			},
 		}
 
-		updateRes, err := categoryColl.UpdateOne(ctx, filter, update)
+		updateRes, err := categoryColl.UpdateOne(sessCtx, filter, update)
 		if err != nil {
 			return nil, gqlerror.Errorf("Failed to update category")
 		}
@@ -56,7 +56,7 @@ func EditCategory(ctx context.Context, db *database.DB, categoryId string, input
 			},
 		}
 
-		_, err = db.GetCollection("templates").UpdateMany(ctx, templatesFilter, templatesUpdate)
+		_, err = db.GetCollection("templates").UpdateMany(sessCtx, templatesFilter, templatesUpdate)
 		if err != nil {
 			return nil, gqlerror.Errorf("Failed to update templates with the new category name")
 		}
