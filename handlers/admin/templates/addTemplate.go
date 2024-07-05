@@ -2,9 +2,11 @@ package templates
 
 import (
 	"context"
+	"fmt"
 	"laughifi/database"
 	"laughifi/entity"
 	"laughifi/graph/model"
+	"regexp"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -15,7 +17,7 @@ import (
 
 func AddTemplate(ctx context.Context, db *database.DB, data model.AdminTemplateRequestInput) (*model.Response, error) {
 	var (
-		templatesColl = db.GetCollection("templates")
+		templatesColl = db.GetCollection("template")
 		template      entity.TemplatesEntity
 	)
 
@@ -33,6 +35,18 @@ func AddTemplate(ctx context.Context, db *database.DB, data model.AdminTemplateR
 		return nil, gqlerror.Errorf("Failed to fetch category")
 	}
 
+	replaceBlanks := func(template string) string {
+		re := regexp.MustCompile(`\bBLANK\b`)
+		counter := 1
+		return re.ReplaceAllStringFunc(template, func(_ string) string {
+			placeholder := fmt.Sprintf("{{BLANK%d}}", counter)
+			counter++
+			return placeholder
+		})
+	}
+
+	processedTemplate := replaceBlanks(data.Template)
+
 	id := primitive.NewObjectID()
 
 	template = entity.TemplatesEntity{
@@ -41,7 +55,7 @@ func AddTemplate(ctx context.Context, db *database.DB, data model.AdminTemplateR
 			Id:   categoryObjID,
 			Name: category.Name,
 		},
-		Template:  data.Template,
+		Template:  processedTemplate,
 		Title:     data.Title,
 		IsDeleted: false,
 		CreatedAt: time.Now().UTC(),

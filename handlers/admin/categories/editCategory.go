@@ -56,7 +56,7 @@ func EditCategory(ctx context.Context, db *database.DB, categoryId string, input
 			},
 		}
 
-		_, err = db.GetCollection("templates").UpdateMany(sessCtx, templatesFilter, templatesUpdate)
+		_, err = db.GetCollection("template").UpdateMany(sessCtx, templatesFilter, templatesUpdate)
 		if err != nil {
 			return nil, gqlerror.Errorf("Failed to update templates with the new category name")
 		}

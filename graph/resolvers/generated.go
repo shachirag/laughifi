@@ -158,6 +158,7 @@ type ComplexityRoot struct {
 		EditProfile                    func(childComplexity int, input model.EditProfileRequestInput) int
 		EditWouldYouRather             func(childComplexity int, id string, input model.EditWouldYouRatherRequestInput) int
 		FilledTemplate                 func(childComplexity int, input model.FilledTemplateRequestInput) int
+		FilledWouldYouRather           func(childComplexity int, input model.FilledWouldYouRatherRequestInput) int
 		ForgotPassword                 func(childComplexity int, input model.ForgotPasswordRequestInput) int
 		Login                          func(childComplexity int, input model.LoginRequestInput) int
 		ResendOtp                      func(childComplexity int, input model.ResendOtpRequestInput) int
@@ -172,21 +173,23 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Admin              func(childComplexity int) int
-		GetAdminTemplate   func(childComplexity int, id string) int
-		GetAdminTemplates  func(childComplexity int, page int, limit int, search *string) int
-		GetAllCategories   func(childComplexity int) int
-		GetCategories      func(childComplexity int, page int, limit int, search *string) int
-		GetCategory        func(childComplexity int, id string) int
-		GetDashboardData   func(childComplexity int) int
-		GetFriends         func(childComplexity int, page int, limit int) int
-		GetFriendsRequests func(childComplexity int) int
-		GetLaughifiUsers   func(childComplexity int, page int, limit int, search *string) int
-		GetSavedTemplates  func(childComplexity int, page int, limit int) int
-		GetTemplates       func(childComplexity int, page int, limit int, category *string) int
-		GetWouldYouRather  func(childComplexity int, id string) int
-		GetWouldYouRathers func(childComplexity int, page int, limit int, search *string) int
-		User               func(childComplexity int) int
+		Admin                   func(childComplexity int) int
+		GetAdminTemplate        func(childComplexity int, id string) int
+		GetAdminTemplates       func(childComplexity int, page int, limit int, search *string) int
+		GetAllCategories        func(childComplexity int) int
+		GetAllWouldYouRathers   func(childComplexity int, page int, limit int) int
+		GetCategories           func(childComplexity int, page int, limit int, search *string) int
+		GetCategory             func(childComplexity int, id string) int
+		GetDashboardData        func(childComplexity int) int
+		GetFriends              func(childComplexity int, page int, limit int) int
+		GetFriendsRequests      func(childComplexity int) int
+		GetLaughifiUsers        func(childComplexity int, page int, limit int, search *string) int
+		GetSavedTemplates       func(childComplexity int, page int, limit int) int
+		GetSavedWouldYouRathers func(childComplexity int, page int, limit int) int
+		GetTemplates            func(childComplexity int, page int, limit int, category *string) int
+		GetWouldYouRather       func(childComplexity int, id string) int
+		GetWouldYouRathers      func(childComplexity int, page int, limit int, search *string) int
+		User                    func(childComplexity int) int
 	}
 
 	Response struct {
@@ -210,6 +213,20 @@ type ComplexityRoot struct {
 		Title      func(childComplexity int) int
 	}
 
+	SavedWouldYouRatherData struct {
+		Answer         func(childComplexity int) int
+		ID             func(childComplexity int) int
+		WouldYouRather func(childComplexity int) int
+	}
+
+	SavedWouldYouRatherPaginationResp struct {
+		CurrentPage          func(childComplexity int) int
+		PerPage              func(childComplexity int) int
+		SavedWouldYouRathers func(childComplexity int) int
+		Total                func(childComplexity int) int
+		TotalPages           func(childComplexity int) int
+	}
+
 	Template struct {
 		Category func(childComplexity int) int
 		ID       func(childComplexity int) int
@@ -223,6 +240,20 @@ type ComplexityRoot struct {
 		Templates   func(childComplexity int) int
 		Total       func(childComplexity int) int
 		TotalPages  func(childComplexity int) int
+	}
+
+	WouldYouRatherData struct {
+		ID             func(childComplexity int) int
+		Options        func(childComplexity int) int
+		WouldYouRather func(childComplexity int) int
+	}
+
+	WouldYouRatherPaginationResp struct {
+		CurrentPage     func(childComplexity int) int
+		PerPage         func(childComplexity int) int
+		Total           func(childComplexity int) int
+		TotalPages      func(childComplexity int) int
+		WouldYouRathers func(childComplexity int) int
 	}
 
 	WouldYouRathers struct {
@@ -271,6 +302,7 @@ type MutationResolver interface {
 	ChangePassword(ctx context.Context, input model.ChangePasswordRequestInput) (*model.Response, error)
 	EditProfile(ctx context.Context, input model.EditProfileRequestInput) (*model.Response, error)
 	FilledTemplate(ctx context.Context, input model.FilledTemplateRequestInput) (*model.Response, error)
+	FilledWouldYouRather(ctx context.Context, input model.FilledWouldYouRatherRequestInput) (*model.Response, error)
 	WouldYouRather(ctx context.Context, input model.WouldYouRatherRequestInput) (*model.Response, error)
 	EditWouldYouRather(ctx context.Context, id string, input model.EditWouldYouRatherRequestInput) (*model.Response, error)
 	DeleteWouldYouRather(ctx context.Context, id string) (*model.Response, error)
@@ -289,6 +321,8 @@ type QueryResolver interface {
 	GetFriendsRequests(ctx context.Context) ([]*model.Friend, error)
 	GetTemplates(ctx context.Context, page int, limit int, category *string) (*model.TemplatePaginationResponse, error)
 	GetSavedTemplates(ctx context.Context, page int, limit int) (*model.SavedTemplatePaginationResponse, error)
+	GetAllWouldYouRathers(ctx context.Context, page int, limit int) (*model.WouldYouRatherPaginationResp, error)
+	GetSavedWouldYouRathers(ctx context.Context, page int, limit int) (*model.SavedWouldYouRatherPaginationResp, error)
 	GetWouldYouRathers(ctx context.Context, page int, limit int, search *string) (*model.WouldYouRathersPaginationResponse, error)
 	GetWouldYouRather(ctx context.Context, id string) (*model.WouldYouRathersDetail, error)
 }
@@ -901,6 +935,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.FilledTemplate(childComplexity, args["input"].(model.FilledTemplateRequestInput)), true
 
+	case "Mutation.filledWouldYouRather":
+		if e.complexity.Mutation.FilledWouldYouRather == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_filledWouldYouRather_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FilledWouldYouRather(childComplexity, args["input"].(model.FilledWouldYouRatherRequestInput)), true
+
 	case "Mutation.forgotPassword":
 		if e.complexity.Mutation.ForgotPassword == nil {
 			break
@@ -1071,6 +1117,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetAllCategories(childComplexity), true
 
+	case "Query.getAllWouldYouRathers":
+		if e.complexity.Query.GetAllWouldYouRathers == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getAllWouldYouRathers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetAllWouldYouRathers(childComplexity, args["page"].(int), args["limit"].(int)), true
+
 	case "Query.getCategories":
 		if e.complexity.Query.GetCategories == nil {
 			break
@@ -1144,6 +1202,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetSavedTemplates(childComplexity, args["page"].(int), args["limit"].(int)), true
+
+	case "Query.getSavedWouldYouRathers":
+		if e.complexity.Query.GetSavedWouldYouRathers == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getSavedWouldYouRathers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetSavedWouldYouRathers(childComplexity, args["page"].(int), args["limit"].(int)), true
 
 	case "Query.getTemplates":
 		if e.complexity.Query.GetTemplates == nil {
@@ -1272,6 +1342,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SavedTemplatesData.Title(childComplexity), true
 
+	case "SavedWouldYouRatherData.answer":
+		if e.complexity.SavedWouldYouRatherData.Answer == nil {
+			break
+		}
+
+		return e.complexity.SavedWouldYouRatherData.Answer(childComplexity), true
+
+	case "SavedWouldYouRatherData.id":
+		if e.complexity.SavedWouldYouRatherData.ID == nil {
+			break
+		}
+
+		return e.complexity.SavedWouldYouRatherData.ID(childComplexity), true
+
+	case "SavedWouldYouRatherData.wouldYouRather":
+		if e.complexity.SavedWouldYouRatherData.WouldYouRather == nil {
+			break
+		}
+
+		return e.complexity.SavedWouldYouRatherData.WouldYouRather(childComplexity), true
+
+	case "SavedWouldYouRatherPaginationResp.currentPage":
+		if e.complexity.SavedWouldYouRatherPaginationResp.CurrentPage == nil {
+			break
+		}
+
+		return e.complexity.SavedWouldYouRatherPaginationResp.CurrentPage(childComplexity), true
+
+	case "SavedWouldYouRatherPaginationResp.perPage":
+		if e.complexity.SavedWouldYouRatherPaginationResp.PerPage == nil {
+			break
+		}
+
+		return e.complexity.SavedWouldYouRatherPaginationResp.PerPage(childComplexity), true
+
+	case "SavedWouldYouRatherPaginationResp.savedWouldYouRathers":
+		if e.complexity.SavedWouldYouRatherPaginationResp.SavedWouldYouRathers == nil {
+			break
+		}
+
+		return e.complexity.SavedWouldYouRatherPaginationResp.SavedWouldYouRathers(childComplexity), true
+
+	case "SavedWouldYouRatherPaginationResp.total":
+		if e.complexity.SavedWouldYouRatherPaginationResp.Total == nil {
+			break
+		}
+
+		return e.complexity.SavedWouldYouRatherPaginationResp.Total(childComplexity), true
+
+	case "SavedWouldYouRatherPaginationResp.totalPages":
+		if e.complexity.SavedWouldYouRatherPaginationResp.TotalPages == nil {
+			break
+		}
+
+		return e.complexity.SavedWouldYouRatherPaginationResp.TotalPages(childComplexity), true
+
 	case "Template.category":
 		if e.complexity.Template.Category == nil {
 			break
@@ -1334,6 +1460,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TemplatePaginationResponse.TotalPages(childComplexity), true
+
+	case "WouldYouRatherData.id":
+		if e.complexity.WouldYouRatherData.ID == nil {
+			break
+		}
+
+		return e.complexity.WouldYouRatherData.ID(childComplexity), true
+
+	case "WouldYouRatherData.options":
+		if e.complexity.WouldYouRatherData.Options == nil {
+			break
+		}
+
+		return e.complexity.WouldYouRatherData.Options(childComplexity), true
+
+	case "WouldYouRatherData.wouldYouRather":
+		if e.complexity.WouldYouRatherData.WouldYouRather == nil {
+			break
+		}
+
+		return e.complexity.WouldYouRatherData.WouldYouRather(childComplexity), true
+
+	case "WouldYouRatherPaginationResp.currentPage":
+		if e.complexity.WouldYouRatherPaginationResp.CurrentPage == nil {
+			break
+		}
+
+		return e.complexity.WouldYouRatherPaginationResp.CurrentPage(childComplexity), true
+
+	case "WouldYouRatherPaginationResp.perPage":
+		if e.complexity.WouldYouRatherPaginationResp.PerPage == nil {
+			break
+		}
+
+		return e.complexity.WouldYouRatherPaginationResp.PerPage(childComplexity), true
+
+	case "WouldYouRatherPaginationResp.total":
+		if e.complexity.WouldYouRatherPaginationResp.Total == nil {
+			break
+		}
+
+		return e.complexity.WouldYouRatherPaginationResp.Total(childComplexity), true
+
+	case "WouldYouRatherPaginationResp.totalPages":
+		if e.complexity.WouldYouRatherPaginationResp.TotalPages == nil {
+			break
+		}
+
+		return e.complexity.WouldYouRatherPaginationResp.TotalPages(childComplexity), true
+
+	case "WouldYouRatherPaginationResp.wouldYouRathers":
+		if e.complexity.WouldYouRatherPaginationResp.WouldYouRathers == nil {
+			break
+		}
+
+		return e.complexity.WouldYouRatherPaginationResp.WouldYouRathers(childComplexity), true
 
 	case "WouldYouRathers.id":
 		if e.complexity.WouldYouRathers.ID == nil {
@@ -1424,6 +1606,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEditProfileRequestInput,
 		ec.unmarshalInputEditWouldYouRatherRequestInput,
 		ec.unmarshalInputFilledTemplateRequestInput,
+		ec.unmarshalInputFilledWouldYouRatherRequestInput,
 		ec.unmarshalInputForgotPasswordRequestInput,
 		ec.unmarshalInputLoginRequestInput,
 		ec.unmarshalInputResendOtpRequestInput,
@@ -1863,6 +2046,51 @@ type SavedTemplatePaginationResponse {
   savedTemplates: [SavedTemplatesData!]!
 }
 `, BuiltIn: false},
+	{Name: "../schema/userWouldYouRather.graphqls", Input: `type WouldYouRatherData {
+  id: ID!
+  wouldYouRather: String!
+  options: [String!]!
+}
+
+type WouldYouRatherPaginationResp {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  wouldYouRathers: [WouldYouRatherData!]!
+}
+
+extend type Query {
+  getAllWouldYouRathers(page: Int!, limit: Int!): WouldYouRatherPaginationResp!
+  getSavedWouldYouRathers(
+    page: Int!
+    limit: Int!
+  ): SavedWouldYouRatherPaginationResp!
+}
+
+type SavedWouldYouRatherData {
+  id: ID!
+  wouldYouRather: String!
+  answer: String!
+}
+
+type SavedWouldYouRatherPaginationResp {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  savedWouldYouRathers: [SavedWouldYouRatherData!]!
+}
+
+extend type Mutation {
+  filledWouldYouRather(input: FilledWouldYouRatherRequestInput!): Response!
+}
+
+input FilledWouldYouRatherRequestInput {
+  wouldYouRatherId: ID!
+  answer: String!
+}
+`, BuiltIn: false},
 	{Name: "../schema/wouldYouRather.graphqls", Input: `extend type Mutation {
   wouldYouRather(input: WouldYouRatherRequestInput!): Response!
   editWouldYouRather(id: ID!, input: EditWouldYouRatherRequestInput!): Response!
@@ -2196,6 +2424,21 @@ func (ec *executionContext) field_Mutation_filledTemplate_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_filledWouldYouRather_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.FilledWouldYouRatherRequestInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNFilledWouldYouRatherRequestInput2laughifiᚋgraphᚋmodelᚐFilledWouldYouRatherRequestInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_forgotPassword_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2433,6 +2676,30 @@ func (ec *executionContext) field_Query_getAdminTemplates_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_getAllWouldYouRathers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_getCategories_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2539,6 +2806,30 @@ func (ec *executionContext) field_Query_getLaughifiUsers_args(ctx context.Contex
 }
 
 func (ec *executionContext) field_Query_getSavedTemplates_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getSavedWouldYouRathers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 int
@@ -6662,6 +6953,65 @@ func (ec *executionContext) fieldContext_Mutation_filledTemplate(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_filledWouldYouRather(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_filledWouldYouRather(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().FilledWouldYouRather(rctx, fc.Args["input"].(model.FilledWouldYouRatherRequestInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Response)
+	fc.Result = res
+	return ec.marshalNResponse2ᚖlaughifiᚋgraphᚋmodelᚐResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_filledWouldYouRather(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "message":
+				return ec.fieldContext_Response_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_filledWouldYouRather_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_wouldYouRather(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_wouldYouRather(ctx, field)
 	if err != nil {
@@ -7645,6 +7995,140 @@ func (ec *executionContext) fieldContext_Query_getSavedTemplates(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getAllWouldYouRathers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getAllWouldYouRathers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetAllWouldYouRathers(rctx, fc.Args["page"].(int), fc.Args["limit"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.WouldYouRatherPaginationResp)
+	fc.Result = res
+	return ec.marshalNWouldYouRatherPaginationResp2ᚖlaughifiᚋgraphᚋmodelᚐWouldYouRatherPaginationResp(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getAllWouldYouRathers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_WouldYouRatherPaginationResp_total(ctx, field)
+			case "perPage":
+				return ec.fieldContext_WouldYouRatherPaginationResp_perPage(ctx, field)
+			case "currentPage":
+				return ec.fieldContext_WouldYouRatherPaginationResp_currentPage(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_WouldYouRatherPaginationResp_totalPages(ctx, field)
+			case "wouldYouRathers":
+				return ec.fieldContext_WouldYouRatherPaginationResp_wouldYouRathers(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type WouldYouRatherPaginationResp", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getAllWouldYouRathers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getSavedWouldYouRathers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getSavedWouldYouRathers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetSavedWouldYouRathers(rctx, fc.Args["page"].(int), fc.Args["limit"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.SavedWouldYouRatherPaginationResp)
+	fc.Result = res
+	return ec.marshalNSavedWouldYouRatherPaginationResp2ᚖlaughifiᚋgraphᚋmodelᚐSavedWouldYouRatherPaginationResp(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getSavedWouldYouRathers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_SavedWouldYouRatherPaginationResp_total(ctx, field)
+			case "perPage":
+				return ec.fieldContext_SavedWouldYouRatherPaginationResp_perPage(ctx, field)
+			case "currentPage":
+				return ec.fieldContext_SavedWouldYouRatherPaginationResp_currentPage(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_SavedWouldYouRatherPaginationResp_totalPages(ctx, field)
+			case "savedWouldYouRathers":
+				return ec.fieldContext_SavedWouldYouRatherPaginationResp_savedWouldYouRathers(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SavedWouldYouRatherPaginationResp", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getSavedWouldYouRathers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getWouldYouRathers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getWouldYouRathers(ctx, field)
 	if err != nil {
@@ -8452,6 +8936,366 @@ func (ec *executionContext) fieldContext_SavedTemplatesData_answers(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _SavedWouldYouRatherData_id(ctx context.Context, field graphql.CollectedField, obj *model.SavedWouldYouRatherData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SavedWouldYouRatherData_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SavedWouldYouRatherData_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavedWouldYouRatherData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SavedWouldYouRatherData_wouldYouRather(ctx context.Context, field graphql.CollectedField, obj *model.SavedWouldYouRatherData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SavedWouldYouRatherData_wouldYouRather(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WouldYouRather, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SavedWouldYouRatherData_wouldYouRather(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavedWouldYouRatherData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SavedWouldYouRatherData_answer(ctx context.Context, field graphql.CollectedField, obj *model.SavedWouldYouRatherData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SavedWouldYouRatherData_answer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Answer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SavedWouldYouRatherData_answer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavedWouldYouRatherData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SavedWouldYouRatherPaginationResp_total(ctx context.Context, field graphql.CollectedField, obj *model.SavedWouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SavedWouldYouRatherPaginationResp_total(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Total, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SavedWouldYouRatherPaginationResp_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavedWouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SavedWouldYouRatherPaginationResp_perPage(ctx context.Context, field graphql.CollectedField, obj *model.SavedWouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SavedWouldYouRatherPaginationResp_perPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SavedWouldYouRatherPaginationResp_perPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavedWouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SavedWouldYouRatherPaginationResp_currentPage(ctx context.Context, field graphql.CollectedField, obj *model.SavedWouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SavedWouldYouRatherPaginationResp_currentPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CurrentPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SavedWouldYouRatherPaginationResp_currentPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavedWouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SavedWouldYouRatherPaginationResp_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.SavedWouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SavedWouldYouRatherPaginationResp_totalPages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SavedWouldYouRatherPaginationResp_totalPages(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavedWouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SavedWouldYouRatherPaginationResp_savedWouldYouRathers(ctx context.Context, field graphql.CollectedField, obj *model.SavedWouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SavedWouldYouRatherPaginationResp_savedWouldYouRathers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SavedWouldYouRathers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.SavedWouldYouRatherData)
+	fc.Result = res
+	return ec.marshalNSavedWouldYouRatherData2ᚕᚖlaughifiᚋgraphᚋmodelᚐSavedWouldYouRatherDataᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SavedWouldYouRatherPaginationResp_savedWouldYouRathers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SavedWouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SavedWouldYouRatherData_id(ctx, field)
+			case "wouldYouRather":
+				return ec.fieldContext_SavedWouldYouRatherData_wouldYouRather(ctx, field)
+			case "answer":
+				return ec.fieldContext_SavedWouldYouRatherData_answer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SavedWouldYouRatherData", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Template_id(ctx context.Context, field graphql.CollectedField, obj *model.Template) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Template_id(ctx, field)
 	if err != nil {
@@ -8853,6 +9697,366 @@ func (ec *executionContext) fieldContext_TemplatePaginationResponse_templates(_ 
 				return ec.fieldContext_Template_template(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Template", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WouldYouRatherData_id(ctx context.Context, field graphql.CollectedField, obj *model.WouldYouRatherData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WouldYouRatherData_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WouldYouRatherData_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WouldYouRatherData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WouldYouRatherData_wouldYouRather(ctx context.Context, field graphql.CollectedField, obj *model.WouldYouRatherData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WouldYouRatherData_wouldYouRather(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WouldYouRather, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WouldYouRatherData_wouldYouRather(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WouldYouRatherData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WouldYouRatherData_options(ctx context.Context, field graphql.CollectedField, obj *model.WouldYouRatherData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WouldYouRatherData_options(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Options, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WouldYouRatherData_options(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WouldYouRatherData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WouldYouRatherPaginationResp_total(ctx context.Context, field graphql.CollectedField, obj *model.WouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WouldYouRatherPaginationResp_total(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Total, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WouldYouRatherPaginationResp_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WouldYouRatherPaginationResp_perPage(ctx context.Context, field graphql.CollectedField, obj *model.WouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WouldYouRatherPaginationResp_perPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WouldYouRatherPaginationResp_perPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WouldYouRatherPaginationResp_currentPage(ctx context.Context, field graphql.CollectedField, obj *model.WouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WouldYouRatherPaginationResp_currentPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CurrentPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WouldYouRatherPaginationResp_currentPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WouldYouRatherPaginationResp_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.WouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WouldYouRatherPaginationResp_totalPages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WouldYouRatherPaginationResp_totalPages(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _WouldYouRatherPaginationResp_wouldYouRathers(ctx context.Context, field graphql.CollectedField, obj *model.WouldYouRatherPaginationResp) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_WouldYouRatherPaginationResp_wouldYouRathers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WouldYouRathers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.WouldYouRatherData)
+	fc.Result = res
+	return ec.marshalNWouldYouRatherData2ᚕᚖlaughifiᚋgraphᚋmodelᚐWouldYouRatherDataᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_WouldYouRatherPaginationResp_wouldYouRathers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "WouldYouRatherPaginationResp",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_WouldYouRatherData_id(ctx, field)
+			case "wouldYouRather":
+				return ec.fieldContext_WouldYouRatherData_wouldYouRather(ctx, field)
+			case "options":
+				return ec.fieldContext_WouldYouRatherData_options(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type WouldYouRatherData", field.Name)
 		},
 	}
 	return fc, nil
@@ -11479,6 +12683,40 @@ func (ec *executionContext) unmarshalInputFilledTemplateRequestInput(ctx context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputFilledWouldYouRatherRequestInput(ctx context.Context, obj interface{}) (model.FilledWouldYouRatherRequestInput, error) {
+	var it model.FilledWouldYouRatherRequestInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"wouldYouRatherId", "answer"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "wouldYouRatherId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wouldYouRatherId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.WouldYouRatherID = data
+		case "answer":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("answer"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Answer = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputForgotPasswordRequestInput(ctx context.Context, obj interface{}) (model.ForgotPasswordRequestInput, error) {
 	var it model.ForgotPasswordRequestInput
 	asMap := map[string]interface{}{}
@@ -12772,6 +14010,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "filledWouldYouRather":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_filledWouldYouRather(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "wouldYouRather":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_wouldYouRather(ctx, field)
@@ -13121,6 +14366,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getAllWouldYouRathers":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getAllWouldYouRathers(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getSavedWouldYouRathers":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getSavedWouldYouRathers(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getWouldYouRathers":
 			field := field
 
@@ -13358,6 +14647,114 @@ func (ec *executionContext) _SavedTemplatesData(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var savedWouldYouRatherDataImplementors = []string{"SavedWouldYouRatherData"}
+
+func (ec *executionContext) _SavedWouldYouRatherData(ctx context.Context, sel ast.SelectionSet, obj *model.SavedWouldYouRatherData) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, savedWouldYouRatherDataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SavedWouldYouRatherData")
+		case "id":
+			out.Values[i] = ec._SavedWouldYouRatherData_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "wouldYouRather":
+			out.Values[i] = ec._SavedWouldYouRatherData_wouldYouRather(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "answer":
+			out.Values[i] = ec._SavedWouldYouRatherData_answer(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var savedWouldYouRatherPaginationRespImplementors = []string{"SavedWouldYouRatherPaginationResp"}
+
+func (ec *executionContext) _SavedWouldYouRatherPaginationResp(ctx context.Context, sel ast.SelectionSet, obj *model.SavedWouldYouRatherPaginationResp) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, savedWouldYouRatherPaginationRespImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SavedWouldYouRatherPaginationResp")
+		case "total":
+			out.Values[i] = ec._SavedWouldYouRatherPaginationResp_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "perPage":
+			out.Values[i] = ec._SavedWouldYouRatherPaginationResp_perPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentPage":
+			out.Values[i] = ec._SavedWouldYouRatherPaginationResp_currentPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalPages":
+			out.Values[i] = ec._SavedWouldYouRatherPaginationResp_totalPages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "savedWouldYouRathers":
+			out.Values[i] = ec._SavedWouldYouRatherPaginationResp_savedWouldYouRathers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var templateImplementors = []string{"Template"}
 
 func (ec *executionContext) _Template(ctx context.Context, sel ast.SelectionSet, obj *model.Template) graphql.Marshaler {
@@ -13445,6 +14842,114 @@ func (ec *executionContext) _TemplatePaginationResponse(ctx context.Context, sel
 			}
 		case "templates":
 			out.Values[i] = ec._TemplatePaginationResponse_templates(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var wouldYouRatherDataImplementors = []string{"WouldYouRatherData"}
+
+func (ec *executionContext) _WouldYouRatherData(ctx context.Context, sel ast.SelectionSet, obj *model.WouldYouRatherData) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, wouldYouRatherDataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WouldYouRatherData")
+		case "id":
+			out.Values[i] = ec._WouldYouRatherData_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "wouldYouRather":
+			out.Values[i] = ec._WouldYouRatherData_wouldYouRather(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "options":
+			out.Values[i] = ec._WouldYouRatherData_options(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var wouldYouRatherPaginationRespImplementors = []string{"WouldYouRatherPaginationResp"}
+
+func (ec *executionContext) _WouldYouRatherPaginationResp(ctx context.Context, sel ast.SelectionSet, obj *model.WouldYouRatherPaginationResp) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, wouldYouRatherPaginationRespImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("WouldYouRatherPaginationResp")
+		case "total":
+			out.Values[i] = ec._WouldYouRatherPaginationResp_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "perPage":
+			out.Values[i] = ec._WouldYouRatherPaginationResp_perPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentPage":
+			out.Values[i] = ec._WouldYouRatherPaginationResp_currentPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalPages":
+			out.Values[i] = ec._WouldYouRatherPaginationResp_totalPages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "wouldYouRathers":
+			out.Values[i] = ec._WouldYouRatherPaginationResp_wouldYouRathers(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -14258,6 +15763,11 @@ func (ec *executionContext) unmarshalNFilledTemplateRequestInput2laughifiᚋgrap
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNFilledWouldYouRatherRequestInput2laughifiᚋgraphᚋmodelᚐFilledWouldYouRatherRequestInput(ctx context.Context, v interface{}) (model.FilledWouldYouRatherRequestInput, error) {
+	res, err := ec.unmarshalInputFilledWouldYouRatherRequestInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNForgotPasswordRequestInput2laughifiᚋgraphᚋmodelᚐForgotPasswordRequestInput(ctx context.Context, v interface{}) (model.ForgotPasswordRequestInput, error) {
 	res, err := ec.unmarshalInputForgotPasswordRequestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -14586,6 +16096,74 @@ func (ec *executionContext) marshalNSavedTemplatesData2ᚖlaughifiᚋgraphᚋmod
 	return ec._SavedTemplatesData(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNSavedWouldYouRatherData2ᚕᚖlaughifiᚋgraphᚋmodelᚐSavedWouldYouRatherDataᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SavedWouldYouRatherData) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSavedWouldYouRatherData2ᚖlaughifiᚋgraphᚋmodelᚐSavedWouldYouRatherData(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSavedWouldYouRatherData2ᚖlaughifiᚋgraphᚋmodelᚐSavedWouldYouRatherData(ctx context.Context, sel ast.SelectionSet, v *model.SavedWouldYouRatherData) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SavedWouldYouRatherData(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSavedWouldYouRatherPaginationResp2laughifiᚋgraphᚋmodelᚐSavedWouldYouRatherPaginationResp(ctx context.Context, sel ast.SelectionSet, v model.SavedWouldYouRatherPaginationResp) graphql.Marshaler {
+	return ec._SavedWouldYouRatherPaginationResp(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSavedWouldYouRatherPaginationResp2ᚖlaughifiᚋgraphᚋmodelᚐSavedWouldYouRatherPaginationResp(ctx context.Context, sel ast.SelectionSet, v *model.SavedWouldYouRatherPaginationResp) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SavedWouldYouRatherPaginationResp(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNSendFriendRequestInput2laughifiᚋgraphᚋmodelᚐSendFriendRequestInput(ctx context.Context, v interface{}) (model.SendFriendRequestInput, error) {
 	res, err := ec.unmarshalInputSendFriendRequestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -14729,6 +16307,74 @@ func (ec *executionContext) unmarshalNVerifyOtpForResetPasswordRequestInput2laug
 func (ec *executionContext) unmarshalNVerifyOtpForSignUpRequestInput2laughifiᚋgraphᚋmodelᚐVerifyOtpForSignUpRequestInput(ctx context.Context, v interface{}) (model.VerifyOtpForSignUpRequestInput, error) {
 	res, err := ec.unmarshalInputVerifyOtpForSignUpRequestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNWouldYouRatherData2ᚕᚖlaughifiᚋgraphᚋmodelᚐWouldYouRatherDataᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.WouldYouRatherData) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNWouldYouRatherData2ᚖlaughifiᚋgraphᚋmodelᚐWouldYouRatherData(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNWouldYouRatherData2ᚖlaughifiᚋgraphᚋmodelᚐWouldYouRatherData(ctx context.Context, sel ast.SelectionSet, v *model.WouldYouRatherData) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._WouldYouRatherData(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNWouldYouRatherPaginationResp2laughifiᚋgraphᚋmodelᚐWouldYouRatherPaginationResp(ctx context.Context, sel ast.SelectionSet, v model.WouldYouRatherPaginationResp) graphql.Marshaler {
+	return ec._WouldYouRatherPaginationResp(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNWouldYouRatherPaginationResp2ᚖlaughifiᚋgraphᚋmodelᚐWouldYouRatherPaginationResp(ctx context.Context, sel ast.SelectionSet, v *model.WouldYouRatherPaginationResp) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._WouldYouRatherPaginationResp(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNWouldYouRatherRequestInput2laughifiᚋgraphᚋmodelᚐWouldYouRatherRequestInput(ctx context.Context, v interface{}) (model.WouldYouRatherRequestInput, error) {

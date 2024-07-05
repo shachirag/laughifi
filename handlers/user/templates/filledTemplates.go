@@ -20,7 +20,7 @@ func FilledTemplates(ctx context.Context, db *database.DB, data model.FilledTemp
 
 	templateObjId, err := primitive.ObjectIDFromHex(data.TemplateID)
 	if err != nil {
-		return nil, gqlerror.Errorf("invalid user Id")
+		return nil, gqlerror.Errorf("invalid template Id")
 	}
 
 	user, err := utils.ExtractUserFromContext(ctx, db)

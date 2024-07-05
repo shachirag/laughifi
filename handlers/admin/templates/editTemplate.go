@@ -2,9 +2,11 @@ package templates
 
 import (
 	"context"
+	"fmt"
 	"laughifi/database"
 	"laughifi/entity"
 	"laughifi/graph/model"
+	"regexp"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -15,7 +17,7 @@ import (
 
 func EditTemplate(ctx context.Context, db *database.DB, templateId string, input model.EditAdminTemplateRequestInput) (*model.Response, error) {
 	var (
-		templatesColl = db.GetCollection("templates")
+		templatesColl = db.GetCollection("template")
 	)
 
 	templateObjID, err := primitive.ObjectIDFromHex(templateId)
@@ -39,12 +41,24 @@ func EditTemplate(ctx context.Context, db *database.DB, templateId string, input
 
 	filter := bson.M{"_id": templateObjID}
 
+	replaceBlanks := func(template string) string {
+		re := regexp.MustCompile(`\bBLANK\b`)
+		counter := 1
+		return re.ReplaceAllStringFunc(template, func(_ string) string {
+			placeholder := fmt.Sprintf("{{BLANK%d}}", counter)
+			counter++
+			return placeholder
+		})
+	}
+
+	processedTemplate := replaceBlanks(input.Template)
+
 	update := bson.M{
 		"$set": bson.M{
 			"category.id":   categoryObjID,
 			"category.name": category.Name,
 			"title":         input.Title,
-			"template":      input.Template,
+			"template":      processedTemplate,
 			"updatedAt":     time.Now().UTC(),
 		},
 	}

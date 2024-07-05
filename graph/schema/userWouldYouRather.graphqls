@@ -1,0 +1,44 @@
+type WouldYouRatherData {
+  id: ID!
+  wouldYouRather: String!
+  options: [String!]!
+}
+
+type WouldYouRatherPaginationResp {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  wouldYouRathers: [WouldYouRatherData!]!
+}
+
+extend type Query {
+  getAllWouldYouRathers(page: Int!, limit: Int!): WouldYouRatherPaginationResp!
+  getSavedWouldYouRathers(
+    page: Int!
+    limit: Int!
+  ): SavedWouldYouRatherPaginationResp!
+}
+
+type SavedWouldYouRatherData {
+  id: ID!
+  wouldYouRather: String!
+  answer: String!
+}
+
+type SavedWouldYouRatherPaginationResp {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  savedWouldYouRathers: [SavedWouldYouRatherData!]!
+}
+
+extend type Mutation {
+  filledWouldYouRather(input: FilledWouldYouRatherRequestInput!): Response!
+}
+
+input FilledWouldYouRatherRequestInput {
+  wouldYouRatherId: ID!
+  answer: String!
+}

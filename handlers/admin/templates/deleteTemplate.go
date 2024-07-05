@@ -27,7 +27,7 @@ func DeletedTemplateData(ctx context.Context, db *database.DB, templateId string
 		},
 	}
 
-	updateRes, err := db.GetCollection("templates").UpdateOne(ctx, filter, update)
+	updateRes, err := db.GetCollection("template").UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, gqlerror.Errorf("Failed to update template")
 	}

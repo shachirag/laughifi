@@ -14,7 +14,7 @@ func GetDashboardCounts(ctx context.Context, db *database.DB) (*model.GetDashboa
 	var (
 		wouldYouRatherColl = db.GetCollection("wouldYouRather")
 		categoryColl       = db.GetCollection("category")
-		templatesColl      = db.GetCollection("templates")
+		templatesColl      = db.GetCollection("template")
 	)
 
 	wouldYouRatherFilter := bson.M{"isDeleted": false}

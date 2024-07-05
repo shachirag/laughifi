@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func ResetPassword(ctx context.Context, db *database.DB, input model.ResetPasswordRequestInput) (*model.Response, error) {
+func AdminResetPassword(ctx context.Context, db *database.DB, input model.ResetPasswordRequestInput) (*model.Response, error) {
 	var (
 		adminColl = db.GetCollection("admin")
 		admin     entity.AdminEntity

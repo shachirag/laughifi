@@ -18,7 +18,7 @@ func DeletedCategoryData(ctx context.Context, db *database.DB, categoryId string
 	}
 
 	templateFilter := bson.M{"category.id": categoryObjID}
-	templateCount, err := db.GetCollection("templates").CountDocuments(ctx, templateFilter)
+	templateCount, err := db.GetCollection("template").CountDocuments(ctx, templateFilter)
 	if err != nil {
 		return nil, gqlerror.Errorf("Failed to check associated templates: %s", err.Error())
 	}

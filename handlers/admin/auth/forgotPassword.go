@@ -16,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func ForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Client, input model.ForgotPasswordRequestInput) (*model.Response, error) {
+func AdminForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Client, input model.ForgotPasswordRequestInput) (*model.Response, error) {
 	var (
 		adminColl = db.GetCollection("admin")
 		otpColl      = db.GetCollection("otp")

@@ -69,6 +69,7 @@ func main() {
 		}
 
 		authRequiredOperations := map[string]bool{
+			// customer
 			"LoginCustomer":             false,
 			"ResendOtp":                 false,
 			"ForgotPassword":            false,
@@ -88,6 +89,35 @@ func main() {
 			"AcceptRejectRequest":       true,
 			"FilledTemplates":           true,
 			"GetFilledTemplates":        true,
+			"FilledWouldYouRather":      true,
+			"GetWouldYouRathers":        true,
+			"GetFilledWouldRathers":     true,
+
+			// admin
+			"LoginAdmin":                     false,
+			"AdminForgotPassword":            false,
+			"AdminVerifyOtpForResetPassword": false,
+			"AdminResetPassword":             false,
+			"AdminChangePassword":            true,
+			"AdminEditAdmin":                 true,
+			"GetAdminData":                   true,
+			"AddCatgeory":                    true,
+			"GetCategoryData":                true,
+			"DeletedCategoryData":            true,
+			"EditCategory":                   true,
+			"GetCategories":                  true,
+			"GetDashboardCounts":             true,
+			"AddTemplate":                    true,
+			"DeletedTemplateData":            true,
+			"EditTemplate":                   true,
+			"GetAllCategories":               true,
+			"GetTemplateData":                true,
+			"GetAllTemplates":                true,
+			"AddWouldYouRather":              true,
+			"DeleteWouldYouRather":           true,
+			"GetWouldYouRatherData":          true,
+			"EditWouldYouRather":             true,
+			"GetAllWouldYouRathers":          true,
 		}
 		if authRequiredOperations[opName] {
 			middleware.ValidateJWT(srv).ServeHTTP(w, r)

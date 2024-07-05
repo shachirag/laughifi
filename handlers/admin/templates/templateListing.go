@@ -6,6 +6,7 @@ import (
 	"laughifi/entity"
 	"laughifi/graph/model"
 	"math"
+	"regexp"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetTemplates(ctx context.Context, db *database.DB, page int, limit int, search string) (*model.AdminTemplatePaginationResponse, error) {
+func GetAllTemplates(ctx context.Context, db *database.DB, page int, limit int, search string) (*model.AdminTemplatePaginationResponse, error) {
 
 	if page < 1 {
 		page = 1
@@ -23,7 +24,7 @@ func GetTemplates(ctx context.Context, db *database.DB, page int, limit int, sea
 		limit = 15
 	}
 
-	templatesColl := db.GetCollection("templates")
+	templatesColl := db.GetCollection("template")
 
 	filter := bson.M{
 		"isDeleted": false,
@@ -59,10 +60,12 @@ func GetTemplates(ctx context.Context, db *database.DB, page int, limit int, sea
 			return nil, gqlerror.Errorf("Failed to decode templates")
 		}
 
+		displayTemplate := replacePlaceholdersWithBlank(template.Template)
+
 		templatesRes := model.AdminTemplates{
 			ID:       template.Id.Hex(),
 			Category: template.Category.Name,
-			Template: template.Template,
+			Template: displayTemplate,
 		}
 
 		templates = append(templates, &templatesRes)
@@ -84,24 +87,7 @@ func GetTemplates(ctx context.Context, db *database.DB, page int, limit int, sea
 	return &response, nil
 }
 
-func FetchCategoryDetails(ctx context.Context, db *database.DB, categoryIDs []primitive.ObjectID) (map[primitive.ObjectID]entity.CategoryEntity, error) {
-	categoryDetails := make(map[primitive.ObjectID]entity.CategoryEntity)
-	if len(categoryIDs) > 0 {
-		customerFilter := bson.M{"_id": bson.M{"$in": categoryIDs}}
-		categoryCur, err := db.GetCollection("category").Find(ctx, customerFilter)
-		if err != nil {
-			return nil, err
-		}
-		defer categoryCur.Close(ctx)
-
-		for categoryCur.Next(ctx) {
-			var category entity.CategoryEntity
-			err := categoryCur.Decode(&category)
-			if err != nil {
-				return nil, err
-			}
-			categoryDetails[category.Id] = category
-		}
-	}
-	return categoryDetails, nil
+func replacePlaceholdersWithBlank(template string) string {
+	re := regexp.MustCompile(`{{BLANK\d+}}`)
+	return re.ReplaceAllString(template, "BLANK")
 }

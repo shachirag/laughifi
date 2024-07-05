@@ -13,7 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ChangePassword(ctx context.Context, db *database.DB, input model.ChangePasswordRequestInput) (*model.Response, error) {
+func AdminChangePassword(ctx context.Context, db *database.DB, input model.ChangePasswordRequestInput) (*model.Response, error) {
 	var (
 		adminColl = db.GetCollection("admin")
 	)
@@ -66,7 +66,7 @@ func ChangePassword(ctx context.Context, db *database.DB, input model.ChangePass
 	if updateRes.MatchedCount == 0 {
 		return nil, gqlerror.Errorf("admin not found")
 	}
-	
+
 	return &model.Response{
 		Message: "Password Changed Successfully",
 	}, nil

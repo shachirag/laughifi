@@ -80,9 +80,9 @@ func GetFilledTemplates(ctx context.Context, db *database.DB, page int, limit in
 	}
 	defer templateCursor.Close(ctx)
 
-	templateMap := make(map[primitive.ObjectID]entity.TemplateEntity)
+	templateMap := make(map[primitive.ObjectID]entity.TemplatesEntity)
 	for templateCursor.Next(ctx) {
-		var template entity.TemplateEntity
+		var template entity.TemplatesEntity
 		err := templateCursor.Decode(&template)
 		if err != nil {
 			return nil, gqlerror.Errorf("Failed to decode template")
@@ -98,7 +98,7 @@ func GetFilledTemplates(ctx context.Context, db *database.DB, page int, limit in
 	for _, filledTemplate := range filledTemplates {
 		template, found := templateMap[filledTemplate.TemplateId]
 		if !found {
-			return nil, gqlerror.Errorf("Template not found for ID: " + filledTemplate.TemplateId.Hex())
+			return nil, gqlerror.Errorf("Template not found")
 		}
 
 		var answers []*model.AnswersData
@@ -114,7 +114,7 @@ func GetFilledTemplates(ctx context.Context, db *database.DB, page int, limit in
 			TemplateID: filledTemplate.TemplateId.Hex(),
 			Title:      template.Title,
 			Template:   template.Template,
-			Category:   template.Topic,
+			Category:   template.Category.Name,
 			Answers:    answers,
 		}
 

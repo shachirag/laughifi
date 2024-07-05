@@ -39,7 +39,7 @@ func (r *mutationResolver) DeleteWouldYouRather(ctx context.Context, id string) 
 
 // GetWouldYouRathers is the resolver for the getWouldYouRathers field.
 func (r *queryResolver) GetWouldYouRathers(ctx context.Context, page int, limit int, search *string) (*model.WouldYouRathersPaginationResponse, error) {
-	geWouldYouRathersData, err := wouldyourather.GetWouldYouRathers(ctx, r.DB, page, limit, *search)
+	geWouldYouRathersData, err := wouldyourather.GetAllWouldYouRathers(ctx, r.DB, page, limit, *search)
 	if err != nil {
 		return nil, err
 	}

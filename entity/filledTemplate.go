@@ -11,7 +11,7 @@ type FilledTemplateEntity struct {
 	UserId     primitive.ObjectID `json:"userId" bson:"userId"`
 	TemplateId primitive.ObjectID `json:"templateId" bson:"templateId"`
 	Answers    []Answers          `json:"answers" bson:"answers"`
-	CreatedAt  time.Time          `json:"cresatedAt" bson:"createdAt"`
+	CreatedAt  time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedAt  time.Time          `json:"updatedAt" bson:"updatedAt"`
 }
 

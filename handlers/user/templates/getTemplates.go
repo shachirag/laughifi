@@ -25,9 +25,12 @@ func GetTemplates(ctx context.Context, db *database.DB, page int, limit int, top
 
 	templateColl := db.GetCollection("template")
 
-	filter := bson.M{}
+	filter := bson.M{
+		"isDeleted": false,
+	}
+	
 	if topic != "" && topic != "random" {
-		filter["topic"] = topic
+		filter["category.name"] = topic
 	}
 
 	skip := (page - 1) * limit
@@ -44,7 +47,7 @@ func GetTemplates(ctx context.Context, db *database.DB, page int, limit int, top
 
 	var templates []*model.Template
 	for cursor.Next(ctx) {
-		var template entity.TemplateEntity
+		var template entity.TemplatesEntity
 		err := cursor.Decode(&template)
 		if err != nil {
 			return nil, gqlerror.Errorf("Failed to decode templates")
@@ -53,7 +56,7 @@ func GetTemplates(ctx context.Context, db *database.DB, page int, limit int, top
 		templateRes := model.Template{
 			ID:       template.Id.Hex(),
 			Title:    template.Title,
-			Category: template.Topic,
+			Category: template.Category.Name,
 			Template: template.Template,
 		}
 

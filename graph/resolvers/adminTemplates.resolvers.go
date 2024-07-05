@@ -39,7 +39,7 @@ func (r *mutationResolver) DeleteAdminTemplate(ctx context.Context, id string) (
 
 // GetAdminTemplates is the resolver for the getAdminTemplates field.
 func (r *queryResolver) GetAdminTemplates(ctx context.Context, page int, limit int, search *string) (*model.AdminTemplatePaginationResponse, error) {
-	getTemplatesData, err := templates.GetTemplates(ctx, r.DB, page, limit, *search)
+	getTemplatesData, err := templates.GetAllTemplates(ctx, r.DB, page, limit, *search)
 	if err != nil {
 		return nil, err
 	}

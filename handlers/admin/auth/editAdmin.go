@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func EditAdmin(ctx context.Context, db *database.DB, input model.AdminEditProfileRequestInput) (*model.Response, error) {
+func AdminEditAdmin(ctx context.Context, db *database.DB, input model.AdminEditProfileRequestInput) (*model.Response, error) {
 	var (
 		adminColl = db.GetCollection("admin")
 	)

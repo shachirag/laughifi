@@ -20,7 +20,7 @@ func GetTemplateData(ctx context.Context, db *database.DB, templateId string) (*
 		return nil, gqlerror.Errorf("invalid template Id")
 	}
 
-	templateColl := db.GetCollection("templates")
+	templateColl := db.GetCollection("template")
 
 	err = templateColl.FindOne(ctx, bson.M{"_id": templateObjID}).Decode(&template)
 	if err != nil {
@@ -39,10 +39,12 @@ func GetTemplateData(ctx context.Context, db *database.DB, templateId string) (*
 		return nil, gqlerror.Errorf("Failed to fetch category")
 	}
 
+	displayTemplate := replacePlaceholdersWithBlank(template.Template)
+
 	return &model.AdminTemplate{
 		ID:       template.Id.Hex(),
 		Category: category.Name,
 		Title:    template.Title,
-		Template: template.Template,
+		Template: displayTemplate,
 	}, nil
 }

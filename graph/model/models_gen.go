@@ -115,6 +115,11 @@ type FilledTemplateRequestInput struct {
 	Answers    []*AnswersInput `json:"answers"`
 }
 
+type FilledWouldYouRatherRequestInput struct {
+	WouldYouRatherID string `json:"wouldYouRatherId"`
+	Answer           string `json:"answer"`
+}
+
 type ForgotPasswordRequestInput struct {
 	Email string `json:"email"`
 }
@@ -205,6 +210,20 @@ type SavedTemplatesData struct {
 	Answers    []*AnswersData `json:"answers"`
 }
 
+type SavedWouldYouRatherData struct {
+	ID             string `json:"id"`
+	WouldYouRather string `json:"wouldYouRather"`
+	Answer         string `json:"answer"`
+}
+
+type SavedWouldYouRatherPaginationResp struct {
+	Total                int                        `json:"total"`
+	PerPage              int                        `json:"perPage"`
+	CurrentPage          int                        `json:"currentPage"`
+	TotalPages           int                        `json:"totalPages"`
+	SavedWouldYouRathers []*SavedWouldYouRatherData `json:"savedWouldYouRathers"`
+}
+
 type SendFriendRequestInput struct {
 	UserIds []string `json:"userIds"`
 }
@@ -249,6 +268,20 @@ type VerifyOtpForSignUpRequestInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Otp      string `json:"otp"`
+}
+
+type WouldYouRatherData struct {
+	ID             string   `json:"id"`
+	WouldYouRather string   `json:"wouldYouRather"`
+	Options        []string `json:"options"`
+}
+
+type WouldYouRatherPaginationResp struct {
+	Total           int                   `json:"total"`
+	PerPage         int                   `json:"perPage"`
+	CurrentPage     int                   `json:"currentPage"`
+	TotalPages      int                   `json:"totalPages"`
+	WouldYouRathers []*WouldYouRatherData `json:"wouldYouRathers"`
 }
 
 type WouldYouRatherRequestInput struct {

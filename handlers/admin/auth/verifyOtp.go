@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func VerifyOtpForResetPassword(ctx context.Context, db *database.DB, input model.VerifyOtpForResetPasswordRequestInput) (*model.Response, error) {
+func AdminVerifyOtpForResetPassword(ctx context.Context, db *database.DB, input model.VerifyOtpForResetPasswordRequestInput) (*model.Response, error) {
 	var (
 		otpColl = db.GetCollection("otp")
 		otpData entity.OtpEntity

@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetWouldYouRathers(ctx context.Context, db *database.DB, page int, limit int, search string) (*model.WouldYouRathersPaginationResponse, error) {
+func GetAllWouldYouRathers(ctx context.Context, db *database.DB, page int, limit int, search string) (*model.WouldYouRathersPaginationResponse, error) {
 
 	if page < 1 {
 		page = 1

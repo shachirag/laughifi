@@ -21,7 +21,7 @@ func (r *mutationResolver) AdminLogin(ctx context.Context, input model.AdminLogi
 
 // AdminForgotPassword is the resolver for the adminForgotPassword field.
 func (r *mutationResolver) AdminForgotPassword(ctx context.Context, input model.ForgotPasswordRequestInput) (*model.Response, error) {
-	forgotPasswordPayload, err := auth.ForgotPassword(ctx, r.DB, r.SESClient, input)
+	forgotPasswordPayload, err := auth.AdminForgotPassword(ctx, r.DB, r.SESClient, input)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (r *mutationResolver) AdminForgotPassword(ctx context.Context, input model.
 
 // AdminVerifyOtpForResetPassword is the resolver for the adminVerifyOtpForResetPassword field.
 func (r *mutationResolver) AdminVerifyOtpForResetPassword(ctx context.Context, input model.VerifyOtpForResetPasswordRequestInput) (*model.Response, error) {
-	verifyOtpPayload, err := auth.VerifyOtpForResetPassword(ctx, r.DB, input)
+	verifyOtpPayload, err := auth.AdminVerifyOtpForResetPassword(ctx, r.DB, input)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (r *mutationResolver) AdminVerifyOtpForResetPassword(ctx context.Context, i
 
 // AdminResetPassword is the resolver for the adminResetPassword field.
 func (r *mutationResolver) AdminResetPassword(ctx context.Context, input model.ResetPasswordRequestInput) (*model.Response, error) {
-	resetPasswordPayload, err := auth.ResetPassword(ctx, r.DB, input)
+	resetPasswordPayload, err := auth.AdminResetPassword(ctx, r.DB, input)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (r *mutationResolver) AdminResetPassword(ctx context.Context, input model.R
 
 // AdminChangePassword is the resolver for the adminChangePassword field.
 func (r *mutationResolver) AdminChangePassword(ctx context.Context, input model.ChangePasswordRequestInput) (*model.Response, error) {
-	changePasswordPayload, err := auth.ChangePassword(ctx, r.DB, input)
+	changePasswordPayload, err := auth.AdminChangePassword(ctx, r.DB, input)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (r *mutationResolver) AdminChangePassword(ctx context.Context, input model.
 
 // AdminEditProfile is the resolver for the adminEditProfile field.
 func (r *mutationResolver) AdminEditProfile(ctx context.Context, input model.AdminEditProfileRequestInput) (*model.Response, error) {
-	editUserData, err := auth.EditAdmin(ctx, r.DB, input)
+	editUserData, err := auth.AdminEditAdmin(ctx, r.DB, input)
 	if err != nil {
 		return nil, err
 	}
