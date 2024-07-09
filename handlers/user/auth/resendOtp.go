@@ -44,13 +44,13 @@ func ResendOtp(ctx context.Context, db *database.DB, sesClient *ses.Client, inpu
 		return nil, gqlerror.Errorf("Failed to update Otp")
 	}
 
-	var customerData entity.CustomerEntity
-	err = db.GetCollection("customer").FindOne(ctx, bson.M{"email": smallEmail}).Decode(&customerData)
-	if err != nil {
-		return nil, gqlerror.Errorf("Failed to fetch user")
-	}
+	// var customerData entity.CustomerEntity
+	// err = db.GetCollection("customer").FindOne(ctx, bson.M{"email": smallEmail}).Decode(&customerData)
+	// if err != nil {
+	// 	return nil, gqlerror.Errorf("Failed to fetch user")
+	// }
 
-	_, err = utils.SendEmail(sesClient, customerData.Name, newOTP)
+	_, err = utils.SendEmail(sesClient, "", newOTP)
 	if err != nil {
 		return nil, gqlerror.Errorf("Internal server error while sending the email")
 	}

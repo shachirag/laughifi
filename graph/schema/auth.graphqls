@@ -69,3 +69,12 @@ type LoginResponse {
 type Response {
   message: String!
 }
+
+input LoginRequestInput {
+  email: String!
+  password: String!
+}
+
+input ResendOtpRequestInput {
+  email: String!
+}
