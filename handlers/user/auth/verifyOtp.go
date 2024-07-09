@@ -6,6 +6,7 @@ import (
 	"laughifi/entity"
 	"laughifi/graph/model"
 	"strings"
+	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
@@ -40,6 +41,11 @@ func VerifyOtpForResetPassword(ctx context.Context, db *database.DB, input model
 			return nil, gqlerror.Errorf("Invalid OTP")
 		}
 		return nil, gqlerror.Errorf("Internal server error while fetching OTP: " + err.Error())
+	}
+
+	timeDiff := time.Since(otpData.CreatedAt)
+	if timeDiff.Minutes() > 10 {
+		return nil, gqlerror.Errorf("OTP expired, generate a new OTP.")
 	}
 
 	if input.Otp != otpData.Otp {

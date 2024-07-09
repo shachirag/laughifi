@@ -43,6 +43,11 @@ func VerifyOtpForSignup(ctx context.Context, db *database.DB, data model.VerifyO
 		return nil, gqlerror.Errorf("Internal Server Error")
 	}
 
+	timeDiff := time.Since(otpData.CreatedAt)
+	if timeDiff.Minutes() > 10 {
+		return nil, gqlerror.Errorf("OTP expired, generate a new OTP.")
+	}
+
 	if data.Otp != otpData.Otp {
 		return nil, gqlerror.Errorf("Invalid Otp")
 	}
