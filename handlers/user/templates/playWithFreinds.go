@@ -6,7 +6,6 @@ import (
 	"laughifi/entity"
 	"laughifi/graph/model"
 	"laughifi/utils"
-	"laughifi/utils/subscription"
 	"strings"
 	"time"
 
@@ -56,7 +55,6 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 	}
 
 	var insertDocuments []interface{}
-	var sharedTemplates []*model.TemplatePlayWithFriend
 	for _, friendObjID := range friendObjIDs {
 		id := primitive.NewObjectID()
 
@@ -73,24 +71,11 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 
 		insertDocuments = append(insertDocuments, templatePlayWithFriend)
 
-		sharedTemplates = append(sharedTemplates, &model.TemplatePlayWithFriend{
-			ID:         id.Hex(),
-			UserID:     user.Id.Hex(),
-			TemplateID: templateObjId.Hex(),
-			FriendID:   friendObjID.Hex(),
-			Status:     "pending",
-			CreatedAt:  time.Now().UTC().String(),
-			UpdatedAt:  time.Now().UTC().String(),
-		})
 	}
 
 	_, err = templatePlayWithFriendColl.InsertMany(ctx, insertDocuments)
 	if err != nil {
 		return nil, gqlerror.Errorf("Failed to share templates with friends: %v", err)
-	}
-
-	for _, sharedTemplate := range sharedTemplates {
-		subscription.NewManager().NotifySubscribers(sharedTemplate)
 	}
 
 	return &model.Response{

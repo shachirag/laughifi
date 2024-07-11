@@ -6,6 +6,12 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+type AddAnswerRequestInput struct {
+	SendAnswerUserID string `json:"sendAnswerUserId"`
+	Key              string `json:"key"`
+	Value            string `json:"value"`
+}
+
 type AdminEditProfileRequestInput struct {
 	FirstName           string          `json:"firstName"`
 	LastName            string          `json:"lastName"`
@@ -280,6 +286,12 @@ type Template struct {
 	Template string `json:"template"`
 }
 
+type TemplateAnswers struct {
+	ID    string `json:"id"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type TemplatePaginationResponse struct {
 	Total       int         `json:"total"`
 	PerPage     int         `json:"perPage"`
@@ -289,13 +301,13 @@ type TemplatePaginationResponse struct {
 }
 
 type TemplatePlayWithFriend struct {
-	ID         string `json:"id"`
-	UserID     string `json:"userId"`
-	TemplateID string `json:"templateId"`
-	FriendID   string `json:"friendId"`
-	Status     string `json:"status"`
-	CreatedAt  string `json:"createdAt"`
-	UpdatedAt  string `json:"updatedAt"`
+	ID       string             `json:"id"`
+	FriendID string             `json:"friendId"`
+	Template string             `json:"template"`
+	Topic    string             `json:"topic"`
+	Title    string             `json:"title"`
+	Answers  []*TemplateAnswers `json:"answers"`
+	Status   string             `json:"status"`
 }
 
 type TemplatePlayWithFriendsRequestInput struct {

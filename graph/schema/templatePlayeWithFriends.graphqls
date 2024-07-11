@@ -2,12 +2,19 @@ extend type Mutation {
   templatePlayWithFriends(
     input: TemplatePlayWithFriendsRequestInput!
   ): Response!
+  addAnswer(input: AddAnswerRequestInput!, id: ID!): Response!
 }
 
 input TemplatePlayWithFriendsRequestInput {
   friendIds: String!
   templateId: ID!
   answer: [Answer!]!
+}
+
+input AddAnswerRequestInput {
+  sendAnswerUserId: ID!
+  key: String!
+  value: String!
 }
 
 input Answer {
@@ -51,10 +58,16 @@ type Subscription {
 
 type TemplatePlayWithFriend {
   id: ID!
-  userId: ID!
-  templateId: ID!
   friendId: ID!
+  template: String!
+  topic: String!
+  title: String!
+  answers: [TemplateAnswers!]!
   status: String!
-  createdAt: String!
-  updatedAt: String!
+}
+
+type TemplateAnswers {
+  id: ID!
+  key: String!
+  value: String!
 }

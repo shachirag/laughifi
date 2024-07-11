@@ -20,6 +20,15 @@ func (r *mutationResolver) TemplatePlayWithFriends(ctx context.Context, input mo
 	return templates, nil
 }
 
+// AddAnswer is the resolver for the addAnswer field.
+func (r *mutationResolver) AddAnswer(ctx context.Context, input model.AddAnswerRequestInput, id string) (*model.Response, error) {
+	templates, err := templates.AddAnswer(ctx, r.DB, input, id)
+	if err != nil {
+		return nil, err
+	}
+	return templates, nil
+}
+
 // GetFriendTemplates is the resolver for the getFriendTemplates field.
 func (r *queryResolver) GetFriendTemplates(ctx context.Context, page int, limit int, friendID string) (*model.FriendTemplatePaginationResponse, error) {
 	templates, err := templates.GetFriendTemplates(ctx, r.DB, page, limit, friendID)

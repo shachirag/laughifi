@@ -86,6 +86,7 @@ func main() {
 			"GetFriends":                true,
 			"AcceptRejectRequest":       true,
 			"CancelFriendRequest":       true,
+			"AddAnswer":                 true,
 			"FilledTemplates":           true,
 			"GetFilledTemplates":        true,
 			"FilledWouldYouRather":      true,
