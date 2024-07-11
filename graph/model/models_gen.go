@@ -56,6 +56,11 @@ type AdminTemplates struct {
 	Template string `json:"template"`
 }
 
+type Answer struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type AnswersData struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -130,12 +135,34 @@ type Friend struct {
 	Image string `json:"image"`
 }
 
+type FriendAnswers struct {
+	ID    string `json:"id"`
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type FriendPaginationResponse struct {
 	Total       int       `json:"total"`
 	PerPage     int       `json:"perPage"`
 	CurrentPage int       `json:"currentPage"`
 	TotalPages  int       `json:"totalPages"`
 	Friends     []*Friend `json:"friends"`
+}
+
+type FriendTemplatePaginationResponse struct {
+	Total           int                `json:"total"`
+	PerPage         int                `json:"perPage"`
+	CurrentPage     int                `json:"currentPage"`
+	TotalPages      int                `json:"totalPages"`
+	FriendTemplates []*FriendTemplates `json:"friendTemplates"`
+}
+
+type FriendTemplates struct {
+	ID       string           `json:"id"`
+	Template string           `json:"template"`
+	Category string           `json:"category"`
+	Title    string           `json:"title"`
+	Answers  []*FriendAnswers `json:"answers"`
 }
 
 type GetAllCategories struct {
@@ -177,6 +204,10 @@ type Mutation struct {
 }
 
 type Query struct {
+}
+
+type RequestResponse struct {
+	Status string `json:"Status"`
 }
 
 type ResendOtpRequestInput struct {
@@ -225,7 +256,7 @@ type SavedWouldYouRatherPaginationResp struct {
 }
 
 type SendFriendRequestInput struct {
-	UserIds []string `json:"userIds"`
+	UserID string `json:"userId"`
 }
 
 type SignUpRequestInput struct {
@@ -237,6 +268,9 @@ type SocialLoginRequestInput struct {
 	Type     string  `json:"type"`
 	Email    *string `json:"email,omitempty"`
 	Name     string  `json:"name"`
+}
+
+type Subscription struct {
 }
 
 type Template struct {
@@ -252,6 +286,22 @@ type TemplatePaginationResponse struct {
 	CurrentPage int         `json:"currentPage"`
 	TotalPages  int         `json:"totalPages"`
 	Templates   []*Template `json:"templates"`
+}
+
+type TemplatePlayWithFriend struct {
+	ID         string `json:"id"`
+	UserID     string `json:"userId"`
+	TemplateID string `json:"templateId"`
+	FriendID   string `json:"friendId"`
+	Status     string `json:"status"`
+	CreatedAt  string `json:"createdAt"`
+	UpdatedAt  string `json:"updatedAt"`
+}
+
+type TemplatePlayWithFriendsRequestInput struct {
+	FriendIds  string    `json:"friendIds"`
+	TemplateID string    `json:"templateId"`
+	Answer     []*Answer `json:"answer"`
 }
 
 type UpdateStatusRequestInput struct {

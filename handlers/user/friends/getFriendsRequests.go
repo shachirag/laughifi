@@ -71,9 +71,9 @@ func fetchPendingRequestFriendIDs(ctx context.Context, db *database.DB) ([]primi
 	}
 
 	filter := bson.M{
+		"userId": user.Id,
 		"friendsList": bson.M{
 			"$elemMatch": bson.M{
-				"id":     user.Id,
 				"status": "friend-request-pending",
 			},
 		},

@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.12 // indirect
 	github.com/aws/smithy-go v1.20.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/gorilla/websocket v1.5.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joho/godotenv v1.5.1

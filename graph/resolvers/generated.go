@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"laughifi/graph/model"
 	"strconv"
 	"sync"
@@ -40,6 +41,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Subscription() SubscriptionResolver
 }
 
 type DirectiveRoot struct {
@@ -102,12 +104,34 @@ type ComplexityRoot struct {
 		Name  func(childComplexity int) int
 	}
 
+	FriendAnswers struct {
+		ID    func(childComplexity int) int
+		Key   func(childComplexity int) int
+		Value func(childComplexity int) int
+	}
+
 	FriendPaginationResponse struct {
 		CurrentPage func(childComplexity int) int
 		Friends     func(childComplexity int) int
 		PerPage     func(childComplexity int) int
 		Total       func(childComplexity int) int
 		TotalPages  func(childComplexity int) int
+	}
+
+	FriendTemplatePaginationResponse struct {
+		CurrentPage     func(childComplexity int) int
+		FriendTemplates func(childComplexity int) int
+		PerPage         func(childComplexity int) int
+		Total           func(childComplexity int) int
+		TotalPages      func(childComplexity int) int
+	}
+
+	FriendTemplates struct {
+		Answers  func(childComplexity int) int
+		Category func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Template func(childComplexity int) int
+		Title    func(childComplexity int) int
 	}
 
 	GetAllCategories struct {
@@ -148,6 +172,7 @@ type ComplexityRoot struct {
 		AdminResetPassword             func(childComplexity int, input model.ResetPasswordRequestInput) int
 		AdminTemplate                  func(childComplexity int, input model.AdminTemplateRequestInput) int
 		AdminVerifyOtpForResetPassword func(childComplexity int, input model.VerifyOtpForResetPasswordRequestInput) int
+		CancelFriendRequest            func(childComplexity int, input model.SendFriendRequestInput) int
 		Category                       func(childComplexity int, input model.CategoryRequestInput) int
 		ChangePassword                 func(childComplexity int, input model.ChangePasswordRequestInput) int
 		DeleteAdminTemplate            func(childComplexity int, id string) int
@@ -166,6 +191,7 @@ type ComplexityRoot struct {
 		SendFriendRequest              func(childComplexity int, input model.SendFriendRequestInput) int
 		Signup                         func(childComplexity int, input model.SignUpRequestInput) int
 		SocialLogin                    func(childComplexity int, input model.SocialLoginRequestInput) int
+		TemplatePlayWithFriends        func(childComplexity int, input model.TemplatePlayWithFriendsRequestInput) int
 		UpdateStatus                   func(childComplexity int, userID string, input model.UpdateStatusRequestInput) int
 		VerifyOtpForResetPassword      func(childComplexity int, input model.VerifyOtpForResetPasswordRequestInput) int
 		VerifyOtpForSignup             func(childComplexity int, input model.VerifyOtpForSignUpRequestInput) int
@@ -181,6 +207,7 @@ type ComplexityRoot struct {
 		GetCategories           func(childComplexity int, page int, limit int, search *string) int
 		GetCategory             func(childComplexity int, id string) int
 		GetDashboardData        func(childComplexity int) int
+		GetFriendTemplates      func(childComplexity int, page int, limit int, friendID string) int
 		GetFriends              func(childComplexity int, page int, limit int) int
 		GetFriendsRequests      func(childComplexity int) int
 		GetLaughifiUsers        func(childComplexity int, page int, limit int, search *string) int
@@ -190,6 +217,10 @@ type ComplexityRoot struct {
 		GetWouldYouRather       func(childComplexity int, id string) int
 		GetWouldYouRathers      func(childComplexity int, page int, limit int, search *string) int
 		User                    func(childComplexity int) int
+	}
+
+	RequestResponse struct {
+		Status func(childComplexity int) int
 	}
 
 	Response struct {
@@ -227,6 +258,10 @@ type ComplexityRoot struct {
 		TotalPages           func(childComplexity int) int
 	}
 
+	Subscription struct {
+		TemplateShared func(childComplexity int) int
+	}
+
 	Template struct {
 		Category func(childComplexity int) int
 		ID       func(childComplexity int) int
@@ -240,6 +275,16 @@ type ComplexityRoot struct {
 		Templates   func(childComplexity int) int
 		Total       func(childComplexity int) int
 		TotalPages  func(childComplexity int) int
+	}
+
+	TemplatePlayWithFriend struct {
+		CreatedAt  func(childComplexity int) int
+		FriendID   func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Status     func(childComplexity int) int
+		TemplateID func(childComplexity int) int
+		UpdatedAt  func(childComplexity int) int
+		UserID     func(childComplexity int) int
 	}
 
 	WouldYouRatherData struct {
@@ -298,10 +343,12 @@ type MutationResolver interface {
 	EditCategory(ctx context.Context, id string, input model.EditCategoryRequestInput) (*model.Response, error)
 	DeleteCategory(ctx context.Context, id string) (*model.Response, error)
 	UpdateStatus(ctx context.Context, userID string, input model.UpdateStatusRequestInput) (*model.Response, error)
-	SendFriendRequest(ctx context.Context, input model.SendFriendRequestInput) (*model.Response, error)
+	SendFriendRequest(ctx context.Context, input model.SendFriendRequestInput) (*model.RequestResponse, error)
+	CancelFriendRequest(ctx context.Context, input model.SendFriendRequestInput) (*model.Response, error)
 	ChangePassword(ctx context.Context, input model.ChangePasswordRequestInput) (*model.Response, error)
 	EditProfile(ctx context.Context, input model.EditProfileRequestInput) (*model.Response, error)
 	FilledTemplate(ctx context.Context, input model.FilledTemplateRequestInput) (*model.Response, error)
+	TemplatePlayWithFriends(ctx context.Context, input model.TemplatePlayWithFriendsRequestInput) (*model.Response, error)
 	FilledWouldYouRather(ctx context.Context, input model.FilledWouldYouRatherRequestInput) (*model.Response, error)
 	WouldYouRather(ctx context.Context, input model.WouldYouRatherRequestInput) (*model.Response, error)
 	EditWouldYouRather(ctx context.Context, id string, input model.EditWouldYouRatherRequestInput) (*model.Response, error)
@@ -321,10 +368,14 @@ type QueryResolver interface {
 	GetFriendsRequests(ctx context.Context) ([]*model.Friend, error)
 	GetTemplates(ctx context.Context, page int, limit int, category *string) (*model.TemplatePaginationResponse, error)
 	GetSavedTemplates(ctx context.Context, page int, limit int) (*model.SavedTemplatePaginationResponse, error)
+	GetFriendTemplates(ctx context.Context, page int, limit int, friendID string) (*model.FriendTemplatePaginationResponse, error)
 	GetAllWouldYouRathers(ctx context.Context, page int, limit int) (*model.WouldYouRatherPaginationResp, error)
 	GetSavedWouldYouRathers(ctx context.Context, page int, limit int) (*model.SavedWouldYouRatherPaginationResp, error)
 	GetWouldYouRathers(ctx context.Context, page int, limit int, search *string) (*model.WouldYouRathersPaginationResponse, error)
 	GetWouldYouRather(ctx context.Context, id string) (*model.WouldYouRathersDetail, error)
+}
+type SubscriptionResolver interface {
+	TemplateShared(ctx context.Context) (<-chan *model.TemplatePlayWithFriend, error)
 }
 
 type executableSchema struct {
@@ -570,6 +621,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Friend.Name(childComplexity), true
 
+	case "FriendAnswers.id":
+		if e.complexity.FriendAnswers.ID == nil {
+			break
+		}
+
+		return e.complexity.FriendAnswers.ID(childComplexity), true
+
+	case "FriendAnswers.key":
+		if e.complexity.FriendAnswers.Key == nil {
+			break
+		}
+
+		return e.complexity.FriendAnswers.Key(childComplexity), true
+
+	case "FriendAnswers.value":
+		if e.complexity.FriendAnswers.Value == nil {
+			break
+		}
+
+		return e.complexity.FriendAnswers.Value(childComplexity), true
+
 	case "FriendPaginationResponse.currentPage":
 		if e.complexity.FriendPaginationResponse.CurrentPage == nil {
 			break
@@ -604,6 +676,76 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FriendPaginationResponse.TotalPages(childComplexity), true
+
+	case "FriendTemplatePaginationResponse.currentPage":
+		if e.complexity.FriendTemplatePaginationResponse.CurrentPage == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplatePaginationResponse.CurrentPage(childComplexity), true
+
+	case "FriendTemplatePaginationResponse.friendTemplates":
+		if e.complexity.FriendTemplatePaginationResponse.FriendTemplates == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplatePaginationResponse.FriendTemplates(childComplexity), true
+
+	case "FriendTemplatePaginationResponse.perPage":
+		if e.complexity.FriendTemplatePaginationResponse.PerPage == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplatePaginationResponse.PerPage(childComplexity), true
+
+	case "FriendTemplatePaginationResponse.total":
+		if e.complexity.FriendTemplatePaginationResponse.Total == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplatePaginationResponse.Total(childComplexity), true
+
+	case "FriendTemplatePaginationResponse.totalPages":
+		if e.complexity.FriendTemplatePaginationResponse.TotalPages == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplatePaginationResponse.TotalPages(childComplexity), true
+
+	case "FriendTemplates.answers":
+		if e.complexity.FriendTemplates.Answers == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplates.Answers(childComplexity), true
+
+	case "FriendTemplates.category":
+		if e.complexity.FriendTemplates.Category == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplates.Category(childComplexity), true
+
+	case "FriendTemplates.id":
+		if e.complexity.FriendTemplates.ID == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplates.ID(childComplexity), true
+
+	case "FriendTemplates.template":
+		if e.complexity.FriendTemplates.Template == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplates.Template(childComplexity), true
+
+	case "FriendTemplates.title":
+		if e.complexity.FriendTemplates.Title == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplates.Title(childComplexity), true
 
 	case "GetAllCategories.category":
 		if e.complexity.GetAllCategories.Category == nil {
@@ -814,6 +956,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AdminVerifyOtpForResetPassword(childComplexity, args["input"].(model.VerifyOtpForResetPasswordRequestInput)), true
+
+	case "Mutation.cancelFriendRequest":
+		if e.complexity.Mutation.CancelFriendRequest == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_cancelFriendRequest_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CancelFriendRequest(childComplexity, args["input"].(model.SendFriendRequestInput)), true
 
 	case "Mutation.category":
 		if e.complexity.Mutation.Category == nil {
@@ -1031,6 +1185,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.SocialLogin(childComplexity, args["input"].(model.SocialLoginRequestInput)), true
 
+	case "Mutation.templatePlayWithFriends":
+		if e.complexity.Mutation.TemplatePlayWithFriends == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_templatePlayWithFriends_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TemplatePlayWithFriends(childComplexity, args["input"].(model.TemplatePlayWithFriendsRequestInput)), true
+
 	case "Mutation.updateStatus":
 		if e.complexity.Mutation.UpdateStatus == nil {
 			break
@@ -1160,6 +1326,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetDashboardData(childComplexity), true
 
+	case "Query.getFriendTemplates":
+		if e.complexity.Query.GetFriendTemplates == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getFriendTemplates_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetFriendTemplates(childComplexity, args["page"].(int), args["limit"].(int), args["friendId"].(string)), true
+
 	case "Query.getFriends":
 		if e.complexity.Query.GetFriends == nil {
 			break
@@ -1257,6 +1435,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.User(childComplexity), true
+
+	case "RequestResponse.Status":
+		if e.complexity.RequestResponse.Status == nil {
+			break
+		}
+
+		return e.complexity.RequestResponse.Status(childComplexity), true
 
 	case "Response.message":
 		if e.complexity.Response.Message == nil {
@@ -1398,6 +1583,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SavedWouldYouRatherPaginationResp.TotalPages(childComplexity), true
 
+	case "Subscription.templateShared":
+		if e.complexity.Subscription.TemplateShared == nil {
+			break
+		}
+
+		return e.complexity.Subscription.TemplateShared(childComplexity), true
+
 	case "Template.category":
 		if e.complexity.Template.Category == nil {
 			break
@@ -1460,6 +1652,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TemplatePaginationResponse.TotalPages(childComplexity), true
+
+	case "TemplatePlayWithFriend.createdAt":
+		if e.complexity.TemplatePlayWithFriend.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.TemplatePlayWithFriend.CreatedAt(childComplexity), true
+
+	case "TemplatePlayWithFriend.friendId":
+		if e.complexity.TemplatePlayWithFriend.FriendID == nil {
+			break
+		}
+
+		return e.complexity.TemplatePlayWithFriend.FriendID(childComplexity), true
+
+	case "TemplatePlayWithFriend.id":
+		if e.complexity.TemplatePlayWithFriend.ID == nil {
+			break
+		}
+
+		return e.complexity.TemplatePlayWithFriend.ID(childComplexity), true
+
+	case "TemplatePlayWithFriend.status":
+		if e.complexity.TemplatePlayWithFriend.Status == nil {
+			break
+		}
+
+		return e.complexity.TemplatePlayWithFriend.Status(childComplexity), true
+
+	case "TemplatePlayWithFriend.templateId":
+		if e.complexity.TemplatePlayWithFriend.TemplateID == nil {
+			break
+		}
+
+		return e.complexity.TemplatePlayWithFriend.TemplateID(childComplexity), true
+
+	case "TemplatePlayWithFriend.updatedAt":
+		if e.complexity.TemplatePlayWithFriend.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.TemplatePlayWithFriend.UpdatedAt(childComplexity), true
+
+	case "TemplatePlayWithFriend.userId":
+		if e.complexity.TemplatePlayWithFriend.UserID == nil {
+			break
+		}
+
+		return e.complexity.TemplatePlayWithFriend.UserID(childComplexity), true
 
 	case "WouldYouRatherData.id":
 		if e.complexity.WouldYouRatherData.ID == nil {
@@ -1598,6 +1839,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAdminEditProfileRequestInput,
 		ec.unmarshalInputAdminLoginRequestInput,
 		ec.unmarshalInputAdminTemplateRequestInput,
+		ec.unmarshalInputAnswer,
 		ec.unmarshalInputAnswersInput,
 		ec.unmarshalInputCategoryRequestInput,
 		ec.unmarshalInputChangePasswordRequestInput,
@@ -1614,6 +1856,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputSendFriendRequestInput,
 		ec.unmarshalInputSignUpRequestInput,
 		ec.unmarshalInputSocialLoginRequestInput,
+		ec.unmarshalInputTemplatePlayWithFriendsRequestInput,
 		ec.unmarshalInputUpdateStatusRequestInput,
 		ec.unmarshalInputVerifyOtpForResetPasswordRequestInput,
 		ec.unmarshalInputVerifyOtpForSignUpRequestInput,
@@ -1661,6 +1904,23 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
 			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
 			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
+	case ast.Subscription:
+		next := ec._Subscription(ctx, rc.Operation.SelectionSet)
+
+		var buf bytes.Buffer
+		return func(ctx context.Context) *graphql.Response {
+			buf.Reset()
+			data := next(ctx)
+
+			if data == nil {
+				return nil
+			}
 			data.MarshalGQL(&buf)
 
 			return &graphql.Response{
@@ -1816,6 +2076,8 @@ type GetAllCategories {
   id: ID!
   category: String!
 }
+
+
 `, BuiltIn: false},
 	{Name: "../schema/auth.graphqls", Input: `scalar Upload
 
@@ -1835,10 +2097,6 @@ type Mutation {
 input LoginRequestInput {
   email: String!
   password: String!
-}
-
-input ResendOtpRequestInput {
-  email: String!
 }
 
 input SocialLoginRequestInput {
@@ -1888,7 +2146,10 @@ type LoginResponse {
 type Response {
   message: String!
 }
-`, BuiltIn: false},
+
+input ResendOtpRequestInput {
+  email: String!
+}`, BuiltIn: false},
 	{Name: "../schema/category.graphqls", Input: `extend type Mutation {
   category(input: CategoryRequestInput!): Response!
   editCategory(id: ID!, input: EditCategoryRequestInput!): Response!
@@ -1948,14 +2209,23 @@ type LaughifiUserPaginationResponse {
 }
 
 extend type Query {
-  getLaughifiUsers(page: Int!, limit: Int!, search: String): LaughifiUserPaginationResponse!
+  getLaughifiUsers(
+    page: Int!
+    limit: Int!
+    search: String
+  ): LaughifiUserPaginationResponse!
   getFriends(page: Int!, limit: Int!): FriendPaginationResponse!
   getFriendsRequests: [Friend!]!
 }
 
 extend type Mutation {
   updateStatus(userId: ID!, input: UpdateStatusRequestInput!): Response!
-  sendFriendRequest(input: SendFriendRequestInput!): Response!
+  sendFriendRequest(input: SendFriendRequestInput!): RequestResponse!
+  cancelFriendRequest(input: SendFriendRequestInput!): Response!
+}
+
+type RequestResponse {
+  Status: String!
 }
 
 input UpdateStatusRequestInput {
@@ -1963,7 +2233,7 @@ input UpdateStatusRequestInput {
 }
 
 input SendFriendRequestInput {
-  userIds: [ID!]!
+  userId: ID!
 }
 `, BuiltIn: false},
 	{Name: "../schema/profile.graphqls", Input: `type Query {
@@ -2046,6 +2316,66 @@ type SavedTemplatePaginationResponse {
   savedTemplates: [SavedTemplatesData!]!
 }
 `, BuiltIn: false},
+	{Name: "../schema/templatePlayeWithFriends.graphqls", Input: `extend type Mutation {
+  templatePlayWithFriends(
+    input: TemplatePlayWithFriendsRequestInput!
+  ): Response!
+}
+
+input TemplatePlayWithFriendsRequestInput {
+  friendIds: String!
+  templateId: ID!
+  answer: [Answer!]!
+}
+
+input Answer {
+  key: String!
+  value: String!
+}
+
+extend type Query {
+  getFriendTemplates(
+    page: Int!
+    limit: Int!
+    friendId: String!
+  ): FriendTemplatePaginationResponse!
+}
+
+type FriendTemplatePaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  friendTemplates: [FriendTemplates!]!
+}
+
+type FriendTemplates {
+  id: ID!
+  template: String!
+  category: String!
+  title: String!
+  answers: [FriendAnswers!]!
+}
+
+type FriendAnswers {
+  id: ID!
+  key: String!
+  value: String!
+}
+
+type Subscription {
+  templateShared: TemplatePlayWithFriend!
+}
+
+type TemplatePlayWithFriend {
+  id: ID!
+  userId: ID!
+  templateId: ID!
+  friendId: ID!
+  status: String!
+  createdAt: String!
+  updatedAt: String!
+}`, BuiltIn: false},
 	{Name: "../schema/userWouldYouRather.graphqls", Input: `type WouldYouRatherData {
   id: ID!
   wouldYouRather: String!
@@ -2239,6 +2569,21 @@ func (ec *executionContext) field_Mutation_adminVerifyOtpForResetPassword_args(c
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNVerifyOtpForResetPasswordRequestInput2laughifiᚋgraphᚋmodelᚐVerifyOtpForResetPasswordRequestInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_cancelFriendRequest_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.SendFriendRequestInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNSendFriendRequestInput2laughifiᚋgraphᚋmodelᚐSendFriendRequestInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2544,6 +2889,21 @@ func (ec *executionContext) field_Mutation_socialLogin_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_templatePlayWithFriends_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.TemplatePlayWithFriendsRequestInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNTemplatePlayWithFriendsRequestInput2laughifiᚋgraphᚋmodelᚐTemplatePlayWithFriendsRequestInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateStatus_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2745,6 +3105,39 @@ func (ec *executionContext) field_Query_getCategory_args(ctx context.Context, ra
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getFriendTemplates_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["friendId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("friendId"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["friendId"] = arg2
 	return args, nil
 }
 
@@ -4394,6 +4787,138 @@ func (ec *executionContext) fieldContext_Friend_image(_ context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _FriendAnswers_id(ctx context.Context, field graphql.CollectedField, obj *model.FriendAnswers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendAnswers_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendAnswers_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendAnswers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendAnswers_key(ctx context.Context, field graphql.CollectedField, obj *model.FriendAnswers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendAnswers_key(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Key, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendAnswers_key(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendAnswers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendAnswers_value(ctx context.Context, field graphql.CollectedField, obj *model.FriendAnswers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendAnswers_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendAnswers_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendAnswers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FriendPaginationResponse_total(ctx context.Context, field graphql.CollectedField, obj *model.FriendPaginationResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FriendPaginationResponse_total(ctx, field)
 	if err != nil {
@@ -4617,6 +5142,466 @@ func (ec *executionContext) fieldContext_FriendPaginationResponse_friends(_ cont
 				return ec.fieldContext_Friend_image(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Friend", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplatePaginationResponse_total(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplatePaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplatePaginationResponse_total(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Total, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplatePaginationResponse_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplatePaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplatePaginationResponse_perPage(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplatePaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplatePaginationResponse_perPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplatePaginationResponse_perPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplatePaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplatePaginationResponse_currentPage(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplatePaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplatePaginationResponse_currentPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CurrentPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplatePaginationResponse_currentPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplatePaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplatePaginationResponse_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplatePaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplatePaginationResponse_totalPages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplatePaginationResponse_totalPages(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplatePaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplatePaginationResponse_friendTemplates(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplatePaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplatePaginationResponse_friendTemplates(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FriendTemplates, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.FriendTemplates)
+	fc.Result = res
+	return ec.marshalNFriendTemplates2ᚕᚖlaughifiᚋgraphᚋmodelᚐFriendTemplatesᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplatePaginationResponse_friendTemplates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplatePaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_FriendTemplates_id(ctx, field)
+			case "template":
+				return ec.fieldContext_FriendTemplates_template(ctx, field)
+			case "category":
+				return ec.fieldContext_FriendTemplates_category(ctx, field)
+			case "title":
+				return ec.fieldContext_FriendTemplates_title(ctx, field)
+			case "answers":
+				return ec.fieldContext_FriendTemplates_answers(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FriendTemplates", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplates_id(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplates_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplates_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplates_template(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplates_template(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Template, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplates_template(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplates_category(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplates_category(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Category, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplates_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplates_title(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplates_title(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplates_title(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplates_answers(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplates_answers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Answers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.FriendAnswers)
+	fc.Result = res
+	return ec.marshalNFriendAnswers2ᚕᚖlaughifiᚋgraphᚋmodelᚐFriendAnswersᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplates_answers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_FriendAnswers_id(ctx, field)
+			case "key":
+				return ec.fieldContext_FriendAnswers_key(ctx, field)
+			case "value":
+				return ec.fieldContext_FriendAnswers_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FriendAnswers", field.Name)
 		},
 	}
 	return fc, nil
@@ -6743,12 +7728,71 @@ func (ec *executionContext) _Mutation_sendFriendRequest(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
+	res := resTmp.(*model.RequestResponse)
+	fc.Result = res
+	return ec.marshalNRequestResponse2ᚖlaughifiᚋgraphᚋmodelᚐRequestResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_sendFriendRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "Status":
+				return ec.fieldContext_RequestResponse_Status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RequestResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_sendFriendRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_cancelFriendRequest(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_cancelFriendRequest(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CancelFriendRequest(rctx, fc.Args["input"].(model.SendFriendRequestInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
 	res := resTmp.(*model.Response)
 	fc.Result = res
 	return ec.marshalNResponse2ᚖlaughifiᚋgraphᚋmodelᚐResponse(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_sendFriendRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_cancelFriendRequest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -6769,7 +7813,7 @@ func (ec *executionContext) fieldContext_Mutation_sendFriendRequest(ctx context.
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_sendFriendRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_cancelFriendRequest_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -6947,6 +7991,65 @@ func (ec *executionContext) fieldContext_Mutation_filledTemplate(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_filledTemplate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_templatePlayWithFriends(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_templatePlayWithFriends(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().TemplatePlayWithFriends(rctx, fc.Args["input"].(model.TemplatePlayWithFriendsRequestInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Response)
+	fc.Result = res
+	return ec.marshalNResponse2ᚖlaughifiᚋgraphᚋmodelᚐResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_templatePlayWithFriends(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "message":
+				return ec.fieldContext_Response_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_templatePlayWithFriends_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7995,6 +9098,73 @@ func (ec *executionContext) fieldContext_Query_getSavedTemplates(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getFriendTemplates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getFriendTemplates(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetFriendTemplates(rctx, fc.Args["page"].(int), fc.Args["limit"].(int), fc.Args["friendId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.FriendTemplatePaginationResponse)
+	fc.Result = res
+	return ec.marshalNFriendTemplatePaginationResponse2ᚖlaughifiᚋgraphᚋmodelᚐFriendTemplatePaginationResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getFriendTemplates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "total":
+				return ec.fieldContext_FriendTemplatePaginationResponse_total(ctx, field)
+			case "perPage":
+				return ec.fieldContext_FriendTemplatePaginationResponse_perPage(ctx, field)
+			case "currentPage":
+				return ec.fieldContext_FriendTemplatePaginationResponse_currentPage(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_FriendTemplatePaginationResponse_totalPages(ctx, field)
+			case "friendTemplates":
+				return ec.fieldContext_FriendTemplatePaginationResponse_friendTemplates(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type FriendTemplatePaginationResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getFriendTemplates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getAllWouldYouRathers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getAllWouldYouRathers(ctx, field)
 	if err != nil {
@@ -8383,6 +9553,50 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RequestResponse_Status(ctx context.Context, field graphql.CollectedField, obj *model.RequestResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RequestResponse_Status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RequestResponse_Status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RequestResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9296,6 +10510,80 @@ func (ec *executionContext) fieldContext_SavedWouldYouRatherPaginationResp_saved
 	return fc, nil
 }
 
+func (ec *executionContext) _Subscription_templateShared(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_templateShared(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().TemplateShared(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan *model.TemplatePlayWithFriend):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNTemplatePlayWithFriend2ᚖlaughifiᚋgraphᚋmodelᚐTemplatePlayWithFriend(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_templateShared(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TemplatePlayWithFriend_id(ctx, field)
+			case "userId":
+				return ec.fieldContext_TemplatePlayWithFriend_userId(ctx, field)
+			case "templateId":
+				return ec.fieldContext_TemplatePlayWithFriend_templateId(ctx, field)
+			case "friendId":
+				return ec.fieldContext_TemplatePlayWithFriend_friendId(ctx, field)
+			case "status":
+				return ec.fieldContext_TemplatePlayWithFriend_status(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_TemplatePlayWithFriend_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_TemplatePlayWithFriend_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TemplatePlayWithFriend", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Template_id(ctx context.Context, field graphql.CollectedField, obj *model.Template) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Template_id(ctx, field)
 	if err != nil {
@@ -9697,6 +10985,314 @@ func (ec *executionContext) fieldContext_TemplatePaginationResponse_templates(_ 
 				return ec.fieldContext_Template_template(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Template", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TemplatePlayWithFriend_id(ctx context.Context, field graphql.CollectedField, obj *model.TemplatePlayWithFriend) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TemplatePlayWithFriend_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TemplatePlayWithFriend_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TemplatePlayWithFriend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TemplatePlayWithFriend_userId(ctx context.Context, field graphql.CollectedField, obj *model.TemplatePlayWithFriend) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TemplatePlayWithFriend_userId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TemplatePlayWithFriend_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TemplatePlayWithFriend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TemplatePlayWithFriend_templateId(ctx context.Context, field graphql.CollectedField, obj *model.TemplatePlayWithFriend) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TemplatePlayWithFriend_templateId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TemplateID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TemplatePlayWithFriend_templateId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TemplatePlayWithFriend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TemplatePlayWithFriend_friendId(ctx context.Context, field graphql.CollectedField, obj *model.TemplatePlayWithFriend) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TemplatePlayWithFriend_friendId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FriendID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TemplatePlayWithFriend_friendId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TemplatePlayWithFriend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TemplatePlayWithFriend_status(ctx context.Context, field graphql.CollectedField, obj *model.TemplatePlayWithFriend) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TemplatePlayWithFriend_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TemplatePlayWithFriend_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TemplatePlayWithFriend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TemplatePlayWithFriend_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.TemplatePlayWithFriend) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TemplatePlayWithFriend_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TemplatePlayWithFriend_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TemplatePlayWithFriend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TemplatePlayWithFriend_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.TemplatePlayWithFriend) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TemplatePlayWithFriend_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TemplatePlayWithFriend_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TemplatePlayWithFriend",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -12404,6 +14000,40 @@ func (ec *executionContext) unmarshalInputAdminTemplateRequestInput(ctx context.
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAnswer(ctx context.Context, obj interface{}) (model.Answer, error) {
+	var it model.Answer
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"key", "value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "key":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Key = data
+		case "value":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Value = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAnswersInput(ctx context.Context, obj interface{}) (model.AnswersInput, error) {
 	var it model.AnswersInput
 	asMap := map[string]interface{}{}
@@ -12853,20 +14483,20 @@ func (ec *executionContext) unmarshalInputSendFriendRequestInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"userIds"}
+	fieldsInOrder := [...]string{"userId"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "userIds":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userIds"))
-			data, err := ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+		case "userId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.UserIds = data
+			it.UserID = data
 		}
 	}
 
@@ -12942,6 +14572,47 @@ func (ec *executionContext) unmarshalInputSocialLoginRequestInput(ctx context.Co
 				return it, err
 			}
 			it.Name = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTemplatePlayWithFriendsRequestInput(ctx context.Context, obj interface{}) (model.TemplatePlayWithFriendsRequestInput, error) {
+	var it model.TemplatePlayWithFriendsRequestInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"friendIds", "templateId", "answer"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "friendIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("friendIds"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FriendIds = data
+		case "templateId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TemplateID = data
+		case "answer":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("answer"))
+			data, err := ec.unmarshalNAnswer2ᚕᚖlaughifiᚋgraphᚋmodelᚐAnswerᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Answer = data
 		}
 	}
 
@@ -13531,6 +15202,55 @@ func (ec *executionContext) _Friend(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var friendAnswersImplementors = []string{"FriendAnswers"}
+
+func (ec *executionContext) _FriendAnswers(ctx context.Context, sel ast.SelectionSet, obj *model.FriendAnswers) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, friendAnswersImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FriendAnswers")
+		case "id":
+			out.Values[i] = ec._FriendAnswers_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "key":
+			out.Values[i] = ec._FriendAnswers_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "value":
+			out.Values[i] = ec._FriendAnswers_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var friendPaginationResponseImplementors = []string{"FriendPaginationResponse"}
 
 func (ec *executionContext) _FriendPaginationResponse(ctx context.Context, sel ast.SelectionSet, obj *model.FriendPaginationResponse) graphql.Marshaler {
@@ -13564,6 +15284,124 @@ func (ec *executionContext) _FriendPaginationResponse(ctx context.Context, sel a
 			}
 		case "friends":
 			out.Values[i] = ec._FriendPaginationResponse_friends(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var friendTemplatePaginationResponseImplementors = []string{"FriendTemplatePaginationResponse"}
+
+func (ec *executionContext) _FriendTemplatePaginationResponse(ctx context.Context, sel ast.SelectionSet, obj *model.FriendTemplatePaginationResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, friendTemplatePaginationResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FriendTemplatePaginationResponse")
+		case "total":
+			out.Values[i] = ec._FriendTemplatePaginationResponse_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "perPage":
+			out.Values[i] = ec._FriendTemplatePaginationResponse_perPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentPage":
+			out.Values[i] = ec._FriendTemplatePaginationResponse_currentPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalPages":
+			out.Values[i] = ec._FriendTemplatePaginationResponse_totalPages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "friendTemplates":
+			out.Values[i] = ec._FriendTemplatePaginationResponse_friendTemplates(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var friendTemplatesImplementors = []string{"FriendTemplates"}
+
+func (ec *executionContext) _FriendTemplates(ctx context.Context, sel ast.SelectionSet, obj *model.FriendTemplates) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, friendTemplatesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FriendTemplates")
+		case "id":
+			out.Values[i] = ec._FriendTemplates_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "template":
+			out.Values[i] = ec._FriendTemplates_template(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "category":
+			out.Values[i] = ec._FriendTemplates_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "title":
+			out.Values[i] = ec._FriendTemplates_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "answers":
+			out.Values[i] = ec._FriendTemplates_answers(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -13989,6 +15827,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "cancelFriendRequest":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_cancelFriendRequest(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "changePassword":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_changePassword(ctx, field)
@@ -14006,6 +15851,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "filledTemplate":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_filledTemplate(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "templatePlayWithFriends":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_templatePlayWithFriends(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -14366,6 +16218,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getFriendTemplates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getFriendTemplates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getAllWouldYouRathers":
 			field := field
 
@@ -14462,6 +16336,45 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___schema(ctx, field)
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var requestResponseImplementors = []string{"RequestResponse"}
+
+func (ec *executionContext) _RequestResponse(ctx context.Context, sel ast.SelectionSet, obj *model.RequestResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, requestResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RequestResponse")
+		case "Status":
+			out.Values[i] = ec._RequestResponse_Status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14755,6 +16668,26 @@ func (ec *executionContext) _SavedWouldYouRatherPaginationResp(ctx context.Conte
 	return out
 }
 
+var subscriptionImplementors = []string{"Subscription"}
+
+func (ec *executionContext) _Subscription(ctx context.Context, sel ast.SelectionSet) func(ctx context.Context) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, subscriptionImplementors)
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Subscription",
+	})
+	if len(fields) != 1 {
+		ec.Errorf(ctx, "must subscribe to exactly one stream")
+		return nil
+	}
+
+	switch fields[0].Name {
+	case "templateShared":
+		return ec._Subscription_templateShared(ctx, fields[0])
+	default:
+		panic("unknown field " + strconv.Quote(fields[0].Name))
+	}
+}
+
 var templateImplementors = []string{"Template"}
 
 func (ec *executionContext) _Template(ctx context.Context, sel ast.SelectionSet, obj *model.Template) graphql.Marshaler {
@@ -14842,6 +16775,75 @@ func (ec *executionContext) _TemplatePaginationResponse(ctx context.Context, sel
 			}
 		case "templates":
 			out.Values[i] = ec._TemplatePaginationResponse_templates(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var templatePlayWithFriendImplementors = []string{"TemplatePlayWithFriend"}
+
+func (ec *executionContext) _TemplatePlayWithFriend(ctx context.Context, sel ast.SelectionSet, obj *model.TemplatePlayWithFriend) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, templatePlayWithFriendImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TemplatePlayWithFriend")
+		case "id":
+			out.Values[i] = ec._TemplatePlayWithFriend_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "userId":
+			out.Values[i] = ec._TemplatePlayWithFriend_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "templateId":
+			out.Values[i] = ec._TemplatePlayWithFriend_templateId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "friendId":
+			out.Values[i] = ec._TemplatePlayWithFriend_friendId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._TemplatePlayWithFriend_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._TemplatePlayWithFriend_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._TemplatePlayWithFriend_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -15565,6 +17567,28 @@ func (ec *executionContext) marshalNAdminTemplates2ᚖlaughifiᚋgraphᚋmodel�
 	return ec._AdminTemplates(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNAnswer2ᚕᚖlaughifiᚋgraphᚋmodelᚐAnswerᚄ(ctx context.Context, v interface{}) ([]*model.Answer, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.Answer, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAnswer2ᚖlaughifiᚋgraphᚋmodelᚐAnswer(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNAnswer2ᚖlaughifiᚋgraphᚋmodelᚐAnswer(ctx context.Context, v interface{}) (*model.Answer, error) {
+	res, err := ec.unmarshalInputAnswer(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNAnswersData2ᚕᚖlaughifiᚋgraphᚋmodelᚐAnswersDataᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AnswersData) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -15827,6 +17851,60 @@ func (ec *executionContext) marshalNFriend2ᚖlaughifiᚋgraphᚋmodelᚐFriend(
 	return ec._Friend(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNFriendAnswers2ᚕᚖlaughifiᚋgraphᚋmodelᚐFriendAnswersᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FriendAnswers) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNFriendAnswers2ᚖlaughifiᚋgraphᚋmodelᚐFriendAnswers(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNFriendAnswers2ᚖlaughifiᚋgraphᚋmodelᚐFriendAnswers(ctx context.Context, sel ast.SelectionSet, v *model.FriendAnswers) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FriendAnswers(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNFriendPaginationResponse2laughifiᚋgraphᚋmodelᚐFriendPaginationResponse(ctx context.Context, sel ast.SelectionSet, v model.FriendPaginationResponse) graphql.Marshaler {
 	return ec._FriendPaginationResponse(ctx, sel, &v)
 }
@@ -15839,6 +17917,74 @@ func (ec *executionContext) marshalNFriendPaginationResponse2ᚖlaughifiᚋgraph
 		return graphql.Null
 	}
 	return ec._FriendPaginationResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFriendTemplatePaginationResponse2laughifiᚋgraphᚋmodelᚐFriendTemplatePaginationResponse(ctx context.Context, sel ast.SelectionSet, v model.FriendTemplatePaginationResponse) graphql.Marshaler {
+	return ec._FriendTemplatePaginationResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNFriendTemplatePaginationResponse2ᚖlaughifiᚋgraphᚋmodelᚐFriendTemplatePaginationResponse(ctx context.Context, sel ast.SelectionSet, v *model.FriendTemplatePaginationResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FriendTemplatePaginationResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFriendTemplates2ᚕᚖlaughifiᚋgraphᚋmodelᚐFriendTemplatesᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FriendTemplates) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNFriendTemplates2ᚖlaughifiᚋgraphᚋmodelᚐFriendTemplates(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNFriendTemplates2ᚖlaughifiᚋgraphᚋmodelᚐFriendTemplates(ctx context.Context, sel ast.SelectionSet, v *model.FriendTemplates) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FriendTemplates(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNGetAllCategories2ᚕᚖlaughifiᚋgraphᚋmodelᚐGetAllCategoriesᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GetAllCategories) graphql.Marshaler {
@@ -15924,38 +18070,6 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -16002,6 +18116,20 @@ func (ec *executionContext) marshalNLoginResponse2ᚖlaughifiᚋgraphᚋmodelᚐ
 		return graphql.Null
 	}
 	return ec._LoginResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRequestResponse2laughifiᚋgraphᚋmodelᚐRequestResponse(ctx context.Context, sel ast.SelectionSet, v model.RequestResponse) graphql.Marshaler {
+	return ec._RequestResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRequestResponse2ᚖlaughifiᚋgraphᚋmodelᚐRequestResponse(ctx context.Context, sel ast.SelectionSet, v *model.RequestResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RequestResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNResendOtpRequestInput2laughifiᚋgraphᚋmodelᚐResendOtpRequestInput(ctx context.Context, v interface{}) (model.ResendOtpRequestInput, error) {
@@ -16292,6 +18420,25 @@ func (ec *executionContext) marshalNTemplatePaginationResponse2ᚖlaughifiᚋgra
 		return graphql.Null
 	}
 	return ec._TemplatePaginationResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTemplatePlayWithFriend2laughifiᚋgraphᚋmodelᚐTemplatePlayWithFriend(ctx context.Context, sel ast.SelectionSet, v model.TemplatePlayWithFriend) graphql.Marshaler {
+	return ec._TemplatePlayWithFriend(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTemplatePlayWithFriend2ᚖlaughifiᚋgraphᚋmodelᚐTemplatePlayWithFriend(ctx context.Context, sel ast.SelectionSet, v *model.TemplatePlayWithFriend) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TemplatePlayWithFriend(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTemplatePlayWithFriendsRequestInput2laughifiᚋgraphᚋmodelᚐTemplatePlayWithFriendsRequestInput(ctx context.Context, v interface{}) (model.TemplatePlayWithFriendsRequestInput, error) {
+	res, err := ec.unmarshalInputTemplatePlayWithFriendsRequestInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUpdateStatusRequestInput2laughifiᚋgraphᚋmodelᚐUpdateStatusRequestInput(ctx context.Context, v interface{}) (model.UpdateStatusRequestInput, error) {

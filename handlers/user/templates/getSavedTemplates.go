@@ -35,11 +35,10 @@ func GetFilledTemplates(ctx context.Context, db *database.DB, page int, limit in
 		"userId": user.Id,
 	}
 
-	sortOptions := options.Find().SetSort(bson.M{"updatedAt": -1})
 	skip := (page - 1) * limit
 	findOptions := options.Find().SetSkip(int64(skip)).SetLimit(int64(limit)).SetSort(bson.M{"updatedAt": -1})
 
-	cursor, err := filledTemplateColl.Find(ctx, filter, findOptions, sortOptions)
+	cursor, err := filledTemplateColl.Find(ctx, filter, findOptions)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return &model.SavedTemplatePaginationResponse{

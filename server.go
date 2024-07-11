@@ -8,10 +8,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gorilla/websocket"
 )
 
 const defaultPort = "8080"
@@ -39,19 +41,15 @@ func main() {
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
-	// Add WebSocket transport for subscriptions
-	// srv.AddTransport(&transport.Websocket{
-	// 	Upgrader: websocket.Upgrader{
-	// 		CheckOrigin: func(r *http.Request) bool {
-	// 			return true
-	// 		},
-	// 	},
-	// 	InitFunc: func(ctx context.Context, initPayload transport.InitPayload) (context.Context, error) {
-	// 		return ctx, nil
-	// 	},
-	// })
+	srv.AddTransport(&transport.Websocket{
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		},
+		KeepAlivePingInterval: 10 * time.Second,
+	})
 
-	// Add HTTP transport for queries and mutations
 	srv.AddTransport(&transport.POST{})
 	srv.AddTransport(&transport.Options{})
 
@@ -87,11 +85,14 @@ func main() {
 			"GetFriendRequests":         true,
 			"GetFriends":                true,
 			"AcceptRejectRequest":       true,
+			"CancelFriendRequest":       true,
 			"FilledTemplates":           true,
 			"GetFilledTemplates":        true,
 			"FilledWouldYouRather":      true,
 			"GetWouldYouRathers":        true,
 			"GetFilledWouldRathers":     true,
+			"TemplatePlayWithFriends":   true,
+			"GetFriendTemplates":        true,
 
 			// admin
 			"LoginAdmin":                     false,

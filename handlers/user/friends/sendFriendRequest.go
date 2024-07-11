@@ -14,10 +14,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFriendRequestInput) (*model.Response, error) {
+func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFriendRequestInput) (*model.RequestResponse, error) {
 	var (
 		friendsListColl = db.GetCollection("friendsList")
 	)
+
+	userObjIdID, err := primitive.ObjectIDFromHex(data.UserID)
+	if err != nil {
+		return nil, gqlerror.Errorf("invalid user Id")
+	}
 
 	user, err := utils.ExtractUserFromContext(ctx, db)
 	if err != nil {
@@ -33,18 +38,12 @@ func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFrie
 			UserId:    user.Id,
 			CreatedAt: time.Now().UTC(),
 			UpdatedAt: time.Now().UTC(),
-		}
-
-		for _, memberId := range data.UserIds {
-			memberObjID, err := primitive.ObjectIDFromHex(memberId)
-			if err != nil {
-				return nil, gqlerror.Errorf("Invalid user ID: %v", err)
-			}
-
-			newFriendList.FriendsList = append(newFriendList.FriendsList, entity.FriendsList{
-				Id:     memberObjID,
-				Status: "friend-request-pending",
-			})
+			FriendsList: []entity.FriendsList{
+				{
+					Id:     userObjIdID,
+					Status: "friend-request-pending",
+				},
+			},
 		}
 
 		_, err = friendsListColl.InsertOne(ctx, newFriendList)
@@ -54,71 +53,35 @@ func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFrie
 	} else if err != nil {
 		return nil, gqlerror.Errorf("Failed to check existing friend requests: %v", err)
 	} else {
-
-		var duplicateUserIDs []string
-
-		for _, memberId := range data.UserIds {
-			memberObjID, err := primitive.ObjectIDFromHex(memberId)
-			if err != nil {
-				return nil, gqlerror.Errorf("Invalid user ID: %v", err)
-			}
-
-			for _, existingFriend := range existingFriendList.FriendsList {
-				if existingFriend.Id == memberObjID && existingFriend.Status == "friend-request-pending" {
-					duplicateUserIDs = append(duplicateUserIDs, memberId)
-					break
+		for _, existingFriend := range existingFriendList.FriendsList {
+			if existingFriend.Id.Hex() == data.UserID {
+				if existingFriend.Status == "friend-request-pending" {
+					return &model.RequestResponse{
+						Status: "already sent",
+					}, nil
 				}
 			}
 		}
 
-		if len(duplicateUserIDs) > 0 {
-			return nil, gqlerror.Errorf("Friend request already sent")
+		update := bson.M{
+			"$push": bson.M{
+				"friendsList": bson.M{
+					"id":     userObjIdID,
+					"status": "friend-request-pending",
+				},
+			},
+			"$set": bson.M{
+				"updatedAt": time.Now().UTC(),
+			},
 		}
 
-		var updates []entity.FriendsList
-
-		for _, memberId := range data.UserIds {
-			memberObjID, err := primitive.ObjectIDFromHex(memberId)
-			if err != nil {
-				return nil, gqlerror.Errorf("Invalid user ID: %v", err)
-			}
-
-			exists := false
-			for _, existingFriend := range existingFriendList.FriendsList {
-				if existingFriend.Id == memberObjID {
-					exists = true
-					break
-				}
-			}
-
-			if !exists {
-				updates = append(updates, entity.FriendsList{
-					Id:     memberObjID,
-					Status: "friend-request-pending",
-				})
-			}
-		}
-
-		if len(updates) > 0 {
-			update := bson.M{
-				"$push": bson.M{
-					"friendsList": bson.M{
-						"$each": updates,
-					},
-				},
-				"$set": bson.M{
-					"updatedAt": time.Now().UTC(),
-				},
-			}
-
-			_, err = friendsListColl.UpdateOne(ctx, bson.M{"userId": user.Id}, update)
-			if err != nil {
-				return nil, gqlerror.Errorf("Failed to update friend request: %v", err)
-			}
+		_, err = friendsListColl.UpdateOne(ctx, bson.M{"userId": user.Id}, update)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to update friend request: %v", err)
 		}
 	}
 
-	return &model.Response{
-		Message: "Friend Request Sent Successfully",
+	return &model.RequestResponse{
+		Status: "Shared",
 	}, nil
 }

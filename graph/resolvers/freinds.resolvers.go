@@ -22,8 +22,17 @@ func (r *mutationResolver) UpdateStatus(ctx context.Context, userID string, inpu
 }
 
 // SendFriendRequest is the resolver for the sendFriendRequest field.
-func (r *mutationResolver) SendFriendRequest(ctx context.Context, input model.SendFriendRequestInput) (*model.Response, error) {
+func (r *mutationResolver) SendFriendRequest(ctx context.Context, input model.SendFriendRequestInput) (*model.RequestResponse, error) {
 	friends, err := friends.SendFriendRequest(ctx, r.DB, input)
+	if err != nil {
+		return nil, err
+	}
+	return friends, nil
+}
+
+// CancelFriendRequest is the resolver for the cancelFriendRequest field.
+func (r *mutationResolver) CancelFriendRequest(ctx context.Context, input model.SendFriendRequestInput) (*model.Response, error) {
+	friends, err := friends.CancelFriendRequest(ctx, r.DB, input)
 	if err != nil {
 		return nil, err
 	}

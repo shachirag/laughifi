@@ -28,6 +28,10 @@ func FilledTemplates(ctx context.Context, db *database.DB, data model.FilledTemp
 		return nil, err
 	}
 
+	if data.Answers == nil || len(data.Answers) == 0 {
+		return nil, gqlerror.Errorf("At least one answer is required to share")
+	}
+
 	var answers []entity.Answers
 	if data.Answers != nil {
 		for _, answerInput := range data.Answers {

@@ -21,14 +21,23 @@ type LaughifiUserPaginationResponse {
 }
 
 extend type Query {
-  getLaughifiUsers(page: Int!, limit: Int!, search: String): LaughifiUserPaginationResponse!
+  getLaughifiUsers(
+    page: Int!
+    limit: Int!
+    search: String
+  ): LaughifiUserPaginationResponse!
   getFriends(page: Int!, limit: Int!): FriendPaginationResponse!
   getFriendsRequests: [Friend!]!
 }
 
 extend type Mutation {
   updateStatus(userId: ID!, input: UpdateStatusRequestInput!): Response!
-  sendFriendRequest(input: SendFriendRequestInput!): Response!
+  sendFriendRequest(input: SendFriendRequestInput!): RequestResponse!
+  cancelFriendRequest(input: SendFriendRequestInput!): Response!
+}
+
+type RequestResponse {
+  Status: String!
 }
 
 input UpdateStatusRequestInput {
@@ -36,5 +45,5 @@ input UpdateStatusRequestInput {
 }
 
 input SendFriendRequestInput {
-  userIds: [ID!]!
+  userId: ID!
 }

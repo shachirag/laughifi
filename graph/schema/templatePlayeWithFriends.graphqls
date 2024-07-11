@@ -1,0 +1,60 @@
+extend type Mutation {
+  templatePlayWithFriends(
+    input: TemplatePlayWithFriendsRequestInput!
+  ): Response!
+}
+
+input TemplatePlayWithFriendsRequestInput {
+  friendIds: String!
+  templateId: ID!
+  answer: [Answer!]!
+}
+
+input Answer {
+  key: String!
+  value: String!
+}
+
+extend type Query {
+  getFriendTemplates(
+    page: Int!
+    limit: Int!
+    friendId: String!
+  ): FriendTemplatePaginationResponse!
+}
+
+type FriendTemplatePaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  friendTemplates: [FriendTemplates!]!
+}
+
+type FriendTemplates {
+  id: ID!
+  template: String!
+  category: String!
+  title: String!
+  answers: [FriendAnswers!]!
+}
+
+type FriendAnswers {
+  id: ID!
+  key: String!
+  value: String!
+}
+
+type Subscription {
+  templateShared: TemplatePlayWithFriend!
+}
+
+type TemplatePlayWithFriend {
+  id: ID!
+  userId: ID!
+  templateId: ID!
+  friendId: ID!
+  status: String!
+  createdAt: String!
+  updatedAt: String!
+}
