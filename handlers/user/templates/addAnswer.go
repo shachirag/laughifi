@@ -2,6 +2,7 @@ package templates
 
 import (
 	"context"
+	"fmt"
 	"laughifi/database"
 	"laughifi/entity"
 	"laughifi/graph/model"
@@ -49,7 +50,7 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 
 	if len(playWithFriendTemplate.Answers) > 0 {
 		lastAnswer := playWithFriendTemplate.Answers[len(playWithFriendTemplate.Answers)-1]
-		if lastAnswer.Id == playWithFriendTemplate.FriendId {
+		if lastAnswer.Id == sendedUserObjId {
 			return nil, gqlerror.Errorf("It's not your turn to answer.")
 		}
 	}
@@ -90,6 +91,7 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		}
 	}
 
+	fmt.Printf("Notifying subscribers with template ID: %s\n", sharedTemplate.ID)
 	subscription.NewManager().NotifySubscribers(sharedTemplate)
 
 	return &model.Response{

@@ -1,6 +1,7 @@
 package subscription
 
 import (
+	"fmt"  // Import fmt for logging
 	"laughifi/graph/model"
 	"sync"
 )
@@ -20,18 +21,21 @@ func (m *Manager) AddSubscriber(id string, ch chan *model.TemplatePlayWithFriend
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.subscribers[id] = ch
+	fmt.Printf("Added subscriber: %s\n", id)
 }
 
 func (m *Manager) RemoveSubscriber(id string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.subscribers, id)
+	fmt.Printf("Removed subscriber: %s\n", id)
 }
 
 func (m *Manager) NotifySubscribers(template *model.TemplatePlayWithFriend) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	for _, ch := range m.subscribers {
+	for id, ch := range m.subscribers {
+		fmt.Printf("Notifying subscriber: %s\n", id)
 		ch <- template
 	}
 }
