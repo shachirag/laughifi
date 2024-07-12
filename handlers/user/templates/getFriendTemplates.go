@@ -121,6 +121,7 @@ func GetFriendTemplates(ctx context.Context, db *database.DB, page int, limit in
 			Template: template.Template,
 			Category: template.Category.Name,
 			Answers:  answers,
+			Status:   friendTemplate.Status,
 		}
 
 		friendTemplates = append(friendTemplates, friendTemplateRes)

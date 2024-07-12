@@ -6,10 +6,9 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"laughifi/graph/model"
 	"laughifi/handlers/user/friends"
-
-	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // UpdateStatus is the resolver for the updateStatus field.
@@ -43,14 +42,14 @@ func (r *mutationResolver) CancelFriendRequest(ctx context.Context, input model.
 func (r *queryResolver) GetLaughifiUsers(ctx context.Context, page int, limit int, search *string) (*model.LaughifiUserPaginationResponse, error) {
 	friends, err := friends.GetLaughifiCustomers(ctx, r.DB, page, limit, *search)
 	if err != nil {
-		return nil, gqlerror.Errorf("failed: %v", err)
+		return nil, err
 	}
 	return friends, nil
 }
 
 // GetFriends is the resolver for the getFriends field.
-func (r *queryResolver) GetFriends(ctx context.Context, page int, limit int) (*model.FriendPaginationResponse, error) {
-	friends, err := friends.GetFriends(ctx, r.DB, page, limit)
+func (r *queryResolver) GetFriends(ctx context.Context, page int, limit int, search *string) (*model.FriendPaginationResponse, error) {
+	friends, err := friends.GetFriends(ctx, r.DB, page, limit, *search)
 	if err != nil {
 		return nil, err
 	}
@@ -64,4 +63,14 @@ func (r *queryResolver) GetFriendsRequests(ctx context.Context) ([]*model.Friend
 		return nil, err
 	}
 	return friends, nil
+}
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) SubscriptionConnection(ctx context.Context, input model.SubscriptionRequestInput) (*model.Response, error) {
+	panic(fmt.Errorf("not implemented: SubscriptionConnection - subscriptionConnection"))
 }

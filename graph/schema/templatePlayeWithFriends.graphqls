@@ -44,6 +44,7 @@ type FriendTemplates {
   category: String!
   title: String!
   answers: [FriendAnswers!]!
+  status: String!
 }
 
 type FriendAnswers {

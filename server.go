@@ -5,15 +5,14 @@ import (
 	"laughifi/database"
 	graph "laughifi/graph/resolvers"
 	"laughifi/middleware"
+	"laughifi/utils/subscription"
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gorilla/websocket"
 )
 
 const defaultPort = "8080"
@@ -33,22 +32,26 @@ func main() {
 	db := database.Connect()
 	s3 := database.GetS3Uploader()
 	ses := database.GetSesClient()
+	subMgr := subscription.NewManager()
 	resolver := &graph.Resolver{
-		DB:        db,
-		S3Client:  s3,
-		SESClient: ses,
+		DB:              db,
+		S3Client:        s3,
+		SESClient:       ses,
+		SubscriptionMgr: subMgr,
 	}
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
-	srv.AddTransport(&transport.Websocket{
-		Upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true
-			},
-		},
-		KeepAlivePingInterval: 10 * time.Second,
-	})
+	// srv.AddTransport(&transport.Websocket{
+	// 	Upgrader: websocket.Upgrader{
+	// 		CheckOrigin: func(r *http.Request) bool {
+	// 			return true
+	// 		},
+	// 	},
+	// 	KeepAlivePingInterval: 10 * time.Second,
+	// })
+
+	srv.AddTransport(&transport.Websocket{}) 
 
 	srv.AddTransport(&transport.POST{})
 	srv.AddTransport(&transport.Options{})

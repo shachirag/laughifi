@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetFriends(ctx context.Context, db *database.DB, page int, limit int) (*model.FriendPaginationResponse, error) {
+func GetFriends(ctx context.Context, db *database.DB, page int, limit int, search string) (*model.FriendPaginationResponse, error) {
 
 	if page < 1 {
 		page = 1
@@ -45,6 +45,10 @@ func GetFriends(ctx context.Context, db *database.DB, page int, limit int) (*mod
 		"_id": bson.M{
 			"$in": friendIDs,
 		},
+	}
+
+	if search != "blank" {
+		filter["name"] = primitive.Regex{Pattern: search, Options: "i"}
 	}
 
 	sortOptions := options.Find().SetSort(bson.M{"updatedAt": -1})

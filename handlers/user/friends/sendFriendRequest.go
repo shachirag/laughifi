@@ -57,7 +57,7 @@ func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFrie
 			if existingFriend.Id.Hex() == data.UserID {
 				if existingFriend.Status == "friend-request-pending" {
 					return &model.RequestResponse{
-						Status: "already sent",
+						Message: "Not Shared",
 					}, nil
 				}
 			}
@@ -82,6 +82,6 @@ func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFrie
 	}
 
 	return &model.RequestResponse{
-		Status: "Shared",
+		Message: "Shared",
 	}, nil
 }

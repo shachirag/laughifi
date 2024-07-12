@@ -136,9 +136,10 @@ type ForgotPasswordRequestInput struct {
 }
 
 type Friend struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Image string `json:"image"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Image  string `json:"image"`
+	Status bool   `json:"status"`
 }
 
 type FriendAnswers struct {
@@ -169,6 +170,7 @@ type FriendTemplates struct {
 	Category string           `json:"category"`
 	Title    string           `json:"title"`
 	Answers  []*FriendAnswers `json:"answers"`
+	Status   string           `json:"status"`
 }
 
 type GetAllCategories struct {
@@ -213,7 +215,7 @@ type Query struct {
 }
 
 type RequestResponse struct {
-	Status string `json:"Status"`
+	Message string `json:"message"`
 }
 
 type ResendOtpRequestInput struct {
@@ -277,6 +279,11 @@ type SocialLoginRequestInput struct {
 }
 
 type Subscription struct {
+}
+
+type SubscriptionRequestInput struct {
+	ID         string `json:"id"`
+	Connection bool   `json:"connection"`
 }
 
 type Template struct {

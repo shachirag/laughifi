@@ -2,6 +2,7 @@ type Friend {
   id: ID!
   name: String!
   image: String!
+  status: Boolean!
 }
 
 type FriendPaginationResponse {
@@ -26,7 +27,7 @@ extend type Query {
     limit: Int!
     search: String
   ): LaughifiUserPaginationResponse!
-  getFriends(page: Int!, limit: Int!): FriendPaginationResponse!
+  getFriends(page: Int!, limit: Int!, search: String): FriendPaginationResponse!
   getFriendsRequests: [Friend!]!
 }
 
@@ -36,8 +37,13 @@ extend type Mutation {
   cancelFriendRequest(input: SendFriendRequestInput!): Response!
 }
 
+input SubscriptionRequestInput {
+  id: ID!
+  connection: Boolean!
+}
+
 type RequestResponse {
-  Status: String!
+  message: String!
 }
 
 input UpdateStatusRequestInput {

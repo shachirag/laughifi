@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"laughifi/graph/model"
 	"laughifi/handlers/user/templates"
+
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // TemplatePlayWithFriends is the resolver for the templatePlayWithFriends field.
@@ -40,8 +42,13 @@ func (r *queryResolver) GetFriendTemplates(ctx context.Context, page int, limit 
 
 // TemplateShared is the resolver for the templateShared field.
 func (r *subscriptionResolver) TemplateShared(ctx context.Context) (<-chan *model.TemplatePlayWithFriend, error) {
+	if r.SubscriptionMgr == nil {
+		return nil, gqlerror.Errorf("Subscription manager is not initialized")
+	}
+
 	id := fmt.Sprintf("%d", r.SubscriptionMgr.SubscriberCount()+1)
 	messageChan := make(chan *model.TemplatePlayWithFriend, 1)
+	fmt.Println("52", id)
 
 	r.SubscriptionMgr.AddSubscriber(id, messageChan)
 

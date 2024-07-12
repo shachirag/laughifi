@@ -68,10 +68,37 @@ func GetLaughifiCustomers(ctx context.Context, db *database.DB, page int, limit 
 			return nil, gqlerror.Errorf("Failed to decode customer: %v", err)
 		}
 
+		friendFilter := bson.M{
+			"userId": user.Id,
+			"friendsList": bson.M{
+				"$elemMatch": bson.M{
+					"id":     customer.Id,
+					"status": "friend-request-pending",
+				},
+			},
+		}
+
+		var friendsList entity.FriendsList
+		err = db.GetCollection("friendsList").FindOne(ctx, friendFilter).Decode(&friendsList)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				customerRes := &model.Friend{
+					ID:     customer.Id.Hex(),
+					Name:   customer.Name,
+					Image:  customer.Image,
+					Status: false,
+				}
+				templates = append(templates, customerRes)
+				continue
+			}
+			return nil, gqlerror.Errorf("Failed to fetch friend: %v", err)
+		}
+
 		customerRes := &model.Friend{
-			ID:    customer.Id.Hex(),
-			Name:  customer.Name,
-			Image: customer.Image,
+			ID:     customer.Id.Hex(),
+			Name:   customer.Name,
+			Image:  customer.Image,
+			Status: true,
 		}
 
 		templates = append(templates, customerRes)

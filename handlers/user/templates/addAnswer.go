@@ -7,6 +7,7 @@ import (
 	"laughifi/entity"
 	"laughifi/graph/model"
 	"laughifi/utils/subscription"
+	"strings"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -73,6 +74,30 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		return nil, gqlerror.Errorf("Failed to add answer")
 	}
 
+	requiredPlaceholders := extractPlaceholders(template.Template)
+	filledPlaceholders := make(map[string]bool)
+	for _, answer := range playWithFriendTemplate.Answers {
+		filledPlaceholders[answer.Key] = true
+	}
+
+	allFilled := true
+	for _, placeholder := range requiredPlaceholders {
+		if !filledPlaceholders[placeholder] {
+			allFilled = false
+			break
+		}
+	}
+
+	if allFilled {
+		update := bson.M{
+			"$set": bson.M{"status": "completed"},
+		}
+		_, err = templatePlayWithFriendColl.UpdateOne(ctx, filter, update)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to update status to completed")
+		}
+	}
+
 	sharedTemplate := &model.TemplatePlayWithFriend{
 		ID:       playWithFriendTemplate.Id.Hex(),
 		FriendID: playWithFriendTemplate.FriendId.Hex(),
@@ -91,10 +116,33 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		}
 	}
 
-	fmt.Printf("Notifying subscribers with template ID: %s\n", sharedTemplate.ID)
-	subscription.NewManager().NotifySubscribers(sharedTemplate)
+	subManager := subscription.NewManager()
+
+	secondLastIndex := len(playWithFriendTemplate.Answers) - 2
+	if secondLastIndex >= 0 {
+		secondLastUserID := playWithFriendTemplate.Answers[secondLastIndex].Id.Hex()
+		if subManager.SubscriberExists(secondLastUserID) {
+			if err := subManager.NotifySubscriberByID(sharedTemplate, secondLastUserID); err != nil {
+				fmt.Printf("Error notifying subscriber: %s\n", err)
+			}
+		} else {
+			fmt.Printf("129 Subscriber with ID %s does not exist\n", secondLastUserID)
+		}
+	}
+	// fmt.Printf("Notifying subscribers with template ID: %s\n", sharedTemplate.ID)
+	// subscription.NewManager().NotifySubscribersByID(sendedUserObjId)
 
 	return &model.Response{
 		Message: "Success",
 	}, nil
+}
+
+func extractPlaceholders(template string) []string {
+	var placeholders []string
+	parts := strings.Split(template, "{{")
+	for _, part := range parts[1:] {
+		placeholder := strings.Split(part, "}}")[0]
+		placeholders = append(placeholders, strings.TrimSpace(placeholder))
+	}
+	return placeholders
 }
