@@ -42,7 +42,7 @@ func Signup(ctx context.Context, db *database.DB, sesClient *ses.Client, data mo
 	otpData := entity.OtpEntity{
 		Id:        id,
 		Otp:       otp,
-		Email:     data.Email,
+		Email:    smallEmail,
 		CreatedAt: time.Now().UTC(),
 	}
 
