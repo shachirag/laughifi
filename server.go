@@ -4,8 +4,8 @@ import (
 	"laughifi/app"
 	"laughifi/database"
 	graph "laughifi/graph/resolvers"
+	"laughifi/handlers/websocket"
 	"laughifi/middleware"
-	"laughifi/utils/subscription"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +13,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gorilla/handlers"
 )
 
 const defaultPort = "8080"
@@ -32,26 +33,15 @@ func main() {
 	db := database.Connect()
 	s3 := database.GetS3Uploader()
 	ses := database.GetSesClient()
-	subMgr := subscription.NewManager(db)
+	apiClient := database.GetApiClient()
 	resolver := &graph.Resolver{
-		DB:              db,
-		S3Client:        s3,
-		SESClient:       ses,
-		SubscriptionMgr: subMgr,
+		DB:        db,
+		S3Client:  s3,
+		SESClient: ses,
+		ApiClient: apiClient,
 	}
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
-
-	// srv.AddTransport(&transport.Websocket{
-	// 	Upgrader: websocket.Upgrader{
-	// 		CheckOrigin: func(r *http.Request) bool {
-	// 			return true
-	// 		},
-	// 	},
-	// 	KeepAlivePingInterval: 10 * time.Second,
-	// })
-
-	srv.AddTransport(&transport.Websocket{})
 
 	srv.AddTransport(&transport.POST{})
 	srv.AddTransport(&transport.Options{})
@@ -62,7 +52,12 @@ func main() {
 		w.Write([]byte(`{"message": "success"}`))
 	})
 
-	http.Handle("/query", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/connect", websocket.WebsocketConnect(db))
+	http.HandleFunc("/disconnect", websocket.WebsocketDisconnect(db))
+
+	router := http.NewServeMux()
+
+	router.Handle("/query", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		opName := r.Header.Get("X-GraphQL-Operation-Name")
 		if opName == "" {
 			http.Error(w, "Operation name header is required", http.StatusBadRequest)
@@ -131,10 +126,16 @@ func main() {
 		}
 	}))
 
-	http.Handle("/schema", srv)
+	router.Handle("/schema", srv)
 
-	http.Handle("/", playground.Handler("GraphQL Playground", "/query"))
+	router.Handle("/", playground.Handler("GraphQL Playground", "/query"))
+
+	corsMiddleware := handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "PUT", "DELETE"}),
+		handlers.AllowedHeaders([]string{"Authorization", "Content-Type", "X-GraphQL-Operation-Name"}),
+	)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL Playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, corsMiddleware(router)))
 }

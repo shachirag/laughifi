@@ -53,27 +53,7 @@ type FriendTemplates {
 }
 
 type FriendAnswers {
-  id: ID!
   key: String!
   value: String!
 }
 
-type Subscription {
-  templateShared(userId: ID!): TemplatePlayWithFriend!
-}
-
-type TemplatePlayWithFriend {
-  id: ID!
-  friendId: ID!
-  template: String!
-  topic: String!
-  title: String!
-  answers: [TemplateAnswers!]!
-  status: String!
-}
-
-type TemplateAnswers {
-  id: ID!
-  key: String!
-  value: String!
-}

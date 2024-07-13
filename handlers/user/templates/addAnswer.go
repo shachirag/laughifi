@@ -6,7 +6,7 @@ import (
 	"laughifi/database"
 	"laughifi/entity"
 	"laughifi/graph/model"
-	"laughifi/utils/subscription"
+	"laughifi/utils/websocket"
 	"strings"
 	"time"
 
@@ -101,38 +101,14 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		}
 	}
 
-	sharedTemplate := &model.TemplatePlayWithFriend{
-		ID:       playWithFriendTemplate.Id.Hex(),
-		FriendID: playWithFriendTemplate.FriendId.Hex(),
-		Template: template.Template,
-		Topic:    template.Category.Name,
-		Title:    template.Title,
-		Status:   playWithFriendTemplate.Status,
-		Answers:  make([]*model.TemplateAnswers, len(playWithFriendTemplate.Answers)),
+	var secondLastUserObjId primitive.ObjectID
+	if len(playWithFriendTemplate.Answers) > 0 {
+		secondLastUser := playWithFriendTemplate.Answers[len(playWithFriendTemplate.Answers)-2]
+		secondLastUserObjId = secondLastUser.Id
 	}
 
-	for i, answer := range playWithFriendTemplate.Answers {
-		sharedTemplate.Answers[i] = &model.TemplateAnswers{
-			ID:    answer.Id.Hex(),
-			Key:   answer.Key,
-			Value: answer.Value,
-		}
-	}
-
-	subManager := subscription.NewManager(db)
-
-	secondLastIndex := len(playWithFriendTemplate.Answers) - 2
-	if secondLastIndex >= 0 {
-		secondLastUserID := playWithFriendTemplate.Answers[secondLastIndex].Id.Hex()
-		if subManager.SubscriberExists(secondLastUserID) {
-			fmt.Printf("Notifying subscriber with ID: %s\n", secondLastUserID)
-			if err := subManager.NotifySubscriberByID(sharedTemplate, secondLastUserID); err != nil {
-				fmt.Printf("Error notifying subscriber: %s\n", err)
-			}
-		} else {
-			fmt.Printf("Subscriber with ID %s does not exist\n", secondLastUserID)
-		}
-	}
+	fmt.Println("secondLastUser", secondLastUserObjId)
+	websocket.SendTemplateData(db, playWithFriendTemplateObjId, secondLastUserObjId)
 
 	return &model.AddAnswerResponse{
 		Message: "Success",

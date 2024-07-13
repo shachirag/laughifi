@@ -109,7 +109,6 @@ func GetFriendTemplates(ctx context.Context, db *database.DB, page int, limit in
 		var answers []*model.FriendAnswers
 		for _, ans := range friendTemplate.Answers {
 			answers = append(answers, &model.FriendAnswers{
-				ID:    ans.Id.Hex(),
 				Key:   ans.Key,
 				Value: ans.Value,
 			})

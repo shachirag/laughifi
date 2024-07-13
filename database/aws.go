@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 )
@@ -13,6 +14,7 @@ import (
 var (
 	sesClient *ses.Client
 	s3Client  *s3.Client
+	apiClient *apigatewaymanagementapi.Client
 )
 
 func SetupAWSClient() error {
@@ -28,6 +30,7 @@ func SetupAWSClient() error {
 	}
 	s3Client = s3.NewFromConfig(cfg)
 	sesClient = ses.NewFromConfig(cfg)
+	apiClient = apigatewaymanagementapi.NewFromConfig(cfg)
 
 	return nil
 }
@@ -38,4 +41,8 @@ func GetS3Uploader() *manager.Uploader {
 
 func GetSesClient() *ses.Client {
 	return sesClient
+}
+
+func GetApiClient() *apigatewaymanagementapi.Client {
+	return apiClient
 }
