@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequestInput, id string) (*model.Response, error) {
+func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequestInput, id string) (*model.AddAnswerResponse, error) {
 	var (
 		templatePlayWithFriendColl = db.GetCollection("templatePlayWithFriend")
 		playWithFriendTemplate     entity.TemplatePlayWithFriendEntity
@@ -52,7 +52,10 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 	if len(playWithFriendTemplate.Answers) > 0 {
 		lastAnswer := playWithFriendTemplate.Answers[len(playWithFriendTemplate.Answers)-1]
 		if lastAnswer.Id == sendedUserObjId {
-			return nil, gqlerror.Errorf("It's not your turn to answer.")
+			return &model.AddAnswerResponse{
+				Message: "It,s not your turn to answer",
+				Status:  false,
+			}, nil
 		}
 	}
 
@@ -116,24 +119,24 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		}
 	}
 
-	subManager := subscription.NewManager()
+	subManager := subscription.NewManager(db)
 
 	secondLastIndex := len(playWithFriendTemplate.Answers) - 2
 	if secondLastIndex >= 0 {
 		secondLastUserID := playWithFriendTemplate.Answers[secondLastIndex].Id.Hex()
 		if subManager.SubscriberExists(secondLastUserID) {
+			fmt.Printf("Notifying subscriber with ID: %s\n", secondLastUserID)
 			if err := subManager.NotifySubscriberByID(sharedTemplate, secondLastUserID); err != nil {
 				fmt.Printf("Error notifying subscriber: %s\n", err)
 			}
 		} else {
-			fmt.Printf("129 Subscriber with ID %s does not exist\n", secondLastUserID)
+			fmt.Printf("Subscriber with ID %s does not exist\n", secondLastUserID)
 		}
 	}
-	// fmt.Printf("Notifying subscribers with template ID: %s\n", sharedTemplate.ID)
-	// subscription.NewManager().NotifySubscribersByID(sendedUserObjId)
 
-	return &model.Response{
+	return &model.AddAnswerResponse{
 		Message: "Success",
+		Status:  true,
 	}, nil
 }
 

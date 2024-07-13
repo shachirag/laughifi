@@ -2,7 +2,7 @@ extend type Mutation {
   templatePlayWithFriends(
     input: TemplatePlayWithFriendsRequestInput!
   ): Response!
-  addAnswer(input: AddAnswerRequestInput!, id: ID!): Response!
+  addAnswer(input: AddAnswerRequestInput!, id: ID!): AddAnswerResponse!
 }
 
 input TemplatePlayWithFriendsRequestInput {
@@ -38,6 +38,11 @@ type FriendTemplatePaginationResponse {
   friendTemplates: [FriendTemplates!]!
 }
 
+type AddAnswerResponse {
+  status: Boolean!
+  message: String!
+}
+
 type FriendTemplates {
   id: ID!
   template: String!
@@ -54,7 +59,7 @@ type FriendAnswers {
 }
 
 type Subscription {
-  templateShared: TemplatePlayWithFriend!
+  templateShared(userId: ID!): TemplatePlayWithFriend!
 }
 
 type TemplatePlayWithFriend {

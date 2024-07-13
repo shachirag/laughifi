@@ -32,7 +32,7 @@ func main() {
 	db := database.Connect()
 	s3 := database.GetS3Uploader()
 	ses := database.GetSesClient()
-	subMgr := subscription.NewManager()
+	subMgr := subscription.NewManager(db)
 	resolver := &graph.Resolver{
 		DB:              db,
 		S3Client:        s3,
@@ -51,7 +51,7 @@ func main() {
 	// 	KeepAlivePingInterval: 10 * time.Second,
 	// })
 
-	srv.AddTransport(&transport.Websocket{}) 
+	srv.AddTransport(&transport.Websocket{})
 
 	srv.AddTransport(&transport.POST{})
 	srv.AddTransport(&transport.Options{})

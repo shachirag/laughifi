@@ -48,6 +48,11 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AddAnswerResponse struct {
+		Message func(childComplexity int) int
+		Status  func(childComplexity int) int
+	}
+
 	AdminLoginResponse struct {
 		CreatedAt func(childComplexity int) int
 		Email     func(childComplexity int) int
@@ -262,7 +267,7 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		TemplateShared func(childComplexity int) int
+		TemplateShared func(childComplexity int, userID string) int
 	}
 
 	Template struct {
@@ -358,7 +363,7 @@ type MutationResolver interface {
 	EditProfile(ctx context.Context, input model.EditProfileRequestInput) (*model.Response, error)
 	FilledTemplate(ctx context.Context, input model.FilledTemplateRequestInput) (*model.Response, error)
 	TemplatePlayWithFriends(ctx context.Context, input model.TemplatePlayWithFriendsRequestInput) (*model.Response, error)
-	AddAnswer(ctx context.Context, input model.AddAnswerRequestInput, id string) (*model.Response, error)
+	AddAnswer(ctx context.Context, input model.AddAnswerRequestInput, id string) (*model.AddAnswerResponse, error)
 	FilledWouldYouRather(ctx context.Context, input model.FilledWouldYouRatherRequestInput) (*model.Response, error)
 	WouldYouRather(ctx context.Context, input model.WouldYouRatherRequestInput) (*model.Response, error)
 	EditWouldYouRather(ctx context.Context, id string, input model.EditWouldYouRatherRequestInput) (*model.Response, error)
@@ -385,7 +390,7 @@ type QueryResolver interface {
 	GetWouldYouRather(ctx context.Context, id string) (*model.WouldYouRathersDetail, error)
 }
 type SubscriptionResolver interface {
-	TemplateShared(ctx context.Context) (<-chan *model.TemplatePlayWithFriend, error)
+	TemplateShared(ctx context.Context, userID string) (<-chan *model.TemplatePlayWithFriend, error)
 }
 
 type executableSchema struct {
@@ -406,6 +411,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e, 0, 0, nil}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "AddAnswerResponse.message":
+		if e.complexity.AddAnswerResponse.Message == nil {
+			break
+		}
+
+		return e.complexity.AddAnswerResponse.Message(childComplexity), true
+
+	case "AddAnswerResponse.status":
+		if e.complexity.AddAnswerResponse.Status == nil {
+			break
+		}
+
+		return e.complexity.AddAnswerResponse.Status(childComplexity), true
 
 	case "AdminLoginResponse.createdAt":
 		if e.complexity.AdminLoginResponse.CreatedAt == nil {
@@ -1624,7 +1643,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Subscription.TemplateShared(childComplexity), true
+		args, err := ec.field_Subscription_templateShared_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.TemplateShared(childComplexity, args["userId"].(string)), true
 
 	case "Template.category":
 		if e.complexity.Template.Category == nil {
@@ -2385,7 +2409,7 @@ type SavedTemplatePaginationResponse {
   templatePlayWithFriends(
     input: TemplatePlayWithFriendsRequestInput!
   ): Response!
-  addAnswer(input: AddAnswerRequestInput!, id: ID!): Response!
+  addAnswer(input: AddAnswerRequestInput!, id: ID!): AddAnswerResponse!
 }
 
 input TemplatePlayWithFriendsRequestInput {
@@ -2421,6 +2445,11 @@ type FriendTemplatePaginationResponse {
   friendTemplates: [FriendTemplates!]!
 }
 
+type AddAnswerResponse {
+  status: Boolean!
+  message: String!
+}
+
 type FriendTemplates {
   id: ID!
   template: String!
@@ -2437,7 +2466,7 @@ type FriendAnswers {
 }
 
 type Subscription {
-  templateShared: TemplatePlayWithFriend!
+  templateShared(userId: ID!): TemplatePlayWithFriend!
 }
 
 type TemplatePlayWithFriend {
@@ -3440,6 +3469,21 @@ func (ec *executionContext) field_Query_getWouldYouRathers_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Subscription_templateShared_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -3477,6 +3521,94 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _AddAnswerResponse_status(ctx context.Context, field graphql.CollectedField, obj *model.AddAnswerResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AddAnswerResponse_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AddAnswerResponse_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AddAnswerResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AddAnswerResponse_message(ctx context.Context, field graphql.CollectedField, obj *model.AddAnswerResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AddAnswerResponse_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AddAnswerResponse_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AddAnswerResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _AdminLoginResponse_id(ctx context.Context, field graphql.CollectedField, obj *model.AdminLoginResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AdminLoginResponse_id(ctx, field)
@@ -8289,9 +8421,9 @@ func (ec *executionContext) _Mutation_addAnswer(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Response)
+	res := resTmp.(*model.AddAnswerResponse)
 	fc.Result = res
-	return ec.marshalNResponse2ᚖlaughifiᚋgraphᚋmodelᚐResponse(ctx, field.Selections, res)
+	return ec.marshalNAddAnswerResponse2ᚖlaughifiᚋgraphᚋmodelᚐAddAnswerResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_addAnswer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8302,10 +8434,12 @@ func (ec *executionContext) fieldContext_Mutation_addAnswer(ctx context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "status":
+				return ec.fieldContext_AddAnswerResponse_status(ctx, field)
 			case "message":
-				return ec.fieldContext_Response_message(ctx, field)
+				return ec.fieldContext_AddAnswerResponse_message(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type AddAnswerResponse", field.Name)
 		},
 	}
 	defer func() {
@@ -10792,7 +10926,7 @@ func (ec *executionContext) _Subscription_templateShared(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().TemplateShared(rctx)
+		return ec.resolvers.Subscription().TemplateShared(rctx, fc.Args["userId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10823,7 +10957,7 @@ func (ec *executionContext) _Subscription_templateShared(ctx context.Context, fi
 	}
 }
 
-func (ec *executionContext) fieldContext_Subscription_templateShared(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Subscription_templateShared(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
 		Field:      field,
@@ -10848,6 +10982,17 @@ func (ec *executionContext) fieldContext_Subscription_templateShared(_ context.C
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TemplatePlayWithFriend", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_templateShared_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -15253,6 +15398,50 @@ func (ec *executionContext) unmarshalInputWouldYouRatherRequestInput(ctx context
 
 // region    **************************** object.gotpl ****************************
 
+var addAnswerResponseImplementors = []string{"AddAnswerResponse"}
+
+func (ec *executionContext) _AddAnswerResponse(ctx context.Context, sel ast.SelectionSet, obj *model.AddAnswerResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, addAnswerResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AddAnswerResponse")
+		case "status":
+			out.Values[i] = ec._AddAnswerResponse_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._AddAnswerResponse_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var adminLoginResponseImplementors = []string{"AdminLoginResponse"}
 
 func (ec *executionContext) _AdminLoginResponse(ctx context.Context, sel ast.SelectionSet, obj *model.AdminLoginResponse) graphql.Marshaler {
@@ -18008,6 +18197,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 func (ec *executionContext) unmarshalNAddAnswerRequestInput2laughifiᚋgraphᚋmodelᚐAddAnswerRequestInput(ctx context.Context, v interface{}) (model.AddAnswerRequestInput, error) {
 	res, err := ec.unmarshalInputAddAnswerRequestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAddAnswerResponse2laughifiᚋgraphᚋmodelᚐAddAnswerResponse(ctx context.Context, sel ast.SelectionSet, v model.AddAnswerResponse) graphql.Marshaler {
+	return ec._AddAnswerResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAddAnswerResponse2ᚖlaughifiᚋgraphᚋmodelᚐAddAnswerResponse(ctx context.Context, sel ast.SelectionSet, v *model.AddAnswerResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AddAnswerResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNAdminEditProfileRequestInput2laughifiᚋgraphᚋmodelᚐAdminEditProfileRequestInput(ctx context.Context, v interface{}) (model.AdminEditProfileRequestInput, error) {

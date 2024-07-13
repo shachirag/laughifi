@@ -23,7 +23,7 @@ func (r *mutationResolver) TemplatePlayWithFriends(ctx context.Context, input mo
 }
 
 // AddAnswer is the resolver for the addAnswer field.
-func (r *mutationResolver) AddAnswer(ctx context.Context, input model.AddAnswerRequestInput, id string) (*model.Response, error) {
+func (r *mutationResolver) AddAnswer(ctx context.Context, input model.AddAnswerRequestInput, id string) (*model.AddAnswerResponse, error) {
 	templates, err := templates.AddAnswer(ctx, r.DB, input, id)
 	if err != nil {
 		return nil, err
@@ -41,20 +41,19 @@ func (r *queryResolver) GetFriendTemplates(ctx context.Context, page int, limit 
 }
 
 // TemplateShared is the resolver for the templateShared field.
-func (r *subscriptionResolver) TemplateShared(ctx context.Context) (<-chan *model.TemplatePlayWithFriend, error) {
+func (r *subscriptionResolver) TemplateShared(ctx context.Context, userID string) (<-chan *model.TemplatePlayWithFriend, error) {
 	if r.SubscriptionMgr == nil {
 		return nil, gqlerror.Errorf("Subscription manager is not initialized")
 	}
 
-	id := fmt.Sprintf("%d", r.SubscriptionMgr.SubscriberCount()+1)
 	messageChan := make(chan *model.TemplatePlayWithFriend, 1)
-	fmt.Println("52", id)
 
-	r.SubscriptionMgr.AddSubscriber(id, messageChan)
+	fmt.Println("Adding subscriber with ID:", userID)
+	r.SubscriptionMgr.AddSubscriber(userID, messageChan)
 
 	go func() {
 		<-ctx.Done()
-		r.SubscriptionMgr.RemoveSubscriber(id)
+		r.SubscriptionMgr.RemoveSubscriber(userID)
 	}()
 
 	return messageChan, nil

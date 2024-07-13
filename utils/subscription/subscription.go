@@ -1,78 +1,130 @@
 package subscription
 
 import (
+	"context"
 	"fmt"
+	"laughifi/database"
+	"laughifi/entity"
 	"laughifi/graph/model"
 	"sync"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Manager struct {
-	subscribers map[string]chan *model.TemplatePlayWithFriend
-	mu          sync.Mutex
+	db            *database.DB
+	subscribers   map[string]chan *model.TemplatePlayWithFriend
+	subscribersMu sync.Mutex
 }
 
-func NewManager() *Manager {
+func NewManager(db *database.DB) *Manager {
 	return &Manager{
-		subscribers: make(map[string]chan *model.TemplatePlayWithFriend),
+		db:            db,
+		subscribers:   make(map[string]chan *model.TemplatePlayWithFriend),
+		subscribersMu: sync.Mutex{},
 	}
 }
 
-func (m *Manager) AddSubscriber(id string, ch chan *model.TemplatePlayWithFriend) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.subscribers[id] = ch
-	fmt.Printf("Added subscriber: %s\n", id)
-}
+func (m *Manager) AddSubscriber(userID string, ch chan *model.TemplatePlayWithFriend) error {
+	m.subscribersMu.Lock()
+	defer m.subscribersMu.Unlock()
 
-func (m *Manager) RemoveSubscriber(id string) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	delete(m.subscribers, id)
-	fmt.Printf("Removed subscriber: %s\n", id)
-}
-
-func (m *Manager) NotifySubscriberByID(template *model.TemplatePlayWithFriend, id string) error {
-	if !m.SubscriberExists(id) {
-		return fmt.Errorf("subscriber with ID %s does not exist", id)
+	if _, exists := m.subscribers[userID]; exists {
+		return fmt.Errorf("subscriber with ID %s already exists", userID)
 	}
 
-	fmt.Printf("Notifying subscriber with template ID: %s, user ID: %s\n", template.ID, id)
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	fmt.Println("39")
-	ch, exists := m.subscribers[id]
-	if !exists {
-		fmt.Println("41")
-		fmt.Println("42", id)
-		return fmt.Errorf("subscriber with ID %s does not exist", id)
+	m.subscribers[userID] = ch
+	fmt.Printf("Added subscriber: %s\n", userID)
+
+	if err := m.addToDatabase(userID); err != nil {
+		return err
 	}
-
-	fmt.Println(ch)
-
-	fmt.Printf("Notifying subscriber by ID: %s\n", id)
-	ch <- template
 
 	return nil
 }
 
-func (m *Manager) SubscriberCount() int {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return len(m.subscribers)
+func (m *Manager) RemoveSubscriber(userID string) error {
+	m.subscribersMu.Lock()
+	defer m.subscribersMu.Unlock()
+
+	if _, exists := m.subscribers[userID]; !exists {
+		return fmt.Errorf("subscriber with ID %s does not exist", userID)
+	}
+
+	delete(m.subscribers, userID)
+	fmt.Printf("Removed subscriber: %s\n", userID)
+
+	if err := m.removeFromDatabase(userID); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (m *Manager) SubscriberExists(id string) bool {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	_, exists := m.subscribers[id]
+func (m *Manager) NotifySubscriberByID(template *model.TemplatePlayWithFriend, userID string) error {
+	m.subscribersMu.Lock()
+	defer m.subscribersMu.Unlock()
+
+	ch, exists := m.subscribers[userID]
+	if !exists {
+		return fmt.Errorf("subscriber channel for ID %s does not exist", userID)
+	}
+
+	ch <- template
+	return nil
+}
+
+func (m *Manager) SubscriberExists(userID string) bool {
+	m.subscribersMu.Lock()
+	defer m.subscribersMu.Unlock()
+	_, exists := m.subscribers[userID]
 	return exists
 }
 
-// func (m *Manager) NotifySubscribers(template *model.TemplatePlayWithFriend) {
-// 	m.mu.Lock()
-// 	defer m.mu.Unlock()
-// 	for id, ch := range m.subscribers {
-// 		fmt.Printf("Notifying subscriber: %s\n", id)
-// 		ch <- template
-// 	}
+func (m *Manager) addToDatabase(userID string) error {
+	collection := m.db.GetCollection("subscriber")
+
+	userObjID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID")
+	}
+
+	subscriber := entity.SubscriptionEntity{
+		Id:        primitive.NewObjectID(),
+		UserId:    userObjID,
+		CreatedAt: time.Now().UTC(),
+	}
+
+	_, err = collection.InsertOne(context.TODO(), subscriber)
+	if err != nil {
+		return fmt.Errorf("failed to add subscriber to database: %v", err)
+	}
+
+	return nil
+}
+
+func (m *Manager) removeFromDatabase(userID string) error {
+	collection := m.db.GetCollection("subscriber")
+
+	userObjID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID")
+	}
+
+	filter := bson.M{"userId": userObjID}
+
+	_, err = collection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return fmt.Errorf("failed to remove subscriber from database: %v", err)
+	}
+
+	return nil
+}
+
+// func (m *Manager) SubscriberCount() int {
+// 	m.subscribersMu.Lock()
+// 	defer m.subscribersMu.Unlock()
+// 	return len(m.subscribers)
 // }

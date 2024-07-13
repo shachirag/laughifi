@@ -12,6 +12,11 @@ type AddAnswerRequestInput struct {
 	Value            string `json:"value"`
 }
 
+type AddAnswerResponse struct {
+	Status  bool   `json:"status"`
+	Message string `json:"message"`
+}
+
 type AdminEditProfileRequestInput struct {
 	FirstName           string          `json:"firstName"`
 	LastName            string          `json:"lastName"`
