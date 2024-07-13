@@ -60,9 +60,7 @@ func SendTemplateData(db *database.DB, templateId primitive.ObjectID, customerId
 			for _, ws := range websocketConnectionEntities {
 				err := sendConnectionIDToAPIGateway(db, ws.ConnectionId, &dataBytes)
 				if err != nil {
-					fmt.Println("Failed to send data to connection ID:", ws.ConnectionId, "Error:", err)
-				} else {
-					fmt.Println("Successfully sent data to connection ID:", ws.ConnectionId)
+					fmt.Println("63", err)
 				}
 			}
 		}

@@ -28,6 +28,7 @@ extend type Query {
     limit: Int!
     friendId: String!
   ): FriendTemplatePaginationResponse!
+  getFriendTemplatesDetail(id: ID!): FriendTemplateDetail!
 }
 
 type FriendTemplatePaginationResponse {
@@ -36,6 +37,14 @@ type FriendTemplatePaginationResponse {
   currentPage: Int!
   totalPages: Int!
   friendTemplates: [FriendTemplates!]!
+}
+
+type FriendTemplateDetail {
+  id: ID!
+  title: String!
+  category: String!
+  template: String!
+  answers: [FriendAnswers!]!
 }
 
 type AddAnswerResponse {
@@ -56,4 +65,3 @@ type FriendAnswers {
   key: String!
   value: String!
 }
-

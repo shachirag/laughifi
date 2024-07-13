@@ -160,6 +160,14 @@ type FriendPaginationResponse struct {
 	Friends     []*Friend `json:"friends"`
 }
 
+type FriendTemplateDetail struct {
+	ID       string           `json:"id"`
+	Title    string           `json:"title"`
+	Category string           `json:"category"`
+	Template string           `json:"template"`
+	Answers  []*FriendAnswers `json:"answers"`
+}
+
 type FriendTemplatePaginationResponse struct {
 	Total           int                `json:"total"`
 	PerPage         int                `json:"perPage"`

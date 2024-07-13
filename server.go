@@ -46,16 +46,15 @@ func main() {
 	srv.AddTransport(&transport.POST{})
 	srv.AddTransport(&transport.Options{})
 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	router := http.NewServeMux()
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"message": "success"}`))
 	})
 
-	http.HandleFunc("/connect", websocket.WebsocketConnect(db))
-	http.HandleFunc("/disconnect", websocket.WebsocketDisconnect(db))
-
-	router := http.NewServeMux()
+	router.HandleFunc("/connect", websocket.WebsocketConnect(db))
+	router.HandleFunc("/disconnect", websocket.WebsocketDisconnect(db))
 
 	router.Handle("/query", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		opName := r.Header.Get("X-GraphQL-Operation-Name")

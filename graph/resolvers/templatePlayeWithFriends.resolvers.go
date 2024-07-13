@@ -36,3 +36,12 @@ func (r *queryResolver) GetFriendTemplates(ctx context.Context, page int, limit 
 	}
 	return templates, nil
 }
+
+// GetFriendTemplatesDetail is the resolver for the getFriendTemplatesDetail field.
+func (r *queryResolver) GetFriendTemplatesDetail(ctx context.Context, id string) (*model.FriendTemplateDetail, error) {
+	templates, err := templates.GetTemplateDetail(ctx, r.DB, id)
+	if err != nil {
+		return nil, err
+	}
+	return templates, nil
+}
