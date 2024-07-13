@@ -64,6 +64,7 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 			TemplateId: templateObjId,
 			FriendId:   friendObjID,
 			Answers:    answers,
+			IsFriend:   true,
 			Status:     "pending",
 			CreatedAt:  time.Now().UTC(),
 			UpdatedAt:  time.Now().UTC(),

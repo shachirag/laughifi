@@ -9,6 +9,7 @@ import (
 type TemplatePlayWithFriendEntity struct {
 	Id         primitive.ObjectID                    `json:"id" bson:"_id"`
 	FriendId   primitive.ObjectID                    `json:"friendId" bson:"friendId"`
+	IsFriend   bool                                  `json:"isFriend" bson:"isFriend"`
 	UserId     primitive.ObjectID                    `json:"userId" bson:"userId"`
 	Status     string                                `json:"status" bson:"status"`
 	TemplateId primitive.ObjectID                    `json:"templateId" bson:"templateId"`

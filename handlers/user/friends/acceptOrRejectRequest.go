@@ -9,6 +9,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, data model.UpdateStatusRequestInput) (*model.Response, error) {
@@ -37,15 +38,53 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 		},
 	}
 
-	update := bson.M{
-		"$set": bson.M{
-			"friendsList.$.status": data.Status,
-		},
+	session, err := db.GetMongoClient().StartSession()
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to start session")
+	}
+	defer session.EndSession(ctx)
+
+	callback := func(sessCtx mongo.SessionContext) (interface{}, error) {
+
+		update := bson.M{
+			"$set": bson.M{
+				"friendsList.$.status": data.Status,
+			},
+		}
+
+		_, err = friendsList.UpdateOne(sessCtx, filter, update)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to update status")
+		}
+
+		if data.Status == "friend-request-accepted" || data.Status == "friend-removed" {
+			isFriend := false
+			if data.Status == "friend-request-accepted" {
+				isFriend = true
+			}
+
+			templateFilter := bson.M{
+				"userId":   user.Id,
+				"friendId": userObjIdID,
+			}
+			templateUpdate := bson.M{
+				"$set": bson.M{
+					"isFriend": isFriend,
+				},
+			}
+
+			_, err = db.GetCollection("templatePlayWithFriend").UpdateMany(sessCtx, templateFilter, templateUpdate)
+			if err != nil && err != mongo.ErrNoDocuments {
+				return nil, gqlerror.Errorf("Failed to update templatePlayWithFriend collection: " + err.Error())
+			}
+		}
+
+		return nil, nil
 	}
 
-	_, err = friendsList.UpdateOne(ctx, filter, update)
+	_, err = session.WithTransaction(ctx, callback)
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to update status")
+		return nil, gqlerror.Errorf("Transaction failed: %v", err)
 	}
 
 	var actionMessage string

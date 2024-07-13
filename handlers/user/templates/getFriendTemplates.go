@@ -39,6 +39,7 @@ func GetFriendTemplates(ctx context.Context, db *database.DB, page int, limit in
 	filter := bson.M{
 		"userId":   user.Id,
 		"friendId": friendObjID,
+		"isFriend": true,
 	}
 
 	skip := (page - 1) * limit
@@ -55,7 +56,6 @@ func GetFriendTemplates(ctx context.Context, db *database.DB, page int, limit in
 				FriendTemplates: []*model.FriendTemplates{},
 			}, nil
 		}
-		return nil, gqlerror.Errorf("Failed to fetch filled templates")
 	}
 	defer cursor.Close(ctx)
 
@@ -76,68 +76,78 @@ func GetFriendTemplates(ctx context.Context, db *database.DB, page int, limit in
 		return nil, gqlerror.Errorf("Cursor error: " + err.Error())
 	}
 
-	templateFilter := bson.M{"_id": bson.M{"$in": templateIds}}
+	if len(templateIds) > 0 {
+		templateFilter := bson.M{"_id": bson.M{"$in": templateIds}}
 
-	templateColl := db.GetCollection("template")
-	templateCursor, err := templateColl.Find(ctx, templateFilter)
-	if err != nil {
-		return nil, gqlerror.Errorf("Failed to fetch templates")
-	}
-	defer templateCursor.Close(ctx)
-
-	templateMap := make(map[primitive.ObjectID]entity.TemplatesEntity)
-	for templateCursor.Next(ctx) {
-		var template entity.TemplatesEntity
-		err := templateCursor.Decode(&template)
+		templateColl := db.GetCollection("template")
+		templateCursor, err := templateColl.Find(ctx, templateFilter)
 		if err != nil {
-			return nil, gqlerror.Errorf("Failed to decode template")
+			return nil, gqlerror.Errorf("Failed to fetch templates")
 		}
-		templateMap[template.Id] = template
-	}
+		defer templateCursor.Close(ctx)
 
-	if err := templateCursor.Err(); err != nil {
-		return nil, gqlerror.Errorf("Cursor error while fetching templates: " + err.Error())
-	}
-
-	var friendTemplates []*model.FriendTemplates
-	for _, friendTemplate := range friendTemplatess {
-		template, found := templateMap[friendTemplate.TemplateId]
-		if !found {
-			return nil, gqlerror.Errorf("Template not found")
+		templateMap := make(map[primitive.ObjectID]entity.TemplatesEntity)
+		for templateCursor.Next(ctx) {
+			var template entity.TemplatesEntity
+			err := templateCursor.Decode(&template)
+			if err != nil {
+				return nil, gqlerror.Errorf("Failed to decode template")
+			}
+			templateMap[template.Id] = template
 		}
 
-		var answers []*model.FriendAnswers
-		for _, ans := range friendTemplate.Answers {
-			answers = append(answers, &model.FriendAnswers{
-				Key:   ans.Key,
-				Value: ans.Value,
-			})
+		if err := templateCursor.Err(); err != nil {
+			return nil, gqlerror.Errorf("Cursor error while fetching templates: " + err.Error())
 		}
 
-		friendTemplateRes := &model.FriendTemplates{
-			ID:       friendTemplate.Id.Hex(),
-			Title:    template.Title,
-			Template: template.Template,
-			Category: template.Category.Name,
-			Answers:  answers,
-			Status:   friendTemplate.Status,
+		var friendTemplates []*model.FriendTemplates
+		for _, friendTemplate := range friendTemplatess {
+			template, found := templateMap[friendTemplate.TemplateId]
+			if !found {
+				continue
+			}
+
+			var answers []*model.FriendAnswers
+			for _, ans := range friendTemplate.Answers {
+				answers = append(answers, &model.FriendAnswers{
+					Key:   ans.Key,
+					Value: ans.Value,
+				})
+			}
+
+			friendTemplateRes := &model.FriendTemplates{
+				ID:       friendTemplate.Id.Hex(),
+				Title:    template.Title,
+				Template: template.Template,
+				Category: template.Category.Name,
+				Answers:  answers,
+				Status:   friendTemplate.Status,
+			}
+
+			friendTemplates = append(friendTemplates, friendTemplateRes)
 		}
 
-		friendTemplates = append(friendTemplates, friendTemplateRes)
+		totalCount, err := templatePlayWithFriendColl.CountDocuments(ctx, filter)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to count friend templates")
+		}
+
+		response := model.FriendTemplatePaginationResponse{
+			Total:           int(totalCount),
+			PerPage:         limit,
+			CurrentPage:     page,
+			TotalPages:      int(math.Ceil(float64(totalCount) / float64(limit))),
+			FriendTemplates: friendTemplates,
+		}
+
+		return &response, nil
 	}
 
-	totalCount, err := templatePlayWithFriendColl.CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, gqlerror.Errorf("Failed to count friend templates")
-	}
-
-	response := model.FriendTemplatePaginationResponse{
-		Total:           int(totalCount),
+	return &model.FriendTemplatePaginationResponse{
+		Total:           0,
 		PerPage:         limit,
 		CurrentPage:     page,
-		TotalPages:      int(math.Ceil(float64(totalCount) / float64(limit))),
-		FriendTemplates: friendTemplates,
-	}
-
-	return &response, nil
+		TotalPages:      0,
+		FriendTemplates: []*model.FriendTemplates{},
+	}, nil
 }
