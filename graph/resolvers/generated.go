@@ -83,6 +83,13 @@ type ComplexityRoot struct {
 		Template func(childComplexity int) int
 	}
 
+	AnsweredTrivia struct {
+		CategoryName func(childComplexity int) int
+		GameName     func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Status       func(childComplexity int) int
+	}
+
 	AnswersData struct {
 		Key   func(childComplexity int) int
 		Value func(childComplexity int) int
@@ -199,6 +206,7 @@ type ComplexityRoot struct {
 		FilledWouldYouRather           func(childComplexity int, input model.FilledWouldYouRatherRequestInput) int
 		ForgotPassword                 func(childComplexity int, input model.ForgotPasswordRequestInput) int
 		Login                          func(childComplexity int, input model.LoginRequestInput) int
+		OwnGame                        func(childComplexity int, input model.OwnGameRequestInput) int
 		ResendOtp                      func(childComplexity int, input model.ResendOtpRequestInput) int
 		ResetPassword                  func(childComplexity int, input model.ResetPasswordRequestInput) int
 		SendFriendRequest              func(childComplexity int, input model.SendFriendRequestInput) int
@@ -217,6 +225,7 @@ type ComplexityRoot struct {
 		GetAdminTemplates        func(childComplexity int, page int, limit int, search *string) int
 		GetAllCategories         func(childComplexity int, search *string) int
 		GetAllWouldYouRathers    func(childComplexity int, page int, limit int) int
+		GetAnsweredTrivia        func(childComplexity int) int
 		GetCategories            func(childComplexity int, page int, limit int, search *string) int
 		GetCategory              func(childComplexity int, id string) int
 		GetDashboardData         func(childComplexity int) int
@@ -225,9 +234,12 @@ type ComplexityRoot struct {
 		GetFriends               func(childComplexity int, page int, limit int, search *string) int
 		GetFriendsRequests       func(childComplexity int) int
 		GetLaughifiUsers         func(childComplexity int, page int, limit int, search *string) int
+		GetRequestedTrivia       func(childComplexity int) int
 		GetSavedTemplates        func(childComplexity int, page int, limit int) int
 		GetSavedWouldYouRathers  func(childComplexity int, page int, limit int) int
 		GetTemplates             func(childComplexity int, page int, limit int, category *string) int
+		GetTriva                 func(childComplexity int) int
+		GetTrivaDetail           func(childComplexity int, id string) int
 		GetWouldYouRather        func(childComplexity int, id string) int
 		GetWouldYouRathers       func(childComplexity int, page int, limit int, search *string) int
 		User                     func(childComplexity int) int
@@ -235,6 +247,12 @@ type ComplexityRoot struct {
 
 	RequestResponse struct {
 		Message func(childComplexity int) int
+	}
+
+	RequestedTrivia struct {
+		ID     func(childComplexity int) int
+		Status func(childComplexity int) int
+		User   func(childComplexity int) int
 	}
 
 	Response struct {
@@ -285,6 +303,36 @@ type ComplexityRoot struct {
 		Templates   func(childComplexity int) int
 		Total       func(childComplexity int) int
 		TotalPages  func(childComplexity int) int
+	}
+
+	TriviaDetail struct {
+		AnsweredUsers      func(childComplexity int) int
+		Answers            func(childComplexity int) int
+		DareForWrongAnswer func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		NotAnsweredUsers   func(childComplexity int) int
+		Question           func(childComplexity int) int
+	}
+
+	TriviaListing struct {
+		CategoryName func(childComplexity int) int
+		GameName     func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Status       func(childComplexity int) int
+	}
+
+	UserInfo struct {
+		ID    func(childComplexity int) int
+		Image func(childComplexity int) int
+		Name  func(childComplexity int) int
+	}
+
+	Users struct {
+		Answer          func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Image           func(childComplexity int) int
+		IsCorrectAnswer func(childComplexity int) int
+		Name            func(childComplexity int) int
 	}
 
 	WouldYouRatherData struct {
@@ -350,6 +398,7 @@ type MutationResolver interface {
 	FilledTemplate(ctx context.Context, input model.FilledTemplateRequestInput) (*model.Response, error)
 	TemplatePlayWithFriends(ctx context.Context, input model.TemplatePlayWithFriendsRequestInput) (*model.Response, error)
 	AddAnswer(ctx context.Context, input model.AddAnswerRequestInput, id string) (*model.AddAnswerResponse, error)
+	OwnGame(ctx context.Context, input model.OwnGameRequestInput) (*model.Response, error)
 	FilledWouldYouRather(ctx context.Context, input model.FilledWouldYouRatherRequestInput) (*model.Response, error)
 	WouldYouRather(ctx context.Context, input model.WouldYouRatherRequestInput) (*model.Response, error)
 	EditWouldYouRather(ctx context.Context, id string, input model.EditWouldYouRatherRequestInput) (*model.Response, error)
@@ -371,6 +420,10 @@ type QueryResolver interface {
 	GetSavedTemplates(ctx context.Context, page int, limit int) (*model.SavedTemplatePaginationResponse, error)
 	GetFriendTemplates(ctx context.Context, page int, limit int, friendID string) (*model.FriendTemplatePaginationResponse, error)
 	GetFriendTemplatesDetail(ctx context.Context, id string) (*model.FriendTemplateDetail, error)
+	GetTriva(ctx context.Context) ([]*model.TriviaListing, error)
+	GetTrivaDetail(ctx context.Context, id string) (*model.TriviaDetail, error)
+	GetAnsweredTrivia(ctx context.Context) ([]*model.AnsweredTrivia, error)
+	GetRequestedTrivia(ctx context.Context) ([]*model.RequestedTrivia, error)
 	GetAllWouldYouRathers(ctx context.Context, page int, limit int) (*model.WouldYouRatherPaginationResp, error)
 	GetSavedWouldYouRathers(ctx context.Context, page int, limit int) (*model.SavedWouldYouRatherPaginationResp, error)
 	GetWouldYouRathers(ctx context.Context, page int, limit int, search *string) (*model.WouldYouRathersPaginationResponse, error)
@@ -549,6 +602,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AdminTemplates.Template(childComplexity), true
+
+	case "AnsweredTrivia.categoryName":
+		if e.complexity.AnsweredTrivia.CategoryName == nil {
+			break
+		}
+
+		return e.complexity.AnsweredTrivia.CategoryName(childComplexity), true
+
+	case "AnsweredTrivia.gameName":
+		if e.complexity.AnsweredTrivia.GameName == nil {
+			break
+		}
+
+		return e.complexity.AnsweredTrivia.GameName(childComplexity), true
+
+	case "AnsweredTrivia.id":
+		if e.complexity.AnsweredTrivia.ID == nil {
+			break
+		}
+
+		return e.complexity.AnsweredTrivia.ID(childComplexity), true
+
+	case "AnsweredTrivia.status":
+		if e.complexity.AnsweredTrivia.Status == nil {
+			break
+		}
+
+		return e.complexity.AnsweredTrivia.Status(childComplexity), true
 
 	case "AnswersData.key":
 		if e.complexity.AnswersData.Key == nil {
@@ -1192,6 +1273,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.LoginRequestInput)), true
 
+	case "Mutation.ownGame":
+		if e.complexity.Mutation.OwnGame == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_ownGame_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OwnGame(childComplexity, args["input"].(model.OwnGameRequestInput)), true
+
 	case "Mutation.resendOtp":
 		if e.complexity.Mutation.ResendOtp == nil {
 			break
@@ -1367,6 +1460,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetAllWouldYouRathers(childComplexity, args["page"].(int), args["limit"].(int)), true
 
+	case "Query.getAnsweredTrivia":
+		if e.complexity.Query.GetAnsweredTrivia == nil {
+			break
+		}
+
+		return e.complexity.Query.GetAnsweredTrivia(childComplexity), true
+
 	case "Query.getCategories":
 		if e.complexity.Query.GetCategories == nil {
 			break
@@ -1453,6 +1553,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetLaughifiUsers(childComplexity, args["page"].(int), args["limit"].(int), args["search"].(*string)), true
 
+	case "Query.getRequestedTrivia":
+		if e.complexity.Query.GetRequestedTrivia == nil {
+			break
+		}
+
+		return e.complexity.Query.GetRequestedTrivia(childComplexity), true
+
 	case "Query.getSavedTemplates":
 		if e.complexity.Query.GetSavedTemplates == nil {
 			break
@@ -1488,6 +1595,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.GetTemplates(childComplexity, args["page"].(int), args["limit"].(int), args["category"].(*string)), true
+
+	case "Query.getTriva":
+		if e.complexity.Query.GetTriva == nil {
+			break
+		}
+
+		return e.complexity.Query.GetTriva(childComplexity), true
+
+	case "Query.getTrivaDetail":
+		if e.complexity.Query.GetTrivaDetail == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getTrivaDetail_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetTrivaDetail(childComplexity, args["id"].(string)), true
 
 	case "Query.getWouldYouRather":
 		if e.complexity.Query.GetWouldYouRather == nil {
@@ -1526,6 +1652,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.RequestResponse.Message(childComplexity), true
+
+	case "RequestedTrivia.id":
+		if e.complexity.RequestedTrivia.ID == nil {
+			break
+		}
+
+		return e.complexity.RequestedTrivia.ID(childComplexity), true
+
+	case "RequestedTrivia.status":
+		if e.complexity.RequestedTrivia.Status == nil {
+			break
+		}
+
+		return e.complexity.RequestedTrivia.Status(childComplexity), true
+
+	case "RequestedTrivia.user":
+		if e.complexity.RequestedTrivia.User == nil {
+			break
+		}
+
+		return e.complexity.RequestedTrivia.User(childComplexity), true
 
 	case "Response.message":
 		if e.complexity.Response.Message == nil {
@@ -1730,6 +1877,132 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TemplatePaginationResponse.TotalPages(childComplexity), true
 
+	case "TriviaDetail.answeredUsers":
+		if e.complexity.TriviaDetail.AnsweredUsers == nil {
+			break
+		}
+
+		return e.complexity.TriviaDetail.AnsweredUsers(childComplexity), true
+
+	case "TriviaDetail.answers":
+		if e.complexity.TriviaDetail.Answers == nil {
+			break
+		}
+
+		return e.complexity.TriviaDetail.Answers(childComplexity), true
+
+	case "TriviaDetail.dareForWrongAnswer":
+		if e.complexity.TriviaDetail.DareForWrongAnswer == nil {
+			break
+		}
+
+		return e.complexity.TriviaDetail.DareForWrongAnswer(childComplexity), true
+
+	case "TriviaDetail.id":
+		if e.complexity.TriviaDetail.ID == nil {
+			break
+		}
+
+		return e.complexity.TriviaDetail.ID(childComplexity), true
+
+	case "TriviaDetail.notAnsweredUsers":
+		if e.complexity.TriviaDetail.NotAnsweredUsers == nil {
+			break
+		}
+
+		return e.complexity.TriviaDetail.NotAnsweredUsers(childComplexity), true
+
+	case "TriviaDetail.question":
+		if e.complexity.TriviaDetail.Question == nil {
+			break
+		}
+
+		return e.complexity.TriviaDetail.Question(childComplexity), true
+
+	case "TriviaListing.categoryName":
+		if e.complexity.TriviaListing.CategoryName == nil {
+			break
+		}
+
+		return e.complexity.TriviaListing.CategoryName(childComplexity), true
+
+	case "TriviaListing.gameName":
+		if e.complexity.TriviaListing.GameName == nil {
+			break
+		}
+
+		return e.complexity.TriviaListing.GameName(childComplexity), true
+
+	case "TriviaListing.id":
+		if e.complexity.TriviaListing.ID == nil {
+			break
+		}
+
+		return e.complexity.TriviaListing.ID(childComplexity), true
+
+	case "TriviaListing.status":
+		if e.complexity.TriviaListing.Status == nil {
+			break
+		}
+
+		return e.complexity.TriviaListing.Status(childComplexity), true
+
+	case "UserInfo.id":
+		if e.complexity.UserInfo.ID == nil {
+			break
+		}
+
+		return e.complexity.UserInfo.ID(childComplexity), true
+
+	case "UserInfo.image":
+		if e.complexity.UserInfo.Image == nil {
+			break
+		}
+
+		return e.complexity.UserInfo.Image(childComplexity), true
+
+	case "UserInfo.name":
+		if e.complexity.UserInfo.Name == nil {
+			break
+		}
+
+		return e.complexity.UserInfo.Name(childComplexity), true
+
+	case "Users.answer":
+		if e.complexity.Users.Answer == nil {
+			break
+		}
+
+		return e.complexity.Users.Answer(childComplexity), true
+
+	case "Users.id":
+		if e.complexity.Users.ID == nil {
+			break
+		}
+
+		return e.complexity.Users.ID(childComplexity), true
+
+	case "Users.image":
+		if e.complexity.Users.Image == nil {
+			break
+		}
+
+		return e.complexity.Users.Image(childComplexity), true
+
+	case "Users.isCorrectAnswer":
+		if e.complexity.Users.IsCorrectAnswer == nil {
+			break
+		}
+
+		return e.complexity.Users.IsCorrectAnswer(childComplexity), true
+
+	case "Users.name":
+		if e.complexity.Users.Name == nil {
+			break
+		}
+
+		return e.complexity.Users.Name(childComplexity), true
+
 	case "WouldYouRatherData.id":
 		if e.complexity.WouldYouRatherData.ID == nil {
 			break
@@ -1880,6 +2153,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputFilledWouldYouRatherRequestInput,
 		ec.unmarshalInputForgotPasswordRequestInput,
 		ec.unmarshalInputLoginRequestInput,
+		ec.unmarshalInputOwnGameRequestInput,
 		ec.unmarshalInputResendOtpRequestInput,
 		ec.unmarshalInputResetPasswordRequestInput,
 		ec.unmarshalInputSendFriendRequestInput,
@@ -2401,6 +2675,66 @@ type FriendAnswers {
   value: String!
 }
 `, BuiltIn: false},
+	{Name: "../schema/trivia.graphqls", Input: `extend type Mutation {
+  ownGame(input: OwnGameRequestInput!): Response!
+}
+
+input OwnGameRequestInput {
+  categoryId: ID!
+  friendIds: ID!
+  gameName: String!
+}
+
+extend type Query {
+  getTriva: [TriviaListing!]!
+  getTrivaDetail(id: ID!): TriviaDetail!
+  getAnsweredTrivia: [AnsweredTrivia!]!
+  getRequestedTrivia: [RequestedTrivia!]!
+}
+
+type TriviaListing {
+  id: ID!
+  categoryName: String!
+  gameName: String!
+  status: String!
+}
+
+type AnsweredTrivia {
+  id: ID!
+  categoryName: String!
+  gameName: String!
+  status: String!
+}
+
+type RequestedTrivia {
+  id: ID!
+  user: UserInfo!
+  status: String!
+}
+
+type UserInfo {
+  id: ID!
+  name: String!
+  image: String!
+}
+
+type TriviaDetail {
+  id: ID!
+  question: String!
+  answers: [String!]!
+  answeredUsers: [Users!]!
+  notAnsweredUsers: [Users!]!
+  dareForWrongAnswer: String
+}
+
+type Users {
+  id: ID!
+  name: String!
+  image: String!
+  answer: String
+  isCorrectAnswer: Boolean
+}
+`, BuiltIn: false},
 	{Name: "../schema/userWouldYouRather.graphqls", Input: `type WouldYouRatherData {
   id: ID!
   wouldYouRather: String!
@@ -2855,6 +3189,21 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNLoginRequestInput2laughifiᚋgraphᚋmodelᚐLoginRequestInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_ownGame_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OwnGameRequestInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOwnGameRequestInput2laughifiᚋgraphᚋmodelᚐOwnGameRequestInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3364,6 +3713,21 @@ func (ec *executionContext) field_Query_getTemplates_args(ctx context.Context, r
 		}
 	}
 	args["category"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getTrivaDetail_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -4419,6 +4783,182 @@ func (ec *executionContext) _AdminTemplates_template(ctx context.Context, field 
 func (ec *executionContext) fieldContext_AdminTemplates_template(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AdminTemplates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnsweredTrivia_id(ctx context.Context, field graphql.CollectedField, obj *model.AnsweredTrivia) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnsweredTrivia_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnsweredTrivia_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnsweredTrivia",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnsweredTrivia_categoryName(ctx context.Context, field graphql.CollectedField, obj *model.AnsweredTrivia) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnsweredTrivia_categoryName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CategoryName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnsweredTrivia_categoryName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnsweredTrivia",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnsweredTrivia_gameName(ctx context.Context, field graphql.CollectedField, obj *model.AnsweredTrivia) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnsweredTrivia_gameName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GameName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnsweredTrivia_gameName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnsweredTrivia",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AnsweredTrivia_status(ctx context.Context, field graphql.CollectedField, obj *model.AnsweredTrivia) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AnsweredTrivia_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AnsweredTrivia_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AnsweredTrivia",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -8567,6 +9107,65 @@ func (ec *executionContext) fieldContext_Mutation_addAnswer(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_ownGame(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_ownGame(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().OwnGame(rctx, fc.Args["input"].(model.OwnGameRequestInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Response)
+	fc.Result = res
+	return ec.marshalNResponse2ᚖlaughifiᚋgraphᚋmodelᚐResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_ownGame(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "message":
+				return ec.fieldContext_Response_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_ownGame_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_filledWouldYouRather(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_filledWouldYouRather(ctx, field)
 	if err != nil {
@@ -9756,6 +10355,235 @@ func (ec *executionContext) fieldContext_Query_getFriendTemplatesDetail(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_getTriva(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getTriva(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetTriva(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TriviaListing)
+	fc.Result = res
+	return ec.marshalNTriviaListing2ᚕᚖlaughifiᚋgraphᚋmodelᚐTriviaListingᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getTriva(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TriviaListing_id(ctx, field)
+			case "categoryName":
+				return ec.fieldContext_TriviaListing_categoryName(ctx, field)
+			case "gameName":
+				return ec.fieldContext_TriviaListing_gameName(ctx, field)
+			case "status":
+				return ec.fieldContext_TriviaListing_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TriviaListing", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getTrivaDetail(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getTrivaDetail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetTrivaDetail(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.TriviaDetail)
+	fc.Result = res
+	return ec.marshalNTriviaDetail2ᚖlaughifiᚋgraphᚋmodelᚐTriviaDetail(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getTrivaDetail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_TriviaDetail_id(ctx, field)
+			case "question":
+				return ec.fieldContext_TriviaDetail_question(ctx, field)
+			case "answers":
+				return ec.fieldContext_TriviaDetail_answers(ctx, field)
+			case "answeredUsers":
+				return ec.fieldContext_TriviaDetail_answeredUsers(ctx, field)
+			case "notAnsweredUsers":
+				return ec.fieldContext_TriviaDetail_notAnsweredUsers(ctx, field)
+			case "dareForWrongAnswer":
+				return ec.fieldContext_TriviaDetail_dareForWrongAnswer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TriviaDetail", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getTrivaDetail_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getAnsweredTrivia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getAnsweredTrivia(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetAnsweredTrivia(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AnsweredTrivia)
+	fc.Result = res
+	return ec.marshalNAnsweredTrivia2ᚕᚖlaughifiᚋgraphᚋmodelᚐAnsweredTriviaᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getAnsweredTrivia(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AnsweredTrivia_id(ctx, field)
+			case "categoryName":
+				return ec.fieldContext_AnsweredTrivia_categoryName(ctx, field)
+			case "gameName":
+				return ec.fieldContext_AnsweredTrivia_gameName(ctx, field)
+			case "status":
+				return ec.fieldContext_AnsweredTrivia_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AnsweredTrivia", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getRequestedTrivia(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getRequestedTrivia(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetRequestedTrivia(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.RequestedTrivia)
+	fc.Result = res
+	return ec.marshalNRequestedTrivia2ᚕᚖlaughifiᚋgraphᚋmodelᚐRequestedTriviaᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getRequestedTrivia(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_RequestedTrivia_id(ctx, field)
+			case "user":
+				return ec.fieldContext_RequestedTrivia_user(ctx, field)
+			case "status":
+				return ec.fieldContext_RequestedTrivia_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RequestedTrivia", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_getAllWouldYouRathers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_getAllWouldYouRathers(ctx, field)
 	if err != nil {
@@ -10183,6 +11011,146 @@ func (ec *executionContext) _RequestResponse_message(ctx context.Context, field 
 func (ec *executionContext) fieldContext_RequestResponse_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "RequestResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RequestedTrivia_id(ctx context.Context, field graphql.CollectedField, obj *model.RequestedTrivia) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RequestedTrivia_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RequestedTrivia_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RequestedTrivia",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RequestedTrivia_user(ctx context.Context, field graphql.CollectedField, obj *model.RequestedTrivia) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RequestedTrivia_user(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.User, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserInfo)
+	fc.Result = res
+	return ec.marshalNUserInfo2ᚖlaughifiᚋgraphᚋmodelᚐUserInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RequestedTrivia_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RequestedTrivia",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserInfo_id(ctx, field)
+			case "name":
+				return ec.fieldContext_UserInfo_name(ctx, field)
+			case "image":
+				return ec.fieldContext_UserInfo_image(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RequestedTrivia_status(ctx context.Context, field graphql.CollectedField, obj *model.RequestedTrivia) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_RequestedTrivia_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_RequestedTrivia_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RequestedTrivia",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -11502,6 +12470,813 @@ func (ec *executionContext) fieldContext_TemplatePaginationResponse_templates(_ 
 				return ec.fieldContext_Template_template(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Template", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaDetail_id(ctx context.Context, field graphql.CollectedField, obj *model.TriviaDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaDetail_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaDetail_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaDetail_question(ctx context.Context, field graphql.CollectedField, obj *model.TriviaDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaDetail_question(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Question, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaDetail_question(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaDetail_answers(ctx context.Context, field graphql.CollectedField, obj *model.TriviaDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaDetail_answers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Answers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaDetail_answers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaDetail_answeredUsers(ctx context.Context, field graphql.CollectedField, obj *model.TriviaDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaDetail_answeredUsers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AnsweredUsers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Users)
+	fc.Result = res
+	return ec.marshalNUsers2ᚕᚖlaughifiᚋgraphᚋmodelᚐUsersᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaDetail_answeredUsers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Users_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Users_name(ctx, field)
+			case "image":
+				return ec.fieldContext_Users_image(ctx, field)
+			case "answer":
+				return ec.fieldContext_Users_answer(ctx, field)
+			case "isCorrectAnswer":
+				return ec.fieldContext_Users_isCorrectAnswer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Users", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaDetail_notAnsweredUsers(ctx context.Context, field graphql.CollectedField, obj *model.TriviaDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaDetail_notAnsweredUsers(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NotAnsweredUsers, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Users)
+	fc.Result = res
+	return ec.marshalNUsers2ᚕᚖlaughifiᚋgraphᚋmodelᚐUsersᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaDetail_notAnsweredUsers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Users_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Users_name(ctx, field)
+			case "image":
+				return ec.fieldContext_Users_image(ctx, field)
+			case "answer":
+				return ec.fieldContext_Users_answer(ctx, field)
+			case "isCorrectAnswer":
+				return ec.fieldContext_Users_isCorrectAnswer(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Users", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaDetail_dareForWrongAnswer(ctx context.Context, field graphql.CollectedField, obj *model.TriviaDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaDetail_dareForWrongAnswer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DareForWrongAnswer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaDetail_dareForWrongAnswer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaListing_id(ctx context.Context, field graphql.CollectedField, obj *model.TriviaListing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaListing_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaListing_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaListing",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaListing_categoryName(ctx context.Context, field graphql.CollectedField, obj *model.TriviaListing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaListing_categoryName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CategoryName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaListing_categoryName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaListing",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaListing_gameName(ctx context.Context, field graphql.CollectedField, obj *model.TriviaListing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaListing_gameName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GameName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaListing_gameName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaListing",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaListing_status(ctx context.Context, field graphql.CollectedField, obj *model.TriviaListing) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaListing_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaListing_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaListing",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserInfo_id(ctx context.Context, field graphql.CollectedField, obj *model.UserInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserInfo_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserInfo_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserInfo_name(ctx context.Context, field graphql.CollectedField, obj *model.UserInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserInfo_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserInfo_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserInfo_image(ctx context.Context, field graphql.CollectedField, obj *model.UserInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserInfo_image(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Image, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserInfo_image(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Users_id(ctx context.Context, field graphql.CollectedField, obj *model.Users) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Users_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Users_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Users",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Users_name(ctx context.Context, field graphql.CollectedField, obj *model.Users) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Users_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Users_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Users",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Users_image(ctx context.Context, field graphql.CollectedField, obj *model.Users) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Users_image(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Image, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Users_image(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Users",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Users_answer(ctx context.Context, field graphql.CollectedField, obj *model.Users) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Users_answer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Answer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Users_answer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Users",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Users_isCorrectAnswer(ctx context.Context, field graphql.CollectedField, obj *model.Users) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Users_isCorrectAnswer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsCorrectAnswer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Users_isCorrectAnswer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Users",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -14658,6 +16433,47 @@ func (ec *executionContext) unmarshalInputLoginRequestInput(ctx context.Context,
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputOwnGameRequestInput(ctx context.Context, obj interface{}) (model.OwnGameRequestInput, error) {
+	var it model.OwnGameRequestInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"categoryId", "friendIds", "gameName"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "categoryId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CategoryID = data
+		case "friendIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("friendIds"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FriendIds = data
+		case "gameName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gameName"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GameName = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputResendOtpRequestInput(ctx context.Context, obj interface{}) (model.ResendOtpRequestInput, error) {
 	var it model.ResendOtpRequestInput
 	asMap := map[string]interface{}{}
@@ -15308,6 +17124,60 @@ func (ec *executionContext) _AdminTemplates(ctx context.Context, sel ast.Selecti
 			}
 		case "template":
 			out.Values[i] = ec._AdminTemplates_template(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var answeredTriviaImplementors = []string{"AnsweredTrivia"}
+
+func (ec *executionContext) _AnsweredTrivia(ctx context.Context, sel ast.SelectionSet, obj *model.AnsweredTrivia) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, answeredTriviaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AnsweredTrivia")
+		case "id":
+			out.Values[i] = ec._AnsweredTrivia_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "categoryName":
+			out.Values[i] = ec._AnsweredTrivia_categoryName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "gameName":
+			out.Values[i] = ec._AnsweredTrivia_gameName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._AnsweredTrivia_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -16261,6 +18131,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "ownGame":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_ownGame(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "filledWouldYouRather":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_filledWouldYouRather(ctx, field)
@@ -16661,6 +18538,94 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getTriva":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getTriva(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getTrivaDetail":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getTrivaDetail(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getAnsweredTrivia":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getAnsweredTrivia(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getRequestedTrivia":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getRequestedTrivia(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getAllWouldYouRathers":
 			field := field
 
@@ -16793,6 +18758,55 @@ func (ec *executionContext) _RequestResponse(ctx context.Context, sel ast.Select
 			out.Values[i] = graphql.MarshalString("RequestResponse")
 		case "message":
 			out.Values[i] = ec._RequestResponse_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var requestedTriviaImplementors = []string{"RequestedTrivia"}
+
+func (ec *executionContext) _RequestedTrivia(ctx context.Context, sel ast.SelectionSet, obj *model.RequestedTrivia) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, requestedTriviaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RequestedTrivia")
+		case "id":
+			out.Values[i] = ec._RequestedTrivia_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "user":
+			out.Values[i] = ec._RequestedTrivia_user(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._RequestedTrivia_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -17179,6 +19193,223 @@ func (ec *executionContext) _TemplatePaginationResponse(ctx context.Context, sel
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var triviaDetailImplementors = []string{"TriviaDetail"}
+
+func (ec *executionContext) _TriviaDetail(ctx context.Context, sel ast.SelectionSet, obj *model.TriviaDetail) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, triviaDetailImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TriviaDetail")
+		case "id":
+			out.Values[i] = ec._TriviaDetail_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "question":
+			out.Values[i] = ec._TriviaDetail_question(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "answers":
+			out.Values[i] = ec._TriviaDetail_answers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "answeredUsers":
+			out.Values[i] = ec._TriviaDetail_answeredUsers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "notAnsweredUsers":
+			out.Values[i] = ec._TriviaDetail_notAnsweredUsers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dareForWrongAnswer":
+			out.Values[i] = ec._TriviaDetail_dareForWrongAnswer(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var triviaListingImplementors = []string{"TriviaListing"}
+
+func (ec *executionContext) _TriviaListing(ctx context.Context, sel ast.SelectionSet, obj *model.TriviaListing) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, triviaListingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TriviaListing")
+		case "id":
+			out.Values[i] = ec._TriviaListing_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "categoryName":
+			out.Values[i] = ec._TriviaListing_categoryName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "gameName":
+			out.Values[i] = ec._TriviaListing_gameName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._TriviaListing_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var userInfoImplementors = []string{"UserInfo"}
+
+func (ec *executionContext) _UserInfo(ctx context.Context, sel ast.SelectionSet, obj *model.UserInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserInfo")
+		case "id":
+			out.Values[i] = ec._UserInfo_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._UserInfo_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "image":
+			out.Values[i] = ec._UserInfo_image(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var usersImplementors = []string{"Users"}
+
+func (ec *executionContext) _Users(ctx context.Context, sel ast.SelectionSet, obj *model.Users) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, usersImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Users")
+		case "id":
+			out.Values[i] = ec._Users_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Users_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "image":
+			out.Values[i] = ec._Users_image(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "answer":
+			out.Values[i] = ec._Users_answer(ctx, field, obj)
+		case "isCorrectAnswer":
+			out.Values[i] = ec._Users_isCorrectAnswer(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17940,6 +20171,60 @@ func (ec *executionContext) unmarshalNAnswer2ᚖlaughifiᚋgraphᚋmodelᚐAnswe
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNAnsweredTrivia2ᚕᚖlaughifiᚋgraphᚋmodelᚐAnsweredTriviaᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AnsweredTrivia) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAnsweredTrivia2ᚖlaughifiᚋgraphᚋmodelᚐAnsweredTrivia(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAnsweredTrivia2ᚖlaughifiᚋgraphᚋmodelᚐAnsweredTrivia(ctx context.Context, sel ast.SelectionSet, v *model.AnsweredTrivia) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AnsweredTrivia(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNAnswersData2ᚕᚖlaughifiᚋgraphᚋmodelᚐAnswersDataᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AnswersData) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -18483,6 +20768,11 @@ func (ec *executionContext) marshalNLoginResponse2ᚖlaughifiᚋgraphᚋmodelᚐ
 	return ec._LoginResponse(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNOwnGameRequestInput2laughifiᚋgraphᚋmodelᚐOwnGameRequestInput(ctx context.Context, v interface{}) (model.OwnGameRequestInput, error) {
+	res, err := ec.unmarshalInputOwnGameRequestInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNRequestResponse2laughifiᚋgraphᚋmodelᚐRequestResponse(ctx context.Context, sel ast.SelectionSet, v model.RequestResponse) graphql.Marshaler {
 	return ec._RequestResponse(ctx, sel, &v)
 }
@@ -18495,6 +20785,60 @@ func (ec *executionContext) marshalNRequestResponse2ᚖlaughifiᚋgraphᚋmodel�
 		return graphql.Null
 	}
 	return ec._RequestResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRequestedTrivia2ᚕᚖlaughifiᚋgraphᚋmodelᚐRequestedTriviaᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RequestedTrivia) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRequestedTrivia2ᚖlaughifiᚋgraphᚋmodelᚐRequestedTrivia(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNRequestedTrivia2ᚖlaughifiᚋgraphᚋmodelᚐRequestedTrivia(ctx context.Context, sel ast.SelectionSet, v *model.RequestedTrivia) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RequestedTrivia(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNResendOtpRequestInput2laughifiᚋgraphᚋmodelᚐResendOtpRequestInput(ctx context.Context, v interface{}) (model.ResendOtpRequestInput, error) {
@@ -18792,9 +21136,141 @@ func (ec *executionContext) unmarshalNTemplatePlayWithFriendsRequestInput2laughi
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNTriviaDetail2laughifiᚋgraphᚋmodelᚐTriviaDetail(ctx context.Context, sel ast.SelectionSet, v model.TriviaDetail) graphql.Marshaler {
+	return ec._TriviaDetail(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTriviaDetail2ᚖlaughifiᚋgraphᚋmodelᚐTriviaDetail(ctx context.Context, sel ast.SelectionSet, v *model.TriviaDetail) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TriviaDetail(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTriviaListing2ᚕᚖlaughifiᚋgraphᚋmodelᚐTriviaListingᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TriviaListing) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTriviaListing2ᚖlaughifiᚋgraphᚋmodelᚐTriviaListing(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTriviaListing2ᚖlaughifiᚋgraphᚋmodelᚐTriviaListing(ctx context.Context, sel ast.SelectionSet, v *model.TriviaListing) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TriviaListing(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNUpdateStatusRequestInput2laughifiᚋgraphᚋmodelᚐUpdateStatusRequestInput(ctx context.Context, v interface{}) (model.UpdateStatusRequestInput, error) {
 	res, err := ec.unmarshalInputUpdateStatusRequestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUserInfo2ᚖlaughifiᚋgraphᚋmodelᚐUserInfo(ctx context.Context, sel ast.SelectionSet, v *model.UserInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUsers2ᚕᚖlaughifiᚋgraphᚋmodelᚐUsersᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Users) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNUsers2ᚖlaughifiᚋgraphᚋmodelᚐUsers(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNUsers2ᚖlaughifiᚋgraphᚋmodelᚐUsers(ctx context.Context, sel ast.SelectionSet, v *model.Users) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Users(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNVerifyOtpForResetPasswordRequestInput2laughifiᚋgraphᚋmodelᚐVerifyOtpForResetPasswordRequestInput(ctx context.Context, v interface{}) (model.VerifyOtpForResetPasswordRequestInput, error) {

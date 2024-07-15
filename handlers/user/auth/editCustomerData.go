@@ -11,6 +11,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func EditCustomer(ctx context.Context, db *database.DB, input model.EditProfileRequestInput) (*model.Response, error) {
@@ -47,13 +48,56 @@ func EditCustomer(ctx context.Context, db *database.DB, input model.EditProfileR
 		},
 	}
 
-	updateRes, err := customerColl.UpdateOne(ctx, filter, update)
+	session, err := db.GetMongoClient().StartSession()
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to update user")
+		return nil, gqlerror.Errorf("Failed to start session")
+	}
+	defer session.EndSession(ctx)
+
+	callback := func(sessCtx mongo.SessionContext) (interface{}, error) {
+
+		updateRes, err := customerColl.UpdateOne(sessCtx, filter, update)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to update user")
+		}
+
+		if updateRes.MatchedCount == 0 {
+			return nil, gqlerror.Errorf("No User found")
+		}
+
+		userFilter := bson.M{"user.id": userData.Id}
+		ownGameUpdate := bson.M{
+			"$set": bson.M{
+				"user.image": imageURL,
+				"user.name":  input.Name,
+				"updatedAt":  time.Now().UTC(),
+			},
+		}
+
+		_, err = db.GetCollection("ownGame").UpdateMany(sessCtx, userFilter, ownGameUpdate)
+		if err != nil && err != mongo.ErrNoDocuments {
+			return nil, gqlerror.Errorf("Failed to update templates with the customer")
+		}
+
+		// friendFilter := bson.M{"friend.id": userData.Id}
+		// friendUpdate := bson.M{
+		// 	"$set": bson.M{
+		// 		"image":     imageURL,
+		// 		"updatedAt": time.Now().UTC(),
+		// 	},
+		// }
+
+		// _, err = db.GetCollection("ownGame").UpdateMany(sessCtx, friendFilter, friendUpdate)
+		// if err != nil && err != mongo.ErrNoDocuments {
+		// 	return nil, gqlerror.Errorf("Failed to update templates with the friend")
+		// }
+
+		return nil, nil
 	}
 
-	if updateRes.MatchedCount == 0 {
-		return nil, gqlerror.Errorf("No User found")
+	_, err = session.WithTransaction(ctx, callback)
+	if err != nil {
+		return nil, gqlerror.Errorf("Transaction failed: %v", err)
 	}
 
 	return &model.Response{

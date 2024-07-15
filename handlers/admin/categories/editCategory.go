@@ -61,6 +61,19 @@ func EditCategory(ctx context.Context, db *database.DB, categoryId string, input
 			return nil, gqlerror.Errorf("Failed to update templates with the new category name")
 		}
 
+		ownGameFilter := bson.M{"category.id": categoryObjID}
+		ownGameUpdate := bson.M{
+			"$set": bson.M{
+				"category.name": input.Category,
+				"updatedAt":     time.Now().UTC(),
+			},
+		}
+
+		_, err = db.GetCollection("ownGame").UpdateMany(sessCtx, ownGameFilter, ownGameUpdate)
+		if err != nil && err != mongo.ErrNoDocuments {
+			return nil, gqlerror.Errorf("Failed to update templates with the new category name")
+		}
+
 		return nil, nil
 	}
 

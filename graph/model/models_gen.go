@@ -72,6 +72,13 @@ type Answer struct {
 	Value string `json:"value"`
 }
 
+type AnsweredTrivia struct {
+	ID           string `json:"id"`
+	CategoryName string `json:"categoryName"`
+	GameName     string `json:"gameName"`
+	Status       string `json:"status"`
+}
+
 type AnswersData struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -223,11 +230,23 @@ type LoginResponse struct {
 type Mutation struct {
 }
 
+type OwnGameRequestInput struct {
+	CategoryID string `json:"categoryId"`
+	FriendIds  string `json:"friendIds"`
+	GameName   string `json:"gameName"`
+}
+
 type Query struct {
 }
 
 type RequestResponse struct {
 	Message string `json:"message"`
+}
+
+type RequestedTrivia struct {
+	ID     string    `json:"id"`
+	User   *UserInfo `json:"user"`
+	Status string    `json:"status"`
 }
 
 type ResendOtpRequestInput struct {
@@ -316,8 +335,38 @@ type TemplatePlayWithFriendsRequestInput struct {
 	Answer     []*Answer `json:"answer"`
 }
 
+type TriviaDetail struct {
+	ID                 string   `json:"id"`
+	Question           string   `json:"question"`
+	Answers            []string `json:"answers"`
+	AnsweredUsers      []*Users `json:"answeredUsers"`
+	NotAnsweredUsers   []*Users `json:"notAnsweredUsers"`
+	DareForWrongAnswer *string  `json:"dareForWrongAnswer,omitempty"`
+}
+
+type TriviaListing struct {
+	ID           string `json:"id"`
+	CategoryName string `json:"categoryName"`
+	GameName     string `json:"gameName"`
+	Status       string `json:"status"`
+}
+
 type UpdateStatusRequestInput struct {
 	Status string `json:"Status"`
+}
+
+type UserInfo struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Image string `json:"image"`
+}
+
+type Users struct {
+	ID              string  `json:"id"`
+	Name            string  `json:"name"`
+	Image           string  `json:"image"`
+	Answer          *string `json:"answer,omitempty"`
+	IsCorrectAnswer *bool   `json:"isCorrectAnswer,omitempty"`
 }
 
 type VerifyOtpForResetPasswordRequestInput struct {

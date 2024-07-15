@@ -51,11 +51,10 @@ func GetFriends(ctx context.Context, db *database.DB, page int, limit int, searc
 		filter["name"] = primitive.Regex{Pattern: search, Options: "i"}
 	}
 
-	sortOptions := options.Find().SetSort(bson.M{"updatedAt": -1})
 	skip := (page - 1) * limit
 	findOptions := options.Find().SetSkip(int64(skip)).SetLimit(int64(limit)).SetSort(bson.M{"updatedAt": -1})
 
-	cursor, err := customerColl.Find(ctx, filter, findOptions, sortOptions)
+	cursor, err := customerColl.Find(ctx, filter, findOptions)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, gqlerror.Errorf("Customer not Found")

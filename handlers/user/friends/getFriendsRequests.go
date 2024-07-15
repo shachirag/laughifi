@@ -71,10 +71,9 @@ func fetchPendingRequestFriendIDs(ctx context.Context, db *database.DB) ([]primi
 	}
 
 	filter := bson.M{
-		// "userId": user.Id,
+		"userId": user.Id,
 		"friendsList": bson.M{
 			"$elemMatch": bson.M{
-				"id":     user.Id,
 				"status": "friend-request-pending",
 			},
 		},
@@ -97,10 +96,14 @@ func fetchPendingRequestFriendIDs(ctx context.Context, db *database.DB) ([]primi
 		friendLists = append(friendLists, friendList)
 	}
 
-	var userIDs []primitive.ObjectID
+	var friendIDs []primitive.ObjectID
 	for _, res := range friendLists {
-		userIDs = append(userIDs, res.UserId)
+		for _, friend := range res.FriendsList {
+			if friend.Status == "friend-request-pending" {
+				friendIDs = append(friendIDs, friend.Id)
+			}
+		}
 	}
 
-	return userIDs, nil
+	return friendIDs, nil
 }

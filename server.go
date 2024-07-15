@@ -91,6 +91,9 @@ func main() {
 			"GetFilledWouldRathers":     true,
 			"TemplatePlayWithFriends":   true,
 			"GetFriendTemplates":        true,
+			"OwnGame":                   true,
+			"GetTrivia":                 true,
+			"GetTriviaDetail":           true,
 
 			// admin
 			"LoginAdmin":                     false,

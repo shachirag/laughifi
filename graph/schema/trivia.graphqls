@@ -1,0 +1,59 @@
+extend type Mutation {
+  ownGame(input: OwnGameRequestInput!): Response!
+}
+
+input OwnGameRequestInput {
+  categoryId: ID!
+  friendIds: ID!
+  gameName: String!
+}
+
+extend type Query {
+  getTriva: [TriviaListing!]!
+  getTrivaDetail(id: ID!): TriviaDetail!
+  getAnsweredTrivia: [AnsweredTrivia!]!
+  getRequestedTrivia: [RequestedTrivia!]!
+}
+
+type TriviaListing {
+  id: ID!
+  categoryName: String!
+  gameName: String!
+  status: String!
+}
+
+type AnsweredTrivia {
+  id: ID!
+  categoryName: String!
+  gameName: String!
+  status: String!
+}
+
+type RequestedTrivia {
+  id: ID!
+  user: UserInfo!
+  status: String!
+}
+
+type UserInfo {
+  id: ID!
+  name: String!
+  image: String!
+}
+
+type TriviaDetail {
+  id: ID!
+  question: String!
+  answers: [String!]!
+  answeredUsers: [Users!]!
+  notAnsweredUsers: [Users!]!
+  dareForWrongAnswer: String
+}
+
+type Users {
+  id: ID!
+  name: String!
+  image: String!
+  answer: String
+  isCorrectAnswer: Boolean
+}

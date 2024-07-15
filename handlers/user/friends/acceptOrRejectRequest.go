@@ -18,7 +18,7 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 		friendsList = db.GetCollection("friendsList")
 	)
 
-	userObjIdID, err := primitive.ObjectIDFromHex(userId)
+	userObjID, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		return nil, gqlerror.Errorf("invalid user Id")
 	}
@@ -32,11 +32,14 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 		"userId": user.Id,
 		"friendsList": bson.M{
 			"$elemMatch": bson.M{
-				"id":     userObjIdID,
+				"id":     userObjID,
 				"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-accepted"}},
 			},
 		},
 	}
+
+	// abc, _ := json.Marshal(filter)
+	// fmt.Println(string(abc))
 
 	session, err := db.GetMongoClient().StartSession()
 	if err != nil {
@@ -57,6 +60,27 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 			return nil, gqlerror.Errorf("Failed to update status")
 		}
 
+		secondFilter := bson.M{
+			"userId": userObjID,
+			"friendsList": bson.M{
+				"$elemMatch": bson.M{
+					"id":     user.Id,
+					"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-accepted"}},
+				},
+			},
+		}
+
+		secondUpdate := bson.M{
+			"$set": bson.M{
+				"friendsList.$.status": data.Status,
+			},
+		}
+
+		_, err = friendsList.UpdateOne(sessCtx, secondFilter, secondUpdate)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to update status")
+		}
+
 		if data.Status == "friend-request-accepted" || data.Status == "friend-removed" {
 			isFriend := false
 			if data.Status == "friend-request-accepted" {
@@ -65,7 +89,7 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 
 			templateFilter := bson.M{
 				"userId":   user.Id,
-				"friendId": userObjIdID,
+				"friendId": userObjID,
 			}
 			templateUpdate := bson.M{
 				"$set": bson.M{
