@@ -8,16 +8,21 @@ import (
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetAllCategories(ctx context.Context, db *database.DB) ([]*model.GetAllCategories, error) {
+func GetAllCategories(ctx context.Context, db *database.DB, search string) ([]*model.GetAllCategories, error) {
 	var (
 		categoryColl = db.GetCollection("category")
 	)
 
 	filter := bson.M{
 		"isDeleted": false,
+	}
+
+	if search != "blank" {
+		filter["name"] = primitive.Regex{Pattern: search, Options: "i"}
 	}
 
 	sortOptions := options.Find().SetSort(bson.M{"updatedAt": -1})

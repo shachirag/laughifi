@@ -56,8 +56,8 @@ func (r *queryResolver) GetAdminTemplate(ctx context.Context, id string) (*model
 }
 
 // GetAllCategories is the resolver for the getAllCategories field.
-func (r *queryResolver) GetAllCategories(ctx context.Context) ([]*model.GetAllCategories, error) {
-	getCategoriesData, err := templates.GetAllCategories(ctx, r.DB)
+func (r *queryResolver) GetAllCategories(ctx context.Context, search *string) ([]*model.GetAllCategories, error) {
+	getCategoriesData, err := templates.GetAllCategories(ctx, r.DB, *search)
 	if err != nil {
 		return nil, err
 	}

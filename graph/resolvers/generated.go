@@ -215,7 +215,7 @@ type ComplexityRoot struct {
 		Admin                    func(childComplexity int) int
 		GetAdminTemplate         func(childComplexity int, id string) int
 		GetAdminTemplates        func(childComplexity int, page int, limit int, search *string) int
-		GetAllCategories         func(childComplexity int) int
+		GetAllCategories         func(childComplexity int, search *string) int
 		GetAllWouldYouRathers    func(childComplexity int, page int, limit int) int
 		GetCategories            func(childComplexity int, page int, limit int, search *string) int
 		GetCategory              func(childComplexity int, id string) int
@@ -361,7 +361,7 @@ type QueryResolver interface {
 	GetDashboardData(ctx context.Context) (*model.GetDashboardData, error)
 	GetAdminTemplates(ctx context.Context, page int, limit int, search *string) (*model.AdminTemplatePaginationResponse, error)
 	GetAdminTemplate(ctx context.Context, id string) (*model.AdminTemplate, error)
-	GetAllCategories(ctx context.Context) ([]*model.GetAllCategories, error)
+	GetAllCategories(ctx context.Context, search *string) ([]*model.GetAllCategories, error)
 	GetCategories(ctx context.Context, page int, limit int, search *string) (*model.CategoriesPaginationResponse, error)
 	GetCategory(ctx context.Context, id string) (*model.Category, error)
 	GetLaughifiUsers(ctx context.Context, page int, limit int, search *string) (*model.LaughifiUserPaginationResponse, error)
@@ -1348,7 +1348,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.GetAllCategories(childComplexity), true
+		args, err := ec.field_Query_getAllCategories_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetAllCategories(childComplexity, args["search"].(*string)), true
 
 	case "Query.getAllWouldYouRathers":
 		if e.complexity.Query.GetAllWouldYouRathers == nil {
@@ -2056,7 +2061,7 @@ extend type Query {
     search: String
   ): AdminTemplatePaginationResponse!
   getAdminTemplate(id: ID!): AdminTemplate!
-  getAllCategories: [GetAllCategories!]!
+  getAllCategories(search: String): [GetAllCategories!]!
 }
 
 type AdminTemplatePaginationResponse {
@@ -2084,8 +2089,6 @@ type GetAllCategories {
   id: ID!
   category: String!
 }
-
-
 `, BuiltIn: false},
 	{Name: "../schema/auth.graphqls", Input: `scalar Upload
 
@@ -3079,6 +3082,21 @@ func (ec *executionContext) field_Query_getAdminTemplates_args(ctx context.Conte
 		}
 	}
 	args["search"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getAllCategories_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["search"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("search"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["search"] = arg0
 	return args, nil
 }
 
@@ -9107,7 +9125,7 @@ func (ec *executionContext) _Query_getAllCategories(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetAllCategories(rctx)
+		return ec.resolvers.Query().GetAllCategories(rctx, fc.Args["search"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9124,7 +9142,7 @@ func (ec *executionContext) _Query_getAllCategories(ctx context.Context, field g
 	return ec.marshalNGetAllCategories2ᚕᚖlaughifiᚋgraphᚋmodelᚐGetAllCategoriesᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_getAllCategories(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getAllCategories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -9139,6 +9157,17 @@ func (ec *executionContext) fieldContext_Query_getAllCategories(_ context.Contex
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GetAllCategories", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getAllCategories_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
