@@ -94,6 +94,9 @@ func main() {
 			"OwnGame":                   true,
 			"GetTrivia":                 true,
 			"GetTriviaDetail":           true,
+			"GetAnsweredTrivia":         true,
+			"GetRequestedTrivia":        true,
+			"AcceptRejectTrivia":        true,
 
 			// admin
 			"LoginAdmin":                     false,

@@ -26,7 +26,7 @@ func GetAnsweredTrivia(ctx context.Context, db *database.DB) ([]*model.AnsweredT
 		"friends": bson.M{
 			"$elemMatch": bson.M{
 				"id":           userData.Id,
-				"playedStatus": "approved",
+				"playedStatus": "accepted",
 			},
 		},
 	}
@@ -47,8 +47,10 @@ func GetAnsweredTrivia(ctx context.Context, db *database.DB) ([]*model.AnsweredT
 		}
 
 		triviaData = append(triviaData, &model.AnsweredTrivia{
-			ID:     ownGame.Id.Hex(),
-			Status: ownGame.Status,
+			ID:           ownGame.Id.Hex(),
+			CategoryName: ownGame.Category.Name,
+			GameName:     ownGame.GameName,
+			Status:       ownGame.Status,
 		})
 
 	}

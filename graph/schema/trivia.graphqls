@@ -13,6 +13,7 @@ extend type Query {
   getTrivaDetail(id: ID!): TriviaDetail!
   getAnsweredTrivia: [AnsweredTrivia!]!
   getRequestedTrivia: [RequestedTrivia!]!
+  AcceptRejectTrivia(id: ID!, status: String!): Response!
 }
 
 type TriviaListing {

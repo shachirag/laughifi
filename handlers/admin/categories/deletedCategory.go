@@ -27,6 +27,16 @@ func DeletedCategoryData(ctx context.Context, db *database.DB, categoryId string
 		return nil, gqlerror.Errorf("Cannot delete category. Templates are associated with this category.")
 	}
 
+	ownGameFilter := bson.M{"category.id": categoryObjID}
+	ownGameCount, err := db.GetCollection("ownGame").CountDocuments(ctx, ownGameFilter)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to check associated own game: %s", err.Error())
+	}
+
+	if ownGameCount > 0 {
+		return nil, gqlerror.Errorf("Cannot delete category. game are associated with this category.")
+	}
+
 	filter := bson.M{
 		"_id": categoryObjID,
 	}

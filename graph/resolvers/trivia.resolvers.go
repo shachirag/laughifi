@@ -54,3 +54,12 @@ func (r *queryResolver) GetRequestedTrivia(ctx context.Context) ([]*model.Reques
 	}
 	return payload, nil
 }
+
+// AcceptRejectTrivia is the resolver for the AcceptRejectTrivia field.
+func (r *queryResolver) AcceptRejectTrivia(ctx context.Context, id string, status string) (*model.Response, error) {
+	payload, err := trivia.AcceptRejectTrivia(ctx, r.DB, id, status)
+	if err != nil {
+		return nil, err
+	}
+	return payload, nil
+}
