@@ -1,0 +1,50 @@
+extend type Mutation {
+  addTrivia(input: TriviaRequestInput!): Response!
+  editTrivia(id: ID!, input: EditTriviaRequestInput!): Response!
+  deleteTrivia(id: ID!): Response!
+}
+
+input TriviaRequestInput {
+  categoryId: ID!
+  question: String!
+  answers: [String!]!
+  correctAnswer: String!
+  dareForWrongAnswerFile: Upload
+}
+
+input EditTriviaRequestInput {
+  categoryId: ID!
+  question: String!
+  answers: [String!]!
+  correctAnswer: String!
+  oldDareForWrongAnswerUrl: String!
+  newDareForWrongAnswerFile: Upload
+}
+
+extend type Query {
+  getTrivias(page: Int!, limit: Int!, search: String): TriviaPaginationResponse!
+  getTrivia(id: ID!): TriviaData!
+}
+
+type TriviaPaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  trivias: [AdminTriviaListing!]!
+}
+
+type AdminTriviaListing {
+  id: ID!
+  question: String!
+  category: String!
+}
+
+type TriviaData {
+  id: ID!
+  question: String!
+  category: String!
+  answers: [String!]!
+  correctAnswer: String!
+  dareForWrongAnswer: String!
+}

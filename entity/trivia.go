@@ -9,6 +9,7 @@ import (
 type TriviaEntity struct {
 	Id                 primitive.ObjectID `json:"id" bson:"_id"`
 	Question           string             `json:"question" bson:"question"`
+	Category           Category           `json:"category" bson:"category"`
 	Answers            []string           `json:"answers" bson:"answers"`
 	CorrectAnswer      string             `json:"correctAnswer" bson:"correctAnswer"`
 	DareForWrongAnswer string             `json:"dareForWrongAnswer" bson:"dareForWrongAnswer"`

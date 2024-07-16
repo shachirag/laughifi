@@ -47,7 +47,12 @@ func AcceptRejectTrivia(ctx context.Context, db *database.DB, id string, status 
 		return nil, gqlerror.Errorf("No ownGame found")
 	}
 
+	message := "rejected"
+	if status == "accepted" {
+		message = "accepted"
+	}
+
 	return &model.Response{
-		Message: "Deleted Successfully",
+		Message: message,
 	}, nil
 }

@@ -63,3 +63,12 @@ func (r *queryResolver) AcceptRejectTrivia(ctx context.Context, id string, statu
 	}
 	return payload, nil
 }
+
+// AddTriviaAnswer is the resolver for the addTriviaAnswer field.
+func (r *queryResolver) AddTriviaAnswer(ctx context.Context, id string, answer string) (*model.Response, error) {
+	payload, err := trivia.AddTriviaAnswer(ctx, r.DB, id, answer)
+	if err != nil {
+		return nil, err
+	}
+	return payload, nil
+}

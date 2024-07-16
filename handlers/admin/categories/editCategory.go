@@ -74,6 +74,19 @@ func EditCategory(ctx context.Context, db *database.DB, categoryId string, input
 			return nil, gqlerror.Errorf("Failed to update templates with the new category name")
 		}
 
+		triviaFilter := bson.M{"category.id": categoryObjID}
+		triviaUpdate := bson.M{
+			"$set": bson.M{
+				"category.name": input.Category,
+				"updatedAt":     time.Now().UTC(),
+			},
+		}
+
+		_, err = db.GetCollection("trivia").UpdateMany(sessCtx, triviaFilter, triviaUpdate)
+		if err != nil && err != mongo.ErrNoDocuments {
+			return nil, gqlerror.Errorf("Failed to update trivia with the new category name")
+		}
+
 		return nil, nil
 	}
 

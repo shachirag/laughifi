@@ -60,6 +60,14 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 		friends = append(friends, friend)
 	}
 
+	userAsFriend := entity.Friend{
+		Id:           user.Id,
+		Name:         user.Name,
+		Image:        user.Image,
+		PlayedStatus: "approved",
+	}
+	friends = append(friends, userAsFriend)
+
 	id := primitive.NewObjectID()
 	ownGame := entity.OwnGameEntity{
 		Id:      id,

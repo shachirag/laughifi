@@ -97,6 +97,7 @@ func main() {
 			"GetAnsweredTrivia":         true,
 			"GetRequestedTrivia":        true,
 			"AcceptRejectTrivia":        true,
+			"AddTriviaAnswer":           true,
 
 			// admin
 			"LoginAdmin":                     false,
@@ -123,6 +124,11 @@ func main() {
 			"GetWouldYouRatherData":          true,
 			"EditWouldYouRather":             true,
 			"GetAllWouldYouRathers":          true,
+			"AddTrivia":                      true,
+			"DeleteTrivia":                   true,
+			"EditTrivia":                     true,
+			"GetAdminTrivia":                 true,
+			"GetTrivias":                     true,
 		}
 		if authRequiredOperations[opName] {
 			middleware.ValidateJWT(srv).ServeHTTP(w, r)

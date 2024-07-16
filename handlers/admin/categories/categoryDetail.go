@@ -15,14 +15,14 @@ import (
 func GetCategoryData(ctx context.Context, db *database.DB, categoryId string) (*model.Category, error) {
 	var category entity.CategoryEntity
 
-	categoryObjIdID, err := primitive.ObjectIDFromHex(categoryId)
+	categoryObjID, err := primitive.ObjectIDFromHex(categoryId)
 	if err != nil {
-		return nil, gqlerror.Errorf("invalid user Id")
+		return nil, gqlerror.Errorf("invalid category Id")
 	}
 
 	categoryColl := db.GetCollection("category")
 
-	err = categoryColl.FindOne(ctx, bson.M{"_id": categoryObjIdID}).Decode(&category)
+	err = categoryColl.FindOne(ctx, bson.M{"_id": categoryObjID}).Decode(&category)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, gqlerror.Errorf("Category not Found")

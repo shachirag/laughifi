@@ -67,6 +67,12 @@ type AdminTemplates struct {
 	Template string `json:"template"`
 }
 
+type AdminTriviaListing struct {
+	ID       string `json:"id"`
+	Question string `json:"question"`
+	Category string `json:"category"`
+}
+
 type Answer struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -126,6 +132,15 @@ type EditProfileRequestInput struct {
 	Name                string          `json:"name"`
 	OldProfileImageURL  string          `json:"oldProfileImageUrl"`
 	NewProfileImageFile *graphql.Upload `json:"newProfileImageFile,omitempty"`
+}
+
+type EditTriviaRequestInput struct {
+	CategoryID                string          `json:"categoryId"`
+	Question                  string          `json:"question"`
+	Answers                   []string        `json:"answers"`
+	CorrectAnswer             string          `json:"correctAnswer"`
+	OldDareForWrongAnswerURL  string          `json:"oldDareForWrongAnswerUrl"`
+	NewDareForWrongAnswerFile *graphql.Upload `json:"newDareForWrongAnswerFile,omitempty"`
 }
 
 type EditWouldYouRatherRequestInput struct {
@@ -335,6 +350,15 @@ type TemplatePlayWithFriendsRequestInput struct {
 	Answer     []*Answer `json:"answer"`
 }
 
+type TriviaData struct {
+	ID                 string   `json:"id"`
+	Question           string   `json:"question"`
+	Category           string   `json:"category"`
+	Answers            []string `json:"answers"`
+	CorrectAnswer      string   `json:"correctAnswer"`
+	DareForWrongAnswer string   `json:"dareForWrongAnswer"`
+}
+
 type TriviaDetail struct {
 	ID                 string   `json:"id"`
 	Question           string   `json:"question"`
@@ -349,6 +373,22 @@ type TriviaListing struct {
 	CategoryName string `json:"categoryName"`
 	GameName     string `json:"gameName"`
 	Status       string `json:"status"`
+}
+
+type TriviaPaginationResponse struct {
+	Total       int                   `json:"total"`
+	PerPage     int                   `json:"perPage"`
+	CurrentPage int                   `json:"currentPage"`
+	TotalPages  int                   `json:"totalPages"`
+	Trivias     []*AdminTriviaListing `json:"trivias"`
+}
+
+type TriviaRequestInput struct {
+	CategoryID             string          `json:"categoryId"`
+	Question               string          `json:"question"`
+	Answers                []string        `json:"answers"`
+	CorrectAnswer          string          `json:"correctAnswer"`
+	DareForWrongAnswerFile *graphql.Upload `json:"dareForWrongAnswerFile,omitempty"`
 }
 
 type UpdateStatusRequestInput struct {

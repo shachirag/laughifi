@@ -59,15 +59,16 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 		id := primitive.NewObjectID()
 
 		templatePlayWithFriend := entity.TemplatePlayWithFriendEntity{
-			Id:         id,
-			UserId:     user.Id,
+			Id:       id,
+			ShareIds: []primitive.ObjectID{user.Id, friendObjID},
+			// UserId:     user.Id,
 			TemplateId: templateObjId,
-			FriendId:   friendObjID,
-			Answers:    answers,
-			IsFriend:   true,
-			Status:     "pending",
-			CreatedAt:  time.Now().UTC(),
-			UpdatedAt:  time.Now().UTC(),
+			// FriendId:   friendObjID,
+			Answers:   answers,
+			IsFriend:  true,
+			Status:    "pending",
+			CreatedAt: time.Now().UTC(),
+			UpdatedAt: time.Now().UTC(),
 		}
 
 		insertDocuments = append(insertDocuments, templatePlayWithFriend)

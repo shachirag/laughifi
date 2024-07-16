@@ -17,14 +17,14 @@ import (
 func GetTriviaDetail(ctx context.Context, db *database.DB, id string) (*model.TriviaDetail, error) {
 	var ownGame entity.OwnGameEntity
 
-	triviaObjID, err := primitive.ObjectIDFromHex(id)
+	ownGameObjID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, gqlerror.Errorf("invalid trivia Id")
 	}
 
 	ownGameColl := db.GetCollection("ownGame")
 
-	err = ownGameColl.FindOne(ctx, bson.M{"_id": triviaObjID}).Decode(&ownGame)
+	err = ownGameColl.FindOne(ctx, bson.M{"_id": ownGameObjID}).Decode(&ownGame)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, gqlerror.Errorf("Own Game not Found")
@@ -54,6 +54,18 @@ func GetTriviaDetail(ctx context.Context, db *database.DB, id string) (*model.Tr
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	randomTrivia := trivias[r.Intn(len(trivias))]
+
+	update := bson.M{
+		"$set": bson.M{
+			"triviaId":  randomTrivia.Id,
+			"updatedAt": time.Now().UTC(),
+		},
+	}
+
+	_, err = ownGameColl.UpdateOne(ctx, bson.M{"_id": ownGameObjID}, update)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to update Own Game with trivia ID")
+	}
 
 	var answeredUsers []*model.Users
 	var notAnsweredUsers []*model.Users

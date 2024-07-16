@@ -37,8 +37,11 @@ func GetFriendTemplates(ctx context.Context, db *database.DB, page int, limit in
 	}
 
 	filter := bson.M{
-		"userId":   user.Id,
-		"friendId": friendObjID,
+		"shareIds": bson.M{
+			"$all": []primitive.ObjectID{user.Id, friendObjID},
+		},
+		// "userId":   user.Id,
+		// "friendId": friendObjID,
 		"isFriend": true,
 	}
 
