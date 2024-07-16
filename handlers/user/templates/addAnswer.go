@@ -53,7 +53,7 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		lastAnswer := playWithFriendTemplate.Answers[len(playWithFriendTemplate.Answers)-1]
 		if lastAnswer.Id == sendedUserObjId {
 			return &model.AddAnswerResponse{
-				Message: "It,s not your turn to answer",
+				Message: "It's not your turn to answer",
 				Status:  false,
 			}, nil
 		}

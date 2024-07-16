@@ -2,6 +2,7 @@ package friends
 
 import (
 	"context"
+	"fmt"
 	"laughifi/database"
 	"laughifi/graph/model"
 	"laughifi/utils"
@@ -60,6 +61,9 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 			return nil, gqlerror.Errorf("Failed to update status")
 		}
 
+		fmt.Println("64", userObjID)
+		fmt.Println("65", user.Id)
+
 		secondFilter := bson.M{
 			"userId": userObjID,
 			"friendsList": bson.M{
@@ -77,6 +81,29 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 		}
 
 		_, err = friendsList.UpdateOne(sessCtx, secondFilter, secondUpdate)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to update status")
+		}
+
+		fmt.Println("85", user.Id)
+		fmt.Println("86", userObjID)
+		thirdFilter := bson.M{
+			"userId": user.Id,
+			"friendsList": bson.M{
+				"$elemMatch": bson.M{
+					"id":     userObjID,
+					"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-accepted"}},
+				},
+			},
+		}
+
+		thirdUpdate := bson.M{
+			"$set": bson.M{
+				"friendsList.$.status": data.Status,
+			},
+		}
+
+		_, err = friendsList.UpdateOne(sessCtx, thirdFilter, thirdUpdate)
 		if err != nil {
 			return nil, gqlerror.Errorf("Failed to update status")
 		}
