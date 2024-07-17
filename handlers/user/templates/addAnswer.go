@@ -2,7 +2,6 @@ package templates
 
 import (
 	"context"
-	"fmt"
 	"laughifi/database"
 	"laughifi/entity"
 	"laughifi/graph/model"
@@ -107,7 +106,6 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		secondLastUserObjId = secondLastUser.Id
 	}
 
-	fmt.Println("secondLastUser", secondLastUserObjId)
 	websocket.SendTemplateData(db, playWithFriendTemplateObjId, secondLastUserObjId)
 
 	return &model.AddAnswerResponse{

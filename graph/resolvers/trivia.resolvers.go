@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"laughifi/graph/model"
 	"laughifi/handlers/user/trivia"
 )
@@ -71,4 +72,9 @@ func (r *queryResolver) AddTriviaAnswer(ctx context.Context, id string, answer s
 		return nil, err
 	}
 	return payload, nil
+}
+
+// GetAllCategory is the resolver for the getAllCategory field.
+func (r *queryResolver) GetAllCategory(ctx context.Context) ([]*model.GetAllCategories, error) {
+	panic(fmt.Errorf("not implemented: GetAllCategory - getAllCategory"))
 }

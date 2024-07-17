@@ -17,15 +17,12 @@ import (
 var ctx = context.Background()
 
 func SendTemplateData(db *database.DB, templateId primitive.ObjectID, customerId primitive.ObjectID) {
-	fmt.Println(templateId)
-	fmt.Println(customerId)
 
 	if templateId.IsZero() {
 		return
 	}
 
 	newTemplateDto := GetTemplateDto(db, templateId)
-	fmt.Println(newTemplateDto)
 	if newTemplateDto == nil {
 		return
 	}

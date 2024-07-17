@@ -15,6 +15,7 @@ extend type Query {
   getRequestedTrivia: [RequestedTrivia!]!
   AcceptRejectTrivia(id: ID!, status: String!): Response!
   addTriviaAnswer(id: ID!, answer: String!): Response!
+  getAllCategory: [GetAllCategories!]!
 }
 
 type TriviaListing {
@@ -50,6 +51,7 @@ type TriviaDetail {
   answeredUsers: [Users!]!
   notAnsweredUsers: [Users!]!
   dareForWrongAnswer: String
+  status: String!
 }
 
 type Users {

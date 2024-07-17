@@ -104,5 +104,6 @@ func GetTriviaDetail(ctx context.Context, db *database.DB, id string) (*model.Tr
 		AnsweredUsers:      answeredUsers,
 		NotAnsweredUsers:   notAnsweredUsers,
 		DareForWrongAnswer: dareForWrongAnswer,
+		Status:             ownGame.Status,
 	}, nil
 }

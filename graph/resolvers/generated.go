@@ -235,6 +235,7 @@ type ComplexityRoot struct {
 		GetAdminTemplate         func(childComplexity int, id string) int
 		GetAdminTemplates        func(childComplexity int, page int, limit int, search *string) int
 		GetAllCategories         func(childComplexity int, search *string) int
+		GetAllCategory           func(childComplexity int) int
 		GetAllWouldYouRathers    func(childComplexity int, page int, limit int) int
 		GetAnsweredTrivia        func(childComplexity int) int
 		GetCategories            func(childComplexity int, page int, limit int, search *string) int
@@ -334,6 +335,7 @@ type ComplexityRoot struct {
 		ID                 func(childComplexity int) int
 		NotAnsweredUsers   func(childComplexity int) int
 		Question           func(childComplexity int) int
+		Status             func(childComplexity int) int
 	}
 
 	TriviaListing struct {
@@ -461,6 +463,7 @@ type QueryResolver interface {
 	GetRequestedTrivia(ctx context.Context) ([]*model.RequestedTrivia, error)
 	AcceptRejectTrivia(ctx context.Context, id string, status string) (*model.Response, error)
 	AddTriviaAnswer(ctx context.Context, id string, answer string) (*model.Response, error)
+	GetAllCategory(ctx context.Context) ([]*model.GetAllCategories, error)
 	GetAllWouldYouRathers(ctx context.Context, page int, limit int) (*model.WouldYouRatherPaginationResp, error)
 	GetSavedWouldYouRathers(ctx context.Context, page int, limit int) (*model.SavedWouldYouRatherPaginationResp, error)
 	GetWouldYouRathers(ctx context.Context, page int, limit int, search *string) (*model.WouldYouRathersPaginationResponse, error)
@@ -1566,6 +1569,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetAllCategories(childComplexity, args["search"].(*string)), true
 
+	case "Query.getAllCategory":
+		if e.complexity.Query.GetAllCategory == nil {
+			break
+		}
+
+		return e.complexity.Query.GetAllCategory(childComplexity), true
+
 	case "Query.getAllWouldYouRathers":
 		if e.complexity.Query.GetAllWouldYouRathers == nil {
 			break
@@ -2102,6 +2112,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TriviaDetail.Question(childComplexity), true
+
+	case "TriviaDetail.status":
+		if e.complexity.TriviaDetail.Status == nil {
+			break
+		}
+
+		return e.complexity.TriviaDetail.Status(childComplexity), true
 
 	case "TriviaListing.categoryName":
 		if e.complexity.TriviaListing.CategoryName == nil {
@@ -2964,6 +2981,7 @@ extend type Query {
   getRequestedTrivia: [RequestedTrivia!]!
   AcceptRejectTrivia(id: ID!, status: String!): Response!
   addTriviaAnswer(id: ID!, answer: String!): Response!
+  getAllCategory: [GetAllCategories!]!
 }
 
 type TriviaListing {
@@ -2999,6 +3017,7 @@ type TriviaDetail {
   answeredUsers: [Users!]!
   notAnsweredUsers: [Users!]!
   dareForWrongAnswer: String
+  status: String!
 }
 
 type Users {
@@ -11329,6 +11348,8 @@ func (ec *executionContext) fieldContext_Query_getTrivaDetail(ctx context.Contex
 				return ec.fieldContext_TriviaDetail_notAnsweredUsers(ctx, field)
 			case "dareForWrongAnswer":
 				return ec.fieldContext_TriviaDetail_dareForWrongAnswer(ctx, field)
+			case "status":
+				return ec.fieldContext_TriviaDetail_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TriviaDetail", field.Name)
 		},
@@ -11567,6 +11588,56 @@ func (ec *executionContext) fieldContext_Query_addTriviaAnswer(ctx context.Conte
 	if fc.Args, err = ec.field_Query_addTriviaAnswer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getAllCategory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getAllCategory(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetAllCategory(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.GetAllCategories)
+	fc.Result = res
+	return ec.marshalNGetAllCategories2ᚕᚖlaughifiᚋgraphᚋmodelᚐGetAllCategoriesᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getAllCategory(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_GetAllCategories_id(ctx, field)
+			case "category":
+				return ec.fieldContext_GetAllCategories_category(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GetAllCategories", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -13999,6 +14070,50 @@ func (ec *executionContext) _TriviaDetail_dareForWrongAnswer(ctx context.Context
 }
 
 func (ec *executionContext) fieldContext_TriviaDetail_dareForWrongAnswer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaDetail_status(ctx context.Context, field graphql.CollectedField, obj *model.TriviaDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaDetail_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaDetail_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TriviaDetail",
 		Field:      field,
@@ -20380,6 +20495,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getAllCategory":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getAllCategory(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getAllWouldYouRathers":
 			field := field
 
@@ -21072,6 +21209,11 @@ func (ec *executionContext) _TriviaDetail(ctx context.Context, sel ast.Selection
 			}
 		case "dareForWrongAnswer":
 			out.Values[i] = ec._TriviaDetail_dareForWrongAnswer(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._TriviaDetail_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -28,8 +28,8 @@ func GetTemplates(ctx context.Context, db *database.DB, page int, limit int, top
 	filter := bson.M{
 		"isDeleted": false,
 	}
-	
-	if topic != "" && topic != "random" {
+
+	if topic != "All" && topic != "random" {
 		filter["category.name"] = topic
 	}
 

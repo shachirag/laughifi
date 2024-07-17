@@ -102,6 +102,8 @@ func AddTriviaAnswer(ctx context.Context, db *database.DB, ownGameId string, ans
 		return nil, gqlerror.Errorf("Failed to update own game status")
 	}
 
+	// websocket.SendTriviaData(db, ownGameObjID, secondLastUserObjId)
+
 	return &model.Response{
 		Message: "Answer Added",
 	}, nil
