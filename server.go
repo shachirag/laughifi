@@ -98,6 +98,7 @@ func main() {
 			"GetRequestedTrivia":        true,
 			"AcceptRejectTrivia":        true,
 			"AddTriviaAnswer":           true,
+			"GetAllCategory":            true,
 
 			// admin
 			"LoginAdmin":                     false,
