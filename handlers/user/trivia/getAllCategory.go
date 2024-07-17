@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetAllCategories(ctx context.Context, db *database.DB, search string) ([]*model.GetAllCategories, error) {
+func GetAllCategory(ctx context.Context, db *database.DB, search string) ([]*model.GetAllCategories, error) {
 	var (
 		categoryColl = db.GetCollection("category")
 	)

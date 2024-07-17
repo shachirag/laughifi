@@ -6,6 +6,7 @@ import (
 	"laughifi/entity"
 	"laughifi/graph/model"
 	"laughifi/utils"
+	"laughifi/utils/websocket"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -102,7 +103,9 @@ func AddTriviaAnswer(ctx context.Context, db *database.DB, ownGameId string, ans
 		return nil, gqlerror.Errorf("Failed to update own game status")
 	}
 
-	// websocket.SendTriviaData(db, ownGameObjID, secondLastUserObjId)
+	for _, friend := range ownGame.Friends {
+		websocket.SendTriviaData(db, ownGameObjID, friend.Id)
+	}
 
 	return &model.Response{
 		Message: "Answer Added",
