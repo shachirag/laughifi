@@ -12,12 +12,18 @@ type CustomerEntity struct {
 	Email         string             `json:"email" bson:"email"`
 	Password      string             `json:"password" bson:"password"`
 	SocialDetails SocialDetails      `json:"socialDetails" bson:"socialDetails"`
-	Image         string             `json:"image" bson:"image"`
-	CreatedAt     time.Time          `json:"cresatedAt" bson:"createdAt"`
-	UpdatedAt     time.Time          `json:"updatedAt" bson:"updatedAt"`
+	// DeviceInfo    DeviceInfo         `json:"deviceInfo" bson:"deviceInfo"`
+	Image     string    `json:"image" bson:"image"`
+	CreatedAt time.Time `json:"cresatedAt" bson:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
 type SocialDetails struct {
-	AppleId  string `json:"appleId"`
-	GoogleId string `json:"googleId"`
+	AppleId  string `json:"appleId" bson:"appleId"`
+	GoogleId string `json:"googleId" bson:"googleId"`
 }
+
+// type DeviceInfo struct {
+// 	DeviceToken string `json:"deviceToken" bson:"deviceToken"`
+// 	DeviceType  string `json:"deviceType" bson:"deviceType"`
+// }

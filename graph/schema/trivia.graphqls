@@ -14,7 +14,7 @@ extend type Query {
   getAnsweredTrivia: [AnsweredTrivia!]!
   getRequestedTrivia: [RequestedTrivia!]!
   AcceptRejectTrivia(id: ID!, status: String!): Response!
-  addTriviaAnswer(id: ID!, answer: String!): Response!
+  addTriviaAnswer(id: ID!, answer: String!, role: String!): Response!
   getAllCategory(search: String!): [GetAllCategories!]!
 }
 
@@ -23,6 +23,7 @@ type TriviaListing {
   categoryName: String!
   gameName: String!
   status: String!
+  role: String!
 }
 
 type AnsweredTrivia {
@@ -30,6 +31,7 @@ type AnsweredTrivia {
   categoryName: String!
   gameName: String!
   status: String!
+  role: String!
 }
 
 type RequestedTrivia {

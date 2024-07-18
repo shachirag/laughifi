@@ -83,6 +83,7 @@ type AnsweredTrivia struct {
 	CategoryName string `json:"categoryName"`
 	GameName     string `json:"gameName"`
 	Status       string `json:"status"`
+	Role         string `json:"role"`
 }
 
 type AnswersData struct {
@@ -374,6 +375,7 @@ type TriviaListing struct {
 	CategoryName string `json:"categoryName"`
 	GameName     string `json:"gameName"`
 	Status       string `json:"status"`
+	Role         string `json:"role"`
 }
 
 type TriviaPaginationResponse struct {

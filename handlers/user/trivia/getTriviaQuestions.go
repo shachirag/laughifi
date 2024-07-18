@@ -23,7 +23,13 @@ func GetTrivia(ctx context.Context, db *database.DB) ([]*model.TriviaListing, er
 	}
 
 	filter := bson.M{
-		"user.id": userData.Id,
+		"friends": bson.M{
+			"$elemMatch": bson.M{
+				"id":           userData.Id,
+				"playedStatus": "accepted",
+				"role":         "host",
+			},
+		},
 	}
 
 	sortOptions := options.Find().SetSort(bson.M{"updatedAt": -1})
@@ -46,6 +52,7 @@ func GetTrivia(ctx context.Context, db *database.DB) ([]*model.TriviaListing, er
 			CategoryName: ownGame.Category.Name,
 			GameName:     ownGame.GameName,
 			Status:       ownGame.Status,
+			Role:         "host",
 		})
 
 	}

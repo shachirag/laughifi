@@ -56,6 +56,7 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 			Name:         friendDetails[friendObjID.Hex()].Name,
 			Image:        friendDetails[friendObjID.Hex()].Image,
 			PlayedStatus: "pending",
+			Role:         "player",
 		}
 		friends = append(friends, friend)
 	}
@@ -64,7 +65,8 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 		Id:           user.Id,
 		Name:         user.Name,
 		Image:        user.Image,
-		PlayedStatus: "approved",
+		PlayedStatus: "accepted",
+		Role:         "host",
 	}
 	friends = append(friends, userAsFriend)
 
@@ -91,6 +93,60 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 	if err != nil {
 		return nil, gqlerror.Errorf("Failed to add own game")
 	}
+
+	// title := "New Game Invitation"
+	// body := "You have been invited to join a new game: " + data.GameName
+	// notifData := map[string]string{
+	// 	"type":   "ownGame",
+	// 	"gameId": id.Hex(),
+	// }
+
+	// for _, friend := range friends {
+	// 	if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
+	// 		err := utils.SendNotificationToUser(
+	// 			friendDetails[friend.Id.Hex()].DeviceToken,
+	// 			friendDetails[friend.Id.Hex()].DeviceType,
+	// 			title,
+	// 			body,
+	// 			notifData,
+	// 		)
+	// 		if err != nil {
+	// 			return nil, gqlerror.Errorf("Failed to send notification to friend: %v", err)
+	// 		}
+	// 	}
+	// }
+
+	// var wg sync.WaitGroup
+	// errChan := make(chan error, len(friends))
+
+	// for _, friend := range friends {
+	// 	if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
+	// 		wg.Add(1)
+	// 		go func(friend entity.Friend) {
+	// 			defer wg.Done()
+	// 			err := utils.SendNotificationToUser(
+	// 				friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken,
+	// 				friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType,
+	// 				title,
+	// 				body,
+	// 				notifData,
+	// 				friend.Id,
+	// 			)
+	// 			if err != nil {
+	// 				errChan <- gqlerror.Errorf("Failed to send notification to friend: %v", err)
+	// 			}
+	// 		}(friend)
+	// 	}
+	// }
+
+	// go func() {
+	// 	wg.Wait()
+	// 	close(errChan)
+	// }()
+
+	// if len(errChan) > 0 {
+	// 	return nil, <-errChan
+	// }
 
 	return &model.Response{
 		Message: "Owned Game successfully shared",

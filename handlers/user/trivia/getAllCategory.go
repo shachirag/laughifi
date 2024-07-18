@@ -51,13 +51,6 @@ func GetAllCategory(ctx context.Context, db *database.DB, search string) ([]*mod
 		return []*model.GetAllCategories{}, nil
 	}
 
-	for i, cat := range categoryData {
-		if cat.Category == "All" {
-			categoryData = append([]*model.GetAllCategories{cat}, append(categoryData[:i], categoryData[i+1:]...)...)
-			break
-		}
-	}
-
 	return categoryData, nil
 
 }

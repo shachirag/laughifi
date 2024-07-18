@@ -28,6 +28,7 @@ func GetRequestedTrivia(ctx context.Context, db *database.DB) ([]*model.Requeste
 			"$elemMatch": bson.M{
 				"id":           userData.Id,
 				"playedStatus": "pending",
+				"role":         "player",
 			},
 		},
 	}
@@ -58,33 +59,35 @@ func GetRequestedTrivia(ctx context.Context, db *database.DB) ([]*model.Requeste
 		})
 	}
 
-	friendDetails, err := fetcheFriendDetails(ctx, db, userIds)
-	if err != nil {
-		return nil, gqlerror.Errorf("Failed to fetch friend details: %v", err)
-	}
-
-	if len(triviaData) == 0 {
-		return []*model.RequestedTrivia{}, nil
-	}
-
-	for i, trivia := range triviaData {
-		triviaObjID, err := primitive.ObjectIDFromHex(trivia.ID)
+	if len(userIds) > 0 {
+		friendDetails, err := fetcheFriendDetails(ctx, db, userIds)
 		if err != nil {
-			return nil, gqlerror.Errorf("invalid user Id")
+			return nil, gqlerror.Errorf("Failed to fetch friend details: %v", err)
 		}
-		ownGame := ownGames[triviaObjID]
-		userDetail, exists := friendDetails[ownGame.User.Id]
-		if exists {
-			triviaData[i].User = &model.UserInfo{
-				ID:    userDetail.Id.Hex(),
-				Name:  userDetail.Name,
-				Image: userDetail.Image,
+
+		if len(triviaData) == 0 {
+			return []*model.RequestedTrivia{}, nil
+		}
+
+		for i, trivia := range triviaData {
+			triviaObjID, err := primitive.ObjectIDFromHex(trivia.ID)
+			if err != nil {
+				return nil, gqlerror.Errorf("invalid user Id")
 			}
-		} else {
-			triviaData[i].User = &model.UserInfo{
-				ID:    "",
-				Name:  "Unknown",
-				Image: "",
+			ownGame := ownGames[triviaObjID]
+			userDetail, exists := friendDetails[ownGame.User.Id]
+			if exists {
+				triviaData[i].User = &model.UserInfo{
+					ID:    userDetail.Id.Hex(),
+					Name:  userDetail.Name,
+					Image: userDetail.Image,
+				}
+			} else {
+				triviaData[i].User = &model.UserInfo{
+					ID:    "",
+					Name:  "Unknown",
+					Image: "",
+				}
 			}
 		}
 	}

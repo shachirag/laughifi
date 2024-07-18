@@ -45,8 +45,8 @@ func SendTemplateData(db *database.DB, templateId primitive.ObjectID, customerId
 		"roleId": customerId,
 	}
 
-	abc, _ := json.Marshal(filter)
-	fmt.Println(string(abc))
+	// abc, _ := json.Marshal(filter)
+	// fmt.Println(string(abc))
 
 	cur, err := db.GetCollection("websocketConnection").Find(ctx, filter)
 	if err == nil {
@@ -57,7 +57,7 @@ func SendTemplateData(db *database.DB, templateId primitive.ObjectID, customerId
 			for _, ws := range websocketConnectionEntities {
 				err := sendConnectionIDToAPIGateway(db, ws.ConnectionId, &dataBytes)
 				if err != nil {
-					fmt.Println("63", err)
+					fmt.Println(err)
 				}
 			}
 		}
@@ -75,7 +75,6 @@ func sendConnectionIDToAPIGateway(db *database.DB, connectionID string, data *[]
 		if strings.Contains(err.Error(), "StatusCode: 410") {
 			filter := bson.M{"connectionId": connectionID}
 			db.GetCollection("websocketConnection").DeleteOne(ctx, filter)
-			fmt.Println("Deleted connection ID due to status code 410:", connectionID)
 		}
 		return err
 	}

@@ -16,5 +16,10 @@ func SetupAndRunApp() error {
 		return err
 	}
 
+	// err = database.StartFirebase()
+	// if err != nil {
+	// 	return err
+	// }
+
 	return nil
 }

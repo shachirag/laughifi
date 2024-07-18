@@ -27,6 +27,7 @@ func GetAnsweredTrivia(ctx context.Context, db *database.DB) ([]*model.AnsweredT
 			"$elemMatch": bson.M{
 				"id":           userData.Id,
 				"playedStatus": "accepted",
+				"role":         "player",
 			},
 		},
 	}
@@ -51,6 +52,7 @@ func GetAnsweredTrivia(ctx context.Context, db *database.DB) ([]*model.AnsweredT
 			CategoryName: ownGame.Category.Name,
 			GameName:     ownGame.GameName,
 			Status:       ownGame.Status,
+			Role:         "player",
 		})
 
 	}

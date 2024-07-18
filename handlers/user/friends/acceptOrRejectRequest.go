@@ -2,7 +2,6 @@ package friends
 
 import (
 	"context"
-	"fmt"
 	"laughifi/database"
 	"laughifi/graph/model"
 	"laughifi/utils"
@@ -39,9 +38,6 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 		},
 	}
 
-	// abc, _ := json.Marshal(filter)
-	// fmt.Println(string(abc))
-
 	session, err := db.GetMongoClient().StartSession()
 	if err != nil {
 		return nil, gqlerror.Errorf("Failed to start session")
@@ -60,9 +56,6 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 		if err != nil {
 			return nil, gqlerror.Errorf("Failed to update status")
 		}
-
-		fmt.Println("64", userObjID)
-		fmt.Println("65", user.Id)
 
 		secondFilter := bson.M{
 			"userId": userObjID,
@@ -85,8 +78,6 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 			return nil, gqlerror.Errorf("Failed to update status")
 		}
 
-		fmt.Println("85", user.Id)
-		fmt.Println("86", userObjID)
 		thirdFilter := bson.M{
 			"userId": user.Id,
 			"friendsList": bson.M{

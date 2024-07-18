@@ -106,6 +106,27 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		secondLastUserObjId = secondLastUser.Id
 	}
 
+	// if secondLastUserObjId != primitive.NilObjectID && len(playWithFriendTemplate.Answers) > 1 {
+	// 	secondLastUser, err := fetchUserByID(ctx, db, secondLastUserObjId)
+	// 	if err != nil {
+	// 		return nil, gqlerror.Errorf("Failed to fetch second last user details")
+	// 	}
+
+	// 	title := "Template Answer Update"
+	// 	body := fmt.Sprintf("%s has answered the template", secondLastUser.Name)
+	// 	notifData := map[string]string{
+	// 		"templateId": playWithFriendTemplateObjId.Hex(),
+	// 		"type":       "templateAnswer",
+	// 	}
+
+	// if secondLastUser.DeviceInfo.DeviceToken != "" && secondLastUser.DeviceInfo.DeviceType != "" {
+	// 	err = utils.SendNotificationToUser(secondLastUser.DeviceInfo.DeviceToken, secondLastUser.DeviceInfo.DeviceType, title, body, notifData)
+	// 	if err != nil {
+	// 		return nil, gqlerror.Errorf("Failed to send notification to second last user: %v", err)
+	// 	}
+	// }
+	// }
+
 	websocket.SendTemplateData(db, playWithFriendTemplateObjId, secondLastUserObjId)
 
 	return &model.AddAnswerResponse{
@@ -122,4 +143,13 @@ func extractPlaceholders(template string) []string {
 		placeholders = append(placeholders, strings.TrimSpace(placeholder))
 	}
 	return placeholders
+}
+
+func fetchUserByID(ctx context.Context, db *database.DB, userID primitive.ObjectID) (*entity.CustomerEntity, error) {
+	var user entity.CustomerEntity
+	err := db.GetCollection("customer").FindOne(ctx, bson.M{"_id": userID}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }

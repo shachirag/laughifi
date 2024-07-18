@@ -92,7 +92,7 @@ func GetTriviaDetail(ctx context.Context, db *database.DB, id string) (*model.Tr
 
 		if friend.Answer != nil {
 			answeredUsers = append(answeredUsers, user)
-		} else if friend.PlayedStatus == "pending" {
+		} else if friend.PlayedStatus == "accepted" {
 			notAnsweredUsers = append(notAnsweredUsers, user)
 		}
 	}

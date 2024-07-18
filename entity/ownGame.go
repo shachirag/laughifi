@@ -29,6 +29,7 @@ type Friend struct {
 	Image           string             `json:"image" bson:"image"`
 	Name            string             `json:"name" bson:"name"`
 	IsCorrectAnswer *bool              `json:"isCorrectAnswer,omitempty" bson:"isCorrectAnswer,omitempty"`
+	Role            string             `json:"role" bson:"role"`
 	Answer          *string            `json:"answer,omitempty" bson:"answer,omitempty"`
 	PlayedStatus    string             `json:"playedStatus" bson:"playedStatus"`
 }

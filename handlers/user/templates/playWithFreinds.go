@@ -59,16 +59,14 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 		id := primitive.NewObjectID()
 
 		templatePlayWithFriend := entity.TemplatePlayWithFriendEntity{
-			Id:       id,
-			ShareIds: []primitive.ObjectID{user.Id, friendObjID},
-			// UserId:     user.Id,
+			Id:         id,
+			ShareIds:   []primitive.ObjectID{user.Id, friendObjID},
 			TemplateId: templateObjId,
-			// FriendId:   friendObjID,
-			Answers:   answers,
-			IsFriend:  true,
-			Status:    "pending",
-			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
+			Answers:    answers,
+			IsFriend:   true,
+			Status:     "pending",
+			CreatedAt:  time.Now().UTC(),
+			UpdatedAt:  time.Now().UTC(),
 		}
 
 		insertDocuments = append(insertDocuments, templatePlayWithFriend)
@@ -80,7 +78,69 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 		return nil, gqlerror.Errorf("Failed to share templates with friends: %v", err)
 	}
 
+	// friendDetails, err := fetchFriendDetails(ctx, db, friendObjIDs)
+	// if err != nil {
+	// 	return nil, gqlerror.Errorf("Failed to fetch friend details: %v", err)
+	// }
+
+	// title := "Template Shared"
+	// body := fmt.Sprintf("%s has shared a template with you", user.Name)
+	// notifData := map[string]string{
+	// 	"templateId": templateObjId.Hex(),
+	// 	"type":       "templateShared",
+	// }
+
+	// errCh := make(chan error, len(friendObjIDs))
+
+	// for _, friendObjID := range friendObjIDs {
+	// 	if friendObjID != user.Id {
+	// 		go func(friendID primitive.ObjectID) {
+	// 			friend := friendDetails[friendID.Hex()]
+
+	// 			if friend.DeviceInfo.DeviceToken != "" && friend.DeviceInfo.DeviceType != "" {
+	// 				err = utils.SendNotificationToUser(friend.DeviceInfo.DeviceToken, friend.DeviceInfo.DeviceType, title, body, notifData)
+	// 				if err != nil {
+	// 					errCh <- fmt.Errorf("Failed to send notification to friend %s: %v", friend.ID.Hex(), err)
+	// 				}
+	// 			}
+	// 		}(friendObjID)
+	// 	}
+	// }
+
+	// for i := 0; i < len(friendObjIDs)-1; i++ {
+	// 	select {
+	// 	case err := <-errCh:
+	// 		if err != nil {
+	// 			return nil, gqlerror.Errorf(err.Error())
+	// 		}
+	// 	}
+	// }
+
 	return &model.Response{
 		Message: "Successfully Shared",
 	}, nil
 }
+
+// func fetchFriendDetails(ctx context.Context, db *database.DB, friendObjIDs []primitive.ObjectID) (map[string]entity.CustomerEntity, error) {
+// 	filter := bson.M{"_id": bson.M{"$in": friendObjIDs}}
+// 	cursor, err := db.GetCollection("customer").Find(ctx, filter)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer cursor.Close(ctx)
+
+// 	friendDetails := make(map[string]entity.CustomerEntity)
+// 	for cursor.Next(ctx) {
+// 		var friend entity.CustomerEntity
+// 		if err := cursor.Decode(&friend); err != nil {
+// 			return nil, err
+// 		}
+// 		friendDetails[friend.Id.Hex()] = friend
+// 	}
+
+// 	if err := cursor.Err(); err != nil {
+// 		return nil, err
+// 	}
+
+// 	return friendDetails, nil
+// }
