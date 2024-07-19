@@ -29,58 +29,6 @@ func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFrie
 		return nil, err
 	}
 
-	var existingFriendList entity.FriendListEntity
-	err = friendsListColl.FindOne(ctx, bson.M{"userId": user.Id}).Decode(&existingFriendList)
-
-	if err == mongo.ErrNoDocuments {
-		newFriendList := entity.FriendListEntity{
-			Id:        primitive.NewObjectID(),
-			UserId:    user.Id,
-			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
-			FriendsList: []entity.FriendsList{
-				{
-					Id:     userObjID,
-					Status: "friend-request-shared",
-				},
-			},
-		}
-
-		_, err = friendsListColl.InsertOne(ctx, newFriendList)
-		if err != nil {
-			return nil, gqlerror.Errorf("Failed to send friend request: %v", err)
-		}
-	} else if err != nil {
-		return nil, gqlerror.Errorf("Failed to check existing friend requests: %v", err)
-	} else {
-		for _, existingFriend := range existingFriendList.FriendsList {
-			if existingFriend.Id.Hex() == data.UserID {
-				if existingFriend.Status == "friend-request-shared" {
-					return &model.RequestResponse{
-						Message: "Not Shared",
-					}, nil
-				}
-			}
-		}
-
-		update := bson.M{
-			"$push": bson.M{
-				"friendsList": bson.M{
-					"id":     userObjID,
-					"status": "friend-request-shared",
-				},
-			},
-			"$set": bson.M{
-				"updatedAt": time.Now().UTC(),
-			},
-		}
-
-		_, err = friendsListColl.UpdateOne(ctx, bson.M{"userId": user.Id}, update)
-		if err != nil {
-			return nil, gqlerror.Errorf("Failed to update friend request: %v", err)
-		}
-	}
-
 	var targetFriendList entity.FriendListEntity
 	err = friendsListColl.FindOne(ctx, bson.M{"userId": userObjID}).Decode(&targetFriendList)
 

@@ -57,46 +57,24 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 			return nil, gqlerror.Errorf("Failed to update status")
 		}
 
-		secondFilter := bson.M{
-			"userId": userObjID,
-			"friendsList": bson.M{
-				"$elemMatch": bson.M{
-					"id":     user.Id,
-					"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-accepted", "friend-request-shared"}},
+		if data.Status == "friend-request-accepted" {
+			addToFriendsListFilter := bson.M{
+				"userId": userObjID,
+			}
+
+			addToFriendsListUpdate := bson.M{
+				"$addToSet": bson.M{
+					"friendsList": bson.M{
+						"id":     user.Id,
+						"status": "friend-request-accepted",
+					},
 				},
-			},
-		}
+			}
 
-		secondUpdate := bson.M{
-			"$set": bson.M{
-				"friendsList.$.status": data.Status,
-			},
-		}
-
-		_, err = friendsList.UpdateOne(sessCtx, secondFilter, secondUpdate)
-		if err != nil {
-			return nil, gqlerror.Errorf("Failed to update status")
-		}
-
-		thirdFilter := bson.M{
-			"userId": user.Id,
-			"friendsList": bson.M{
-				"$elemMatch": bson.M{
-					"id":     userObjID,
-					"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-accepted"}},
-				},
-			},
-		}
-
-		thirdUpdate := bson.M{
-			"$set": bson.M{
-				"friendsList.$.status": data.Status,
-			},
-		}
-
-		_, err = friendsList.UpdateOne(sessCtx, thirdFilter, thirdUpdate)
-		if err != nil {
-			return nil, gqlerror.Errorf("Failed to update status")
+			_, err = friendsList.UpdateOne(sessCtx, addToFriendsListFilter, addToFriendsListUpdate)
+			if err != nil {
+				return nil, gqlerror.Errorf("Failed to add current user to the other user's friends list")
+			}
 		}
 
 		if data.Status == "friend-request-accepted" || data.Status == "friend-removed" {
