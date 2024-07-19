@@ -29,7 +29,7 @@ func GetCategories(ctx context.Context, db *database.DB, page int, limit int, se
 		"isDeleted": false,
 	}
 
-	if search != "blank" {
+	if search != "" {
 		filter["name"] = primitive.Regex{Pattern: search, Options: "i"}
 	}
 

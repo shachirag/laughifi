@@ -35,6 +35,7 @@ func GetAdminTrivia(ctx context.Context, db *database.DB, triviaId string) (*mod
 		Question:           trivia.Question,
 		Answers:            trivia.Answers,
 		Category:           trivia.Category.Name,
+		CategoryID:         trivia.Category.Id.Hex(),
 		CorrectAnswer:      trivia.CorrectAnswer,
 		DareForWrongAnswer: trivia.DareForWrongAnswer,
 	}, nil

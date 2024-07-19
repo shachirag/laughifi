@@ -75,6 +75,7 @@ func fetchPendingRequestFriendIDs(ctx context.Context, db *database.DB) ([]primi
 		"friendsList": bson.M{
 			"$elemMatch": bson.M{
 				"status": "friend-request-pending",
+				"role":   "friend",
 			},
 		},
 	}

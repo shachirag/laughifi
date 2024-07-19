@@ -30,7 +30,7 @@ func GetAllTemplates(ctx context.Context, db *database.DB, page int, limit int, 
 		"isDeleted": false,
 	}
 
-	if search != "blank" {
+	if search != "" {
 		filter["template"] = primitive.Regex{Pattern: search, Options: "i"}
 	}
 

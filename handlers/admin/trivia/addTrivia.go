@@ -36,8 +36,7 @@ func AddTrivia(ctx context.Context, db *database.DB, data model.TriviaRequestInp
 	var dareForYouURL string
 	if data.DareForWrongAnswerFile != nil {
 		dareForYouFile := data.DareForWrongAnswerFile.File
-
-		dareForYouFileName := fmt.Sprintf("dare/%v.jpg", id.Hex())
+		dareForYouFileName := fmt.Sprintf("dare/%v.gif", id.Hex())
 
 		dareForYouURL, err = utils.UploadToS3(dareForYouFileName, dareForYouFile)
 		if err != nil {

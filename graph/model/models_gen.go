@@ -41,10 +41,11 @@ type AdminLoginResponse struct {
 }
 
 type AdminTemplate struct {
-	ID       string `json:"id"`
-	Category string `json:"category"`
-	Title    string `json:"title"`
-	Template string `json:"template"`
+	ID         string `json:"id"`
+	Category   string `json:"category"`
+	CategoryID string `json:"categoryId"`
+	Title      string `json:"title"`
+	Template   string `json:"template"`
 }
 
 type AdminTemplatePaginationResponse struct {
@@ -107,6 +108,15 @@ type CategoriesPaginationResponse struct {
 type Category struct {
 	ID       string `json:"id"`
 	Category string `json:"category"`
+}
+
+type CategoryDetailPaginationResponse struct {
+	Total       int          `json:"total"`
+	PerPage     int          `json:"perPage"`
+	CurrentPage int          `json:"currentPage"`
+	TotalPages  int          `json:"totalPages"`
+	Category    *Category    `json:"category"`
+	Templates   []*Templates `json:"templates"`
 }
 
 type CategoryRequestInput struct {
@@ -351,10 +361,16 @@ type TemplatePlayWithFriendsRequestInput struct {
 	Answer     []*Answer `json:"answer"`
 }
 
+type Templates struct {
+	ID       string `json:"id"`
+	Template string `json:"template"`
+}
+
 type TriviaData struct {
 	ID                 string   `json:"id"`
 	Question           string   `json:"question"`
 	Category           string   `json:"category"`
+	CategoryID         string   `json:"categoryId"`
 	Answers            []string `json:"answers"`
 	CorrectAnswer      string   `json:"correctAnswer"`
 	DareForWrongAnswer string   `json:"dareForWrongAnswer"`

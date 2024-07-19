@@ -52,14 +52,9 @@ func AddTriviaAnswer(ctx context.Context, db *database.DB, ownGameId string, ans
 		}
 	}
 
-	var triviaId primitive.ObjectID
-	if ownGame.TriviaID != nil {
-		triviaId = *ownGame.TriviaID
-	}
-
 	var trivia entity.TriviaEntity
 	triviaFilter := bson.M{
-		"_id": triviaId,
+		"_id": ownGame.TriviaID,
 	}
 
 	err = db.GetCollection("trivia").FindOne(ctx, triviaFilter).Decode(&trivia)

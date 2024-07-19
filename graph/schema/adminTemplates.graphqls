@@ -43,6 +43,7 @@ type AdminTemplates {
 type AdminTemplate {
   id: ID!
   category: String!
+  categoryId: ID!
   title: String!
   template: String!
 }

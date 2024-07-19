@@ -42,9 +42,10 @@ func GetTemplateData(ctx context.Context, db *database.DB, templateId string) (*
 	displayTemplate := replacePlaceholdersWithBlank(template.Template)
 
 	return &model.AdminTemplate{
-		ID:       template.Id.Hex(),
-		Category: category.Name,
-		Title:    template.Title,
-		Template: displayTemplate,
+		ID:         template.Id.Hex(),
+		Category:   category.Name,
+		Title:      template.Title,
+		Template:   displayTemplate,
+		CategoryID: category.Id.Hex(),
 	}, nil
 }

@@ -6,6 +6,7 @@ import (
 	"laughifi/entity"
 	"laughifi/graph/model"
 	"laughifi/utils"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -70,6 +71,29 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 	}
 	friends = append(friends, userAsFriend)
 
+	var trivias []entity.TriviaEntity
+	triviaColl := db.GetCollection("trivia")
+	cursor, err := triviaColl.Find(ctx, bson.M{"category.id": categoryObjID})
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to fetch trivia")
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var trivia entity.TriviaEntity
+		if err := cursor.Decode(&trivia); err != nil {
+			return nil, gqlerror.Errorf("Failed to decode trivia")
+		}
+		trivias = append(trivias, trivia)
+	}
+
+	if len(trivias) == 0 {
+		return nil, gqlerror.Errorf("Trivia not Found")
+	}
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	randomTrivia := trivias[r.Intn(len(trivias))]
+
 	id := primitive.NewObjectID()
 	ownGame := entity.OwnGameEntity{
 		Id:      id,
@@ -79,6 +103,7 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 			Name:  user.Name,
 			Image: user.Image,
 		},
+		TriviaID: randomTrivia.Id,
 		GameName: data.GameName,
 		Category: entity.Category{
 			Id:   categoryObjID,

@@ -24,12 +24,8 @@ func GetTrivaiAnswerDto(db *database.DB, ownGameId primitive.ObjectID) *model.Tr
 
 	var trivia entity.TriviaEntity
 
-	tiviaId := primitive.ObjectID{}
-	if ownGame.TriviaID != nil {
-		tiviaId = *ownGame.TriviaID
-	}
 	triviaFilter := bson.M{
-		"_id": tiviaId,
+		"_id": ownGame.TriviaID,
 	}
 
 	err = db.GetCollection("trivia").FindOne(ctx, triviaFilter).Decode(&trivia)

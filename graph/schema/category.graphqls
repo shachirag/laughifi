@@ -18,7 +18,11 @@ extend type Query {
     limit: Int!
     search: String
   ): CategoriesPaginationResponse!
-  getCategoryDetail(page: Int!, limit: Int!): CategoryDetailPaginationResponse!
+  getCategoryDetail(
+    page: Int!
+    limit: Int!
+    categoryId: ID!
+  ): CategoryDetailPaginationResponse!
 }
 
 type CategoryDetailPaginationResponse {
@@ -27,6 +31,12 @@ type CategoryDetailPaginationResponse {
   currentPage: Int!
   totalPages: Int!
   category: Category!
+  templates: [Templates!]!
+}
+
+type Templates {
+  id: ID!
+  template: String!
 }
 
 type CategoriesPaginationResponse {

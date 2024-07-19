@@ -72,8 +72,10 @@ func GetLaughifiCustomers(ctx context.Context, db *database.DB, page int, limit 
 			"userId": user.Id,
 			"friendsList": bson.M{
 				"$elemMatch": bson.M{
-					"id":     customer.Id,
-					"status": "friend-request-pending",
+					"id": customer.Id,
+					"status": bson.M{
+						"$in": []string{"friend-request-pending", "friend-request-shared"},
+					},
 				},
 			},
 		}

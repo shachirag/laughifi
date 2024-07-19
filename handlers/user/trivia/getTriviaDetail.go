@@ -5,8 +5,6 @@ import (
 	"laughifi/database"
 	"laughifi/entity"
 	"laughifi/graph/model"
-	"math/rand"
-	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
@@ -32,39 +30,10 @@ func GetTriviaDetail(ctx context.Context, db *database.DB, id string) (*model.Tr
 		return nil, gqlerror.Errorf("Failed to fetch Own Game")
 	}
 
-	var trivias []entity.TriviaEntity
-	triviaColl := db.GetCollection("trivia")
-	cursor, err := triviaColl.Find(ctx, bson.M{"category.id": ownGame.Category.Id})
+	var trivia entity.TriviaEntity
+	err = db.GetCollection("trivia").FindOne(ctx, bson.M{"_id": ownGame.TriviaID}).Decode(&trivia)
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to fetch trivia")
-	}
-	defer cursor.Close(ctx)
-
-	for cursor.Next(ctx) {
-		var trivia entity.TriviaEntity
-		if err := cursor.Decode(&trivia); err != nil {
-			return nil, gqlerror.Errorf("Failed to decode trivia")
-		}
-		trivias = append(trivias, trivia)
-	}
-
-	if len(trivias) == 0 {
-		return nil, gqlerror.Errorf("Trivia not Found")
-	}
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	randomTrivia := trivias[r.Intn(len(trivias))]
-
-	update := bson.M{
-		"$set": bson.M{
-			"triviaId":  randomTrivia.Id,
-			"updatedAt": time.Now().UTC(),
-		},
-	}
-
-	_, err = ownGameColl.UpdateOne(ctx, bson.M{"_id": ownGameObjID}, update)
-	if err != nil {
-		return nil, gqlerror.Errorf("Failed to update Own Game with trivia ID")
+		return nil, gqlerror.Errorf("Internal server error while fetching the trivia: " + err.Error())
 	}
 
 	var answeredUsers []*model.Users
@@ -73,8 +42,8 @@ func GetTriviaDetail(ctx context.Context, db *database.DB, id string) (*model.Tr
 	var correctAnswer *string
 
 	if ownGame.Status == "answered" {
-		dareForWrongAnswer = &randomTrivia.DareForWrongAnswer
-		correctAnswer = &randomTrivia.CorrectAnswer
+		dareForWrongAnswer = &trivia.DareForWrongAnswer
+		correctAnswer = &trivia.CorrectAnswer
 	}
 
 	for _, friend := range ownGame.Friends {
@@ -101,8 +70,8 @@ func GetTriviaDetail(ctx context.Context, db *database.DB, id string) (*model.Tr
 
 	return &model.TriviaDetail{
 		ID:                 ownGame.Id.Hex(),
-		Question:           randomTrivia.Question,
-		Answers:            randomTrivia.Answers,
+		Question:           trivia.Question,
+		Answers:            trivia.Answers,
 		AnsweredUsers:      answeredUsers,
 		NotAnsweredUsers:   notAnsweredUsers,
 		DareForWrongAnswer: dareForWrongAnswer,

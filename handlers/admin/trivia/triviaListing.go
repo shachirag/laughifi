@@ -23,20 +23,20 @@ func GetTrivias(ctx context.Context, db *database.DB, page int, limit int, searc
 		limit = 15
 	}
 
-	categoryColl := db.GetCollection("category")
+	triviaColl := db.GetCollection("trivia")
 
 	filter := bson.M{
 		"isDeleted": false,
 	}
 
-	if search != "blank" {
+	if search != "" {
 		filter["question"] = primitive.Regex{Pattern: search, Options: "i"}
 	}
 
 	skip := (page - 1) * limit
 	findOptions := options.Find().SetSkip(int64(skip)).SetLimit(int64(limit)).SetSort(bson.M{"updatedAt": -1})
 
-	cursor, err := categoryColl.Find(ctx, filter, findOptions)
+	cursor, err := triviaColl.Find(ctx, filter, findOptions)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return &model.TriviaPaginationResponse{
@@ -47,7 +47,7 @@ func GetTrivias(ctx context.Context, db *database.DB, page int, limit int, searc
 				Trivias:     []*model.AdminTriviaListing{},
 			}, nil
 		}
-		return nil, gqlerror.Errorf("Failed to fetch filled categories")
+		return nil, gqlerror.Errorf("Failed to fetch trivias")
 	}
 	defer cursor.Close(ctx)
 
@@ -68,9 +68,9 @@ func GetTrivias(ctx context.Context, db *database.DB, page int, limit int, searc
 		trivias = append(trivias, &triviaRes)
 	}
 
-	totalCount, err := categoryColl.CountDocuments(ctx, filter)
+	totalCount, err := triviaColl.CountDocuments(ctx, filter)
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to count filled trivias")
+		return nil, gqlerror.Errorf("Failed to count trivias")
 	}
 
 	response := model.TriviaPaginationResponse{

@@ -46,11 +46,11 @@ func (r *queryResolver) GetCategories(ctx context.Context, page int, limit int, 
 	return geCategoryData, nil
 }
 
-// GetCategory is the resolver for the getCategory field.
-func (r *queryResolver) GetCategory(ctx context.Context, id string) (*model.Category, error) {
-	getCategoryData, err := category.GetCategoryData(ctx, r.DB, id)
+// GetCategoryDetail is the resolver for the getCategoryDetail field.
+func (r *queryResolver) GetCategoryDetail(ctx context.Context, page int, limit int, categoryID string) (*model.CategoryDetailPaginationResponse, error) {
+	geCategoryData, err := category.GetCategoryData(ctx, r.DB, page, limit, categoryID)
 	if err != nil {
 		return nil, err
 	}
-	return getCategoryData, nil
+	return geCategoryData, nil
 }

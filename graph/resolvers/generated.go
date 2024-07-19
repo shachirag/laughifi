@@ -63,10 +63,11 @@ type ComplexityRoot struct {
 	}
 
 	AdminTemplate struct {
-		Category func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Template func(childComplexity int) int
-		Title    func(childComplexity int) int
+		Category   func(childComplexity int) int
+		CategoryID func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Template   func(childComplexity int) int
+		Title      func(childComplexity int) int
 	}
 
 	AdminTemplatePaginationResponse struct {
@@ -113,6 +114,15 @@ type ComplexityRoot struct {
 	Category struct {
 		Category func(childComplexity int) int
 		ID       func(childComplexity int) int
+	}
+
+	CategoryDetailPaginationResponse struct {
+		Category    func(childComplexity int) int
+		CurrentPage func(childComplexity int) int
+		PerPage     func(childComplexity int) int
+		Templates   func(childComplexity int) int
+		Total       func(childComplexity int) int
+		TotalPages  func(childComplexity int) int
 	}
 
 	Friend struct {
@@ -240,7 +250,7 @@ type ComplexityRoot struct {
 		GetAllWouldYouRathers    func(childComplexity int, page int, limit int) int
 		GetAnsweredTrivia        func(childComplexity int) int
 		GetCategories            func(childComplexity int, page int, limit int, search *string) int
-		GetCategory              func(childComplexity int, id string) int
+		GetCategoryDetail        func(childComplexity int, page int, limit int, categoryID string) int
 		GetDashboardData         func(childComplexity int) int
 		GetFriendTemplates       func(childComplexity int, page int, limit int, friendID string) int
 		GetFriendTemplatesDetail func(childComplexity int, id string) int
@@ -320,9 +330,15 @@ type ComplexityRoot struct {
 		TotalPages  func(childComplexity int) int
 	}
 
+	Templates struct {
+		ID       func(childComplexity int) int
+		Template func(childComplexity int) int
+	}
+
 	TriviaData struct {
 		Answers            func(childComplexity int) int
 		Category           func(childComplexity int) int
+		CategoryID         func(childComplexity int) int
 		CorrectAnswer      func(childComplexity int) int
 		DareForWrongAnswer func(childComplexity int) int
 		ID                 func(childComplexity int) int
@@ -452,7 +468,7 @@ type QueryResolver interface {
 	GetTrivias(ctx context.Context, page int, limit int, search *string) (*model.TriviaPaginationResponse, error)
 	GetTrivia(ctx context.Context, id string) (*model.TriviaData, error)
 	GetCategories(ctx context.Context, page int, limit int, search *string) (*model.CategoriesPaginationResponse, error)
-	GetCategory(ctx context.Context, id string) (*model.Category, error)
+	GetCategoryDetail(ctx context.Context, page int, limit int, categoryID string) (*model.CategoryDetailPaginationResponse, error)
 	GetLaughifiUsers(ctx context.Context, page int, limit int, search *string) (*model.LaughifiUserPaginationResponse, error)
 	GetFriends(ctx context.Context, page int, limit int, search *string) (*model.FriendPaginationResponse, error)
 	GetFriendsRequests(ctx context.Context) ([]*model.Friend, error)
@@ -568,6 +584,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AdminTemplate.Category(childComplexity), true
+
+	case "AdminTemplate.categoryId":
+		if e.complexity.AdminTemplate.CategoryID == nil {
+			break
+		}
+
+		return e.complexity.AdminTemplate.CategoryID(childComplexity), true
 
 	case "AdminTemplate.id":
 		if e.complexity.AdminTemplate.ID == nil {
@@ -764,6 +787,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Category.ID(childComplexity), true
+
+	case "CategoryDetailPaginationResponse.category":
+		if e.complexity.CategoryDetailPaginationResponse.Category == nil {
+			break
+		}
+
+		return e.complexity.CategoryDetailPaginationResponse.Category(childComplexity), true
+
+	case "CategoryDetailPaginationResponse.currentPage":
+		if e.complexity.CategoryDetailPaginationResponse.CurrentPage == nil {
+			break
+		}
+
+		return e.complexity.CategoryDetailPaginationResponse.CurrentPage(childComplexity), true
+
+	case "CategoryDetailPaginationResponse.perPage":
+		if e.complexity.CategoryDetailPaginationResponse.PerPage == nil {
+			break
+		}
+
+		return e.complexity.CategoryDetailPaginationResponse.PerPage(childComplexity), true
+
+	case "CategoryDetailPaginationResponse.templates":
+		if e.complexity.CategoryDetailPaginationResponse.Templates == nil {
+			break
+		}
+
+		return e.complexity.CategoryDetailPaginationResponse.Templates(childComplexity), true
+
+	case "CategoryDetailPaginationResponse.total":
+		if e.complexity.CategoryDetailPaginationResponse.Total == nil {
+			break
+		}
+
+		return e.complexity.CategoryDetailPaginationResponse.Total(childComplexity), true
+
+	case "CategoryDetailPaginationResponse.totalPages":
+		if e.complexity.CategoryDetailPaginationResponse.TotalPages == nil {
+			break
+		}
+
+		return e.complexity.CategoryDetailPaginationResponse.TotalPages(childComplexity), true
 
 	case "Friend.id":
 		if e.complexity.Friend.ID == nil {
@@ -1622,17 +1687,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.GetCategories(childComplexity, args["page"].(int), args["limit"].(int), args["search"].(*string)), true
 
-	case "Query.getCategory":
-		if e.complexity.Query.GetCategory == nil {
+	case "Query.getCategoryDetail":
+		if e.complexity.Query.GetCategoryDetail == nil {
 			break
 		}
 
-		args, err := ec.field_Query_getCategory_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_getCategoryDetail_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.GetCategory(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.GetCategoryDetail(childComplexity, args["page"].(int), args["limit"].(int), args["categoryId"].(string)), true
 
 	case "Query.getDashboardData":
 		if e.complexity.Query.GetDashboardData == nil {
@@ -2044,6 +2109,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TemplatePaginationResponse.TotalPages(childComplexity), true
 
+	case "Templates.id":
+		if e.complexity.Templates.ID == nil {
+			break
+		}
+
+		return e.complexity.Templates.ID(childComplexity), true
+
+	case "Templates.template":
+		if e.complexity.Templates.Template == nil {
+			break
+		}
+
+		return e.complexity.Templates.Template(childComplexity), true
+
 	case "TriviaData.answers":
 		if e.complexity.TriviaData.Answers == nil {
 			break
@@ -2057,6 +2136,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TriviaData.Category(childComplexity), true
+
+	case "TriviaData.categoryId":
+		if e.complexity.TriviaData.CategoryID == nil {
+			break
+		}
+
+		return e.complexity.TriviaData.CategoryID(childComplexity), true
 
 	case "TriviaData.correctAnswer":
 		if e.complexity.TriviaData.CorrectAnswer == nil {
@@ -2622,6 +2708,7 @@ type AdminTemplates {
 type AdminTemplate {
   id: ID!
   category: String!
+  categoryId: ID!
   title: String!
   template: String!
 }
@@ -2677,6 +2764,7 @@ type TriviaData {
   id: ID!
   question: String!
   category: String!
+  categoryId: ID!
   answers: [String!]!
   correctAnswer: String!
   dareForWrongAnswer: String!
@@ -2773,7 +2861,25 @@ extend type Query {
     limit: Int!
     search: String
   ): CategoriesPaginationResponse!
-  getCategory(id: ID!): Category!
+  getCategoryDetail(
+    page: Int!
+    limit: Int!
+    categoryId: ID!
+  ): CategoryDetailPaginationResponse!
+}
+
+type CategoryDetailPaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  category: Category!
+  templates: [Templates!]!
+}
+
+type Templates {
+  id: ID!
+  template: String!
 }
 
 type CategoriesPaginationResponse {
@@ -3957,18 +4063,36 @@ func (ec *executionContext) field_Query_getCategories_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_getCategory_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_getCategoryDetail_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	var arg0 int
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
+	args["page"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["categoryId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("categoryId"))
+		arg2, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["categoryId"] = arg2
 	return args, nil
 }
 
@@ -4839,6 +4963,50 @@ func (ec *executionContext) fieldContext_AdminTemplate_category(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdminTemplate_categoryId(ctx context.Context, field graphql.CollectedField, obj *model.AdminTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AdminTemplate_categoryId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CategoryID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AdminTemplate_categoryId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdminTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6041,6 +6209,282 @@ func (ec *executionContext) fieldContext_Category_category(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CategoryDetailPaginationResponse_total(ctx context.Context, field graphql.CollectedField, obj *model.CategoryDetailPaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CategoryDetailPaginationResponse_total(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Total, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CategoryDetailPaginationResponse_total(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CategoryDetailPaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CategoryDetailPaginationResponse_perPage(ctx context.Context, field graphql.CollectedField, obj *model.CategoryDetailPaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CategoryDetailPaginationResponse_perPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CategoryDetailPaginationResponse_perPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CategoryDetailPaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CategoryDetailPaginationResponse_currentPage(ctx context.Context, field graphql.CollectedField, obj *model.CategoryDetailPaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CategoryDetailPaginationResponse_currentPage(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CurrentPage, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CategoryDetailPaginationResponse_currentPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CategoryDetailPaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CategoryDetailPaginationResponse_totalPages(ctx context.Context, field graphql.CollectedField, obj *model.CategoryDetailPaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CategoryDetailPaginationResponse_totalPages(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TotalPages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CategoryDetailPaginationResponse_totalPages(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CategoryDetailPaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CategoryDetailPaginationResponse_category(ctx context.Context, field graphql.CollectedField, obj *model.CategoryDetailPaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CategoryDetailPaginationResponse_category(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Category, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Category)
+	fc.Result = res
+	return ec.marshalNCategory2ᚖlaughifiᚋgraphᚋmodelᚐCategory(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CategoryDetailPaginationResponse_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CategoryDetailPaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Category_id(ctx, field)
+			case "category":
+				return ec.fieldContext_Category_category(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CategoryDetailPaginationResponse_templates(ctx context.Context, field graphql.CollectedField, obj *model.CategoryDetailPaginationResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CategoryDetailPaginationResponse_templates(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Templates, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Templates)
+	fc.Result = res
+	return ec.marshalNTemplates2ᚕᚖlaughifiᚋgraphᚋmodelᚐTemplatesᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CategoryDetailPaginationResponse_templates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CategoryDetailPaginationResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Templates_id(ctx, field)
+			case "template":
+				return ec.fieldContext_Templates_template(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Templates", field.Name)
 		},
 	}
 	return fc, nil
@@ -10540,6 +10984,8 @@ func (ec *executionContext) fieldContext_Query_getAdminTemplate(ctx context.Cont
 				return ec.fieldContext_AdminTemplate_id(ctx, field)
 			case "category":
 				return ec.fieldContext_AdminTemplate_category(ctx, field)
+			case "categoryId":
+				return ec.fieldContext_AdminTemplate_categoryId(ctx, field)
 			case "title":
 				return ec.fieldContext_AdminTemplate_title(ctx, field)
 			case "template":
@@ -10735,6 +11181,8 @@ func (ec *executionContext) fieldContext_Query_getTrivia(ctx context.Context, fi
 				return ec.fieldContext_TriviaData_question(ctx, field)
 			case "category":
 				return ec.fieldContext_TriviaData_category(ctx, field)
+			case "categoryId":
+				return ec.fieldContext_TriviaData_categoryId(ctx, field)
 			case "answers":
 				return ec.fieldContext_TriviaData_answers(ctx, field)
 			case "correctAnswer":
@@ -10826,8 +11274,8 @@ func (ec *executionContext) fieldContext_Query_getCategories(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getCategory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_getCategory(ctx, field)
+func (ec *executionContext) _Query_getCategoryDetail(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getCategoryDetail(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -10840,7 +11288,7 @@ func (ec *executionContext) _Query_getCategory(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().GetCategory(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Query().GetCategoryDetail(rctx, fc.Args["page"].(int), fc.Args["limit"].(int), fc.Args["categoryId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10852,12 +11300,12 @@ func (ec *executionContext) _Query_getCategory(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Category)
+	res := resTmp.(*model.CategoryDetailPaginationResponse)
 	fc.Result = res
-	return ec.marshalNCategory2ᚖlaughifiᚋgraphᚋmodelᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNCategoryDetailPaginationResponse2ᚖlaughifiᚋgraphᚋmodelᚐCategoryDetailPaginationResponse(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_getCategory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getCategoryDetail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -10865,12 +11313,20 @@ func (ec *executionContext) fieldContext_Query_getCategory(ctx context.Context, 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Category_id(ctx, field)
+			case "total":
+				return ec.fieldContext_CategoryDetailPaginationResponse_total(ctx, field)
+			case "perPage":
+				return ec.fieldContext_CategoryDetailPaginationResponse_perPage(ctx, field)
+			case "currentPage":
+				return ec.fieldContext_CategoryDetailPaginationResponse_currentPage(ctx, field)
+			case "totalPages":
+				return ec.fieldContext_CategoryDetailPaginationResponse_totalPages(ctx, field)
 			case "category":
-				return ec.fieldContext_Category_category(ctx, field)
+				return ec.fieldContext_CategoryDetailPaginationResponse_category(ctx, field)
+			case "templates":
+				return ec.fieldContext_CategoryDetailPaginationResponse_templates(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Category", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type CategoryDetailPaginationResponse", field.Name)
 		},
 	}
 	defer func() {
@@ -10880,7 +11336,7 @@ func (ec *executionContext) fieldContext_Query_getCategory(ctx context.Context, 
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getCategory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_getCategoryDetail_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -13650,6 +14106,94 @@ func (ec *executionContext) fieldContext_TemplatePaginationResponse_templates(_ 
 	return fc, nil
 }
 
+func (ec *executionContext) _Templates_id(ctx context.Context, field graphql.CollectedField, obj *model.Templates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Templates_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Templates_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Templates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Templates_template(ctx context.Context, field graphql.CollectedField, obj *model.Templates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Templates_template(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Template, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Templates_template(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Templates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _TriviaData_id(ctx context.Context, field graphql.CollectedField, obj *model.TriviaData) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_TriviaData_id(ctx, field)
 	if err != nil {
@@ -13777,6 +14321,50 @@ func (ec *executionContext) fieldContext_TriviaData_category(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaData_categoryId(ctx context.Context, field graphql.CollectedField, obj *model.TriviaData) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaData_categoryId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CategoryID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaData_categoryId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaData",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -18922,6 +19510,11 @@ func (ec *executionContext) _AdminTemplate(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "categoryId":
+			out.Values[i] = ec._AdminTemplate_categoryId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "title":
 			out.Values[i] = ec._AdminTemplate_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -19292,6 +19885,70 @@ func (ec *executionContext) _Category(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "category":
 			out.Values[i] = ec._Category_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var categoryDetailPaginationResponseImplementors = []string{"CategoryDetailPaginationResponse"}
+
+func (ec *executionContext) _CategoryDetailPaginationResponse(ctx context.Context, sel ast.SelectionSet, obj *model.CategoryDetailPaginationResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, categoryDetailPaginationResponseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CategoryDetailPaginationResponse")
+		case "total":
+			out.Values[i] = ec._CategoryDetailPaginationResponse_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "perPage":
+			out.Values[i] = ec._CategoryDetailPaginationResponse_perPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentPage":
+			out.Values[i] = ec._CategoryDetailPaginationResponse_currentPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalPages":
+			out.Values[i] = ec._CategoryDetailPaginationResponse_totalPages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "category":
+			out.Values[i] = ec._CategoryDetailPaginationResponse_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "templates":
+			out.Values[i] = ec._CategoryDetailPaginationResponse_templates(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -20394,7 +21051,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getCategory":
+		case "getCategoryDetail":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -20403,7 +21060,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getCategory(ctx, field)
+				res = ec._Query_getCategoryDetail(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -21314,6 +21971,50 @@ func (ec *executionContext) _TemplatePaginationResponse(ctx context.Context, sel
 	return out
 }
 
+var templatesImplementors = []string{"Templates"}
+
+func (ec *executionContext) _Templates(ctx context.Context, sel ast.SelectionSet, obj *model.Templates) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, templatesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Templates")
+		case "id":
+			out.Values[i] = ec._Templates_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "template":
+			out.Values[i] = ec._Templates_template(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var triviaDataImplementors = []string{"TriviaData"}
 
 func (ec *executionContext) _TriviaData(ctx context.Context, sel ast.SelectionSet, obj *model.TriviaData) graphql.Marshaler {
@@ -21337,6 +22038,11 @@ func (ec *executionContext) _TriviaData(ctx context.Context, sel ast.SelectionSe
 			}
 		case "category":
 			out.Values[i] = ec._TriviaData_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "categoryId":
+			out.Values[i] = ec._TriviaData_categoryId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -22617,10 +23323,6 @@ func (ec *executionContext) marshalNCategoriesPaginationResponse2ᚖlaughifiᚋg
 	return ec._CategoriesPaginationResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCategory2laughifiᚋgraphᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
-	return ec._Category(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNCategory2ᚕᚖlaughifiᚋgraphᚋmodelᚐCategoryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Category) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -22673,6 +23375,20 @@ func (ec *executionContext) marshalNCategory2ᚖlaughifiᚋgraphᚋmodelᚐCateg
 		return graphql.Null
 	}
 	return ec._Category(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCategoryDetailPaginationResponse2laughifiᚋgraphᚋmodelᚐCategoryDetailPaginationResponse(ctx context.Context, sel ast.SelectionSet, v model.CategoryDetailPaginationResponse) graphql.Marshaler {
+	return ec._CategoryDetailPaginationResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCategoryDetailPaginationResponse2ᚖlaughifiᚋgraphᚋmodelᚐCategoryDetailPaginationResponse(ctx context.Context, sel ast.SelectionSet, v *model.CategoryDetailPaginationResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CategoryDetailPaginationResponse(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNCategoryRequestInput2laughifiᚋgraphᚋmodelᚐCategoryRequestInput(ctx context.Context, v interface{}) (model.CategoryRequestInput, error) {
@@ -23426,6 +24142,60 @@ func (ec *executionContext) marshalNTemplatePaginationResponse2ᚖlaughifiᚋgra
 func (ec *executionContext) unmarshalNTemplatePlayWithFriendsRequestInput2laughifiᚋgraphᚋmodelᚐTemplatePlayWithFriendsRequestInput(ctx context.Context, v interface{}) (model.TemplatePlayWithFriendsRequestInput, error) {
 	res, err := ec.unmarshalInputTemplatePlayWithFriendsRequestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTemplates2ᚕᚖlaughifiᚋgraphᚋmodelᚐTemplatesᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Templates) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTemplates2ᚖlaughifiᚋgraphᚋmodelᚐTemplates(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTemplates2ᚖlaughifiᚋgraphᚋmodelᚐTemplates(ctx context.Context, sel ast.SelectionSet, v *model.Templates) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Templates(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTriviaData2laughifiᚋgraphᚋmodelᚐTriviaData(ctx context.Context, sel ast.SelectionSet, v model.TriviaData) graphql.Marshaler {

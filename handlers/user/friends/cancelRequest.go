@@ -32,7 +32,7 @@ func CancelFriendRequest(ctx context.Context, db *database.DB, data model.SendFr
 		"friendsList": bson.M{
 			"$elemMatch": bson.M{
 				"id":     userObjID,
-				"status": "friend-request-pending",
+				"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-shared"}},
 			},
 		},
 	}
@@ -67,7 +67,7 @@ func CancelFriendRequest(ctx context.Context, db *database.DB, data model.SendFr
 			"friendsList": bson.M{
 				"$elemMatch": bson.M{
 					"id":     user.Id,
-					"status": "friend-request-pending",
+					"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-shared"}},
 				},
 			},
 		}

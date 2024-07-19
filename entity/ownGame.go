@@ -7,15 +7,15 @@ import (
 )
 
 type OwnGameEntity struct {
-	Id        primitive.ObjectID  `json:"id" bson:"_id"`
-	Friends   []Friend            `json:"friends" bson:"friends"`
-	User      User                `json:"user" bson:"user"`
-	Status    string              `json:"status" bson:"status"`
-	GameName  string              `json:"gameName" bson:"gameName"`
-	Category  Category            `json:"category" bson:"category"`
-	TriviaID  *primitive.ObjectID `json:"triviaId,omitempty" bson:"triviaId,omitempty"`
-	CreatedAt time.Time           `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time           `json:"updatedAt" bson:"updatedAt"`
+	Id        primitive.ObjectID `json:"id" bson:"_id"`
+	Friends   []Friend           `json:"friends" bson:"friends"`
+	User      User               `json:"user" bson:"user"`
+	Status    string             `json:"status" bson:"status"`
+	GameName  string             `json:"gameName" bson:"gameName"`
+	Category  Category           `json:"category" bson:"category"`
+	TriviaID  primitive.ObjectID `json:"triviaId" bson:"triviaId"`
+	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt"`
 }
 
 type User struct {
