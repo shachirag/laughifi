@@ -36,10 +36,10 @@ func main() {
 	apiClient := database.GetApiClient()
 	// messagingClient := database.GetFirebaseMessagingClient()
 	resolver := &graph.Resolver{
-		DB:              db,
-		S3Client:        s3,
-		SESClient:       ses,
-		ApiClient:       apiClient,
+		DB:        db,
+		S3Client:  s3,
+		SESClient: ses,
+		ApiClient: apiClient,
 		// MessagingClient: messagingClient,
 	}
 
@@ -65,74 +65,11 @@ func main() {
 			return
 		}
 
-		authRequiredOperations := map[string]bool{
-			// customer
-			"LoginCustomer":             false,
-			"ResendOtp":                 false,
-			"ForgotPassword":            false,
-			"ResetPassword":             false,
-			"Signup":                    false,
-			"VerifyOtpForSignup":        false,
-			"SocialLoginCustomer":       false,
-			"VerifyOtpForResetPassword": false,
-			"ChangePassword":            true,
-			"GetUserData":               true,
-			"EditCustomer":              true,
-			"GetLaughifiCustomers":      true,
-			"GetTemplates":              true,
-			"SendFriendRequest":         true,
-			"GetFriendRequests":         true,
-			"GetFriends":                true,
-			"AcceptRejectRequest":       true,
-			"CancelFriendRequest":       true,
-			"AddAnswer":                 true,
-			"FilledTemplates":           true,
-			"GetFilledTemplates":        true,
-			"FilledWouldYouRather":      true,
-			"GetWouldYouRathers":        true,
-			"GetFilledWouldRathers":     true,
-			"TemplatePlayWithFriends":   true,
-			"GetFriendTemplates":        true,
-			"OwnGame":                   true,
-			"GetTrivia":                 true,
-			"GetTriviaDetail":           true,
-			"GetAnsweredTrivia":         true,
-			"GetRequestedTrivia":        true,
-			"AcceptRejectTrivia":        true,
-			"AddTriviaAnswer":           true,
-			"GetAllCategory":            true,
+		authRequiredOperations := mergeOperations(
+			getAdminOperations(),
+			getCustomerOperations(),
+		)
 
-			// admin
-			"LoginAdmin":                     false,
-			"AdminForgotPassword":            false,
-			"AdminVerifyOtpForResetPassword": false,
-			"AdminResetPassword":             false,
-			"AdminChangePassword":            true,
-			"AdminEditAdmin":                 true,
-			"GetAdminData":                   true,
-			"AddCatgeory":                    true,
-			"GetCategoryData":                true,
-			"DeletedCategoryData":            true,
-			"EditCategory":                   true,
-			"GetCategories":                  true,
-			"GetDashboardCounts":             true,
-			"AddTemplate":                    true,
-			"DeletedTemplateData":            true,
-			"EditTemplate":                   true,
-			"GetAllCategories":               true,
-			"GetTemplateData":                true,
-			"GetAllTemplates":                true,
-			"AddWouldYouRather":              true,
-			"DeleteWouldYouRather":           true,
-			"GetWouldYouRatherData":          true,
-			"EditWouldYouRather":             true,
-			"GetAllWouldYouRathers":          true,
-			"AddTrivia":                      true,
-			"DeleteTrivia":                   true,
-			"EditTrivia":                     true,
-			"GetAdminTrivia":                 true,
-			"GetTrivias":                     true,
-		}
 		if authRequiredOperations[opName] {
 			middleware.ValidateJWT(srv).ServeHTTP(w, r)
 		} else {
@@ -152,4 +89,87 @@ func main() {
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL Playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, corsMiddleware(router)))
+}
+
+func mergeOperations(maps ...map[string]bool) map[string]bool {
+	result := make(map[string]bool)
+	for _, m := range maps {
+		for k, v := range m {
+			result[k] = v
+		}
+	}
+	return result
+}
+
+func getAdminOperations() map[string]bool {
+	return map[string]bool{
+		"LoginAdmin":                     false,
+		"AdminForgotPassword":            false,
+		"AdminVerifyOtpForResetPassword": false,
+		"AdminResetPassword":             false,
+		"AdminChangePassword":            true,
+		"AdminEditAdmin":                 true,
+		"GetAdminData":                   true,
+		"AddCatgeory":                    true,
+		"GetCategoryData":                true,
+		"DeletedCategoryData":            true,
+		"EditCategory":                   true,
+		"GetCategories":                  true,
+		"GetDashboardCounts":             true,
+		"AddTemplate":                    true,
+		"DeletedTemplateData":            true,
+		"EditTemplate":                   true,
+		"GetAllCategories":               true,
+		"GetTemplateData":                true,
+		"GetAllTemplates":                true,
+		"AddWouldYouRather":              true,
+		"DeleteWouldYouRather":           true,
+		"GetWouldYouRatherData":          true,
+		"EditWouldYouRather":             true,
+		"GetAllWouldYouRathers":          true,
+		"AddTrivia":                      true,
+		"DeleteTrivia":                   true,
+		"EditTrivia":                     true,
+		"GetAdminTrivia":                 true,
+		"GetTrivias":                     true,
+	}
+}
+
+func getCustomerOperations() map[string]bool {
+	return map[string]bool{
+		"LoginCustomer":             false,
+		"ResendOtp":                 false,
+		"ForgotPassword":            false,
+		"ResetPassword":             false,
+		"Signup":                    false,
+		"VerifyOtpForSignup":        false,
+		"SocialLoginCustomer":       false,
+		"VerifyOtpForResetPassword": false,
+		"ChangePassword":            true,
+		"GetUserData":               true,
+		"EditCustomer":              true,
+		"GetLaughifiCustomers":      true,
+		"GetTemplates":              true,
+		"SendFriendRequest":         true,
+		"GetFriendRequests":         true,
+		"GetFriends":                true,
+		"AcceptRejectRequest":       true,
+		"CancelFriendRequest":       true,
+		"AddAnswer":                 true,
+		"FilledTemplates":           true,
+		"GetFilledTemplates":        true,
+		"FilledWouldYouRather":      true,
+		"GetWouldYouRathers":        true,
+		"GetFilledWouldRathers":     true,
+		"TemplatePlayWithFriends":   true,
+		"GetFriendTemplates":        true,
+		"OwnGame":                   true,
+		"GetTrivia":                 true,
+		"GetTriviaDetail":           true,
+		"GetAnsweredTrivia":         true,
+		"GetRequestedTrivia":        true,
+		"AcceptRejectTrivia":        true,
+		"AddTriviaAnswer":           true,
+		"GetAllCategory":            true,
+	}
 }

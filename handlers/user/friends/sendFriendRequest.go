@@ -41,7 +41,7 @@ func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFrie
 			FriendsList: []entity.FriendsList{
 				{
 					Id:     userObjID,
-					Status: "friend-request-pending",
+					Status: "friend-request-shared",
 				},
 			},
 		}
@@ -55,7 +55,7 @@ func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFrie
 	} else {
 		for _, existingFriend := range existingFriendList.FriendsList {
 			if existingFriend.Id.Hex() == data.UserID {
-				if existingFriend.Status == "friend-request-pending" {
+				if existingFriend.Status == "friend-request-shared" {
 					return &model.RequestResponse{
 						Message: "Not Shared",
 					}, nil
@@ -67,7 +67,7 @@ func SendFriendRequest(ctx context.Context, db *database.DB, data model.SendFrie
 			"$push": bson.M{
 				"friendsList": bson.M{
 					"id":     userObjID,
-					"status": "friend-request-pending",
+					"status": "friend-request-shared",
 				},
 			},
 			"$set": bson.M{

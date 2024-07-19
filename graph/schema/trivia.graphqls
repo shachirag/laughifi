@@ -54,6 +54,7 @@ type TriviaDetail {
   notAnsweredUsers: [Users!]!
   dareForWrongAnswer: String
   status: String!
+  correctAnswer: String
 }
 
 type Users {

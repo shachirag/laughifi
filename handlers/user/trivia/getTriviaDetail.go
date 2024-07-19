@@ -70,9 +70,11 @@ func GetTriviaDetail(ctx context.Context, db *database.DB, id string) (*model.Tr
 	var answeredUsers []*model.Users
 	var notAnsweredUsers []*model.Users
 	var dareForWrongAnswer *string
+	var correctAnswer *string
 
 	if ownGame.Status == "answered" {
 		dareForWrongAnswer = &randomTrivia.DareForWrongAnswer
+		correctAnswer = &randomTrivia.CorrectAnswer
 	}
 
 	for _, friend := range ownGame.Friends {
@@ -105,5 +107,6 @@ func GetTriviaDetail(ctx context.Context, db *database.DB, id string) (*model.Tr
 		NotAnsweredUsers:   notAnsweredUsers,
 		DareForWrongAnswer: dareForWrongAnswer,
 		Status:             ownGame.Status,
+		CorrectAnswer:      correctAnswer,
 	}, nil
 }

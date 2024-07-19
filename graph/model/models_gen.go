@@ -368,6 +368,7 @@ type TriviaDetail struct {
 	NotAnsweredUsers   []*Users `json:"notAnsweredUsers"`
 	DareForWrongAnswer *string  `json:"dareForWrongAnswer,omitempty"`
 	Status             string   `json:"status"`
+	CorrectAnswer      *string  `json:"correctAnswer,omitempty"`
 }
 
 type TriviaListing struct {

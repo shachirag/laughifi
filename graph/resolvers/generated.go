@@ -332,6 +332,7 @@ type ComplexityRoot struct {
 	TriviaDetail struct {
 		AnsweredUsers      func(childComplexity int) int
 		Answers            func(childComplexity int) int
+		CorrectAnswer      func(childComplexity int) int
 		DareForWrongAnswer func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		NotAnsweredUsers   func(childComplexity int) int
@@ -2099,6 +2100,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TriviaDetail.Answers(childComplexity), true
 
+	case "TriviaDetail.correctAnswer":
+		if e.complexity.TriviaDetail.CorrectAnswer == nil {
+			break
+		}
+
+		return e.complexity.TriviaDetail.CorrectAnswer(childComplexity), true
+
 	case "TriviaDetail.dareForWrongAnswer":
 		if e.complexity.TriviaDetail.DareForWrongAnswer == nil {
 			break
@@ -3041,6 +3049,7 @@ type TriviaDetail {
   notAnsweredUsers: [Users!]!
   dareForWrongAnswer: String
   status: String!
+  correctAnswer: String
 }
 
 type Users {
@@ -11443,6 +11452,8 @@ func (ec *executionContext) fieldContext_Query_getTrivaDetail(ctx context.Contex
 				return ec.fieldContext_TriviaDetail_dareForWrongAnswer(ctx, field)
 			case "status":
 				return ec.fieldContext_TriviaDetail_status(ctx, field)
+			case "correctAnswer":
+				return ec.fieldContext_TriviaDetail_correctAnswer(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TriviaDetail", field.Name)
 		},
@@ -14220,6 +14231,47 @@ func (ec *executionContext) _TriviaDetail_status(ctx context.Context, field grap
 }
 
 func (ec *executionContext) fieldContext_TriviaDetail_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TriviaDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TriviaDetail_correctAnswer(ctx context.Context, field graphql.CollectedField, obj *model.TriviaDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TriviaDetail_correctAnswer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CorrectAnswer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TriviaDetail_correctAnswer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TriviaDetail",
 		Field:      field,
@@ -21369,6 +21421,8 @@ func (ec *executionContext) _TriviaDetail(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "correctAnswer":
+			out.Values[i] = ec._TriviaDetail_correctAnswer(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

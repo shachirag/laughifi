@@ -40,9 +40,11 @@ func GetTrivaiAnswerDto(db *database.DB, ownGameId primitive.ObjectID) *model.Tr
 	var answeredUsers []*model.Users
 	var notAnsweredUsers []*model.Users
 	var dareForWrongAnswer *string
+	var correctAnswer *string
 
 	if ownGame.Status == "answered" {
 		dareForWrongAnswer = &trivia.DareForWrongAnswer
+		correctAnswer = &trivia.CorrectAnswer
 	}
 
 	for _, friend := range ownGame.Friends {
@@ -75,6 +77,7 @@ func GetTrivaiAnswerDto(db *database.DB, ownGameId primitive.ObjectID) *model.Tr
 		NotAnsweredUsers:   notAnsweredUsers,
 		DareForWrongAnswer: dareForWrongAnswer,
 		Status:             ownGame.Status,
+		CorrectAnswer:      correctAnswer,
 	}
 
 	return &newTemplateObj

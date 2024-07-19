@@ -62,7 +62,7 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 			"friendsList": bson.M{
 				"$elemMatch": bson.M{
 					"id":     user.Id,
-					"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-accepted"}},
+					"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-accepted", "friend-request-shared"}},
 				},
 			},
 		}
