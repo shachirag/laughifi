@@ -58,7 +58,7 @@ func EditTrivia(ctx context.Context, db *database.DB, triviaId string, input mod
 			"category.id":        categoryObjID,
 			"category.name":      category.Name,
 			"dareForWrongAnswer": dareForYouUrl,
-			"correctAnswer":      input.Answers,
+			"correctAnswer":      input.correctAnswer,
 			"updatedAt":          time.Now().UTC(),
 		},
 	}
