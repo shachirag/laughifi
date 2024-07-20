@@ -77,6 +77,29 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 			}
 		}
 
+		if data.Status == "friend-removed" {
+			removeFriendsListFilter := bson.M{
+				"userId": userObjID,
+				"friendsList": bson.M{
+					"$elemMatch": bson.M{
+						"id":     user.Id,
+						"status": bson.M{"$in": []string{"friend-request-pending", "friend-request-accepted"}},
+					},
+				},
+			}
+
+			removedListUpdate := bson.M{
+				"$set": bson.M{
+					"friendsList.$.status": data.Status,
+				},
+			}
+
+			_, err = friendsList.UpdateOne(sessCtx, removeFriendsListFilter, removedListUpdate)
+			if err != nil {
+				return nil, gqlerror.Errorf("Failed to add current user to the other user's friends list")
+			}
+		}
+
 		if data.Status == "friend-request-accepted" || data.Status == "friend-removed" {
 			isFriend := false
 			if data.Status == "friend-request-accepted" {
