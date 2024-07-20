@@ -73,7 +73,7 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 
 	var trivias []entity.TriviaEntity
 	triviaColl := db.GetCollection("trivia")
-	cursor, err := triviaColl.Find(ctx, bson.M{"category.id": categoryObjID})
+	cursor, err := triviaColl.Find(ctx, bson.M{"category.id": categoryObjID, "isDeleted": false})
 	if err != nil {
 		return nil, gqlerror.Errorf("Failed to fetch trivia")
 	}
