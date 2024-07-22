@@ -6,6 +6,7 @@ import (
 	"laughifi/database"
 	"laughifi/graph/model"
 	"laughifi/utils"
+	"path/filepath"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -29,8 +30,11 @@ func EditCustomer(ctx context.Context, db *database.DB, input model.EditProfileR
 	var imageURL string
 	if input.NewProfileImageFile != nil {
 		file := input.NewProfileImageFile.File
+		fileHeader := input.NewProfileImageFile.Filename
+
+		fileExtension := filepath.Ext(fileHeader)
 		id := primitive.NewObjectID()
-		fileName := fmt.Sprintf("customer/%v-profilepic.jpg", id.Hex())
+		fileName := fmt.Sprintf("customer/%v-profilepic%v", id.Hex(), fileExtension)
 
 		imageURL, err = utils.UploadToS3(fileName, file)
 		if err != nil {

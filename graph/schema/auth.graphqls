@@ -11,11 +11,13 @@ type Mutation {
     input: VerifyOtpForResetPasswordRequestInput!
   ): Response!
   resetPassword(input: ResetPasswordRequestInput!): Response!
+  deleteAccount: Response!
 }
 
 input LoginRequestInput {
   email: String!
   password: String!
+  deviceInfo: DeviceInfo!
 }
 
 input SocialLoginRequestInput {
@@ -23,6 +25,7 @@ input SocialLoginRequestInput {
   type: String!
   email: String
   name: String!
+  deviceInfo: DeviceInfo!
 }
 
 input SignUpRequestInput {
@@ -34,6 +37,12 @@ input VerifyOtpForSignUpRequestInput {
   email: String!
   password: String!
   otp: String!
+  deviceInfo: DeviceInfo!
+}
+
+input DeviceInfo {
+  deviceToken: String!
+  deviceType: String!
 }
 
 input ForgotPasswordRequestInput {

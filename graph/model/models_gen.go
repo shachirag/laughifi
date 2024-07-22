@@ -129,6 +129,11 @@ type ChangePasswordRequestInput struct {
 	ConfirmPassword string `json:"confirmPassword"`
 }
 
+type DeviceInfo struct {
+	DeviceToken string `json:"deviceToken"`
+	DeviceType  string `json:"deviceType"`
+}
+
 type EditAdminTemplateRequestInput struct {
 	CategoryID string `json:"categoryId"`
 	Title      string `json:"title"`
@@ -238,8 +243,9 @@ type LaughifiUserPaginationResponse struct {
 }
 
 type LoginRequestInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email      string      `json:"email"`
+	Password   string      `json:"password"`
+	DeviceInfo *DeviceInfo `json:"deviceInfo"`
 }
 
 type LoginResponse struct {
@@ -329,10 +335,11 @@ type SignUpRequestInput struct {
 }
 
 type SocialLoginRequestInput struct {
-	SocialID string  `json:"socialId"`
-	Type     string  `json:"type"`
-	Email    *string `json:"email,omitempty"`
-	Name     string  `json:"name"`
+	SocialID   string      `json:"socialId"`
+	Type       string      `json:"type"`
+	Email      *string     `json:"email,omitempty"`
+	Name       string      `json:"name"`
+	DeviceInfo *DeviceInfo `json:"deviceInfo"`
 }
 
 type SubscriptionRequestInput struct {
@@ -435,10 +442,11 @@ type VerifyOtpForResetPasswordRequestInput struct {
 }
 
 type VerifyOtpForSignUpRequestInput struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Otp      string `json:"otp"`
+	Name       string      `json:"name"`
+	Email      string      `json:"email"`
+	Password   string      `json:"password"`
+	Otp        string      `json:"otp"`
+	DeviceInfo *DeviceInfo `json:"deviceInfo"`
 }
 
 type WouldYouRatherData struct {

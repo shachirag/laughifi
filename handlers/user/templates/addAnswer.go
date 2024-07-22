@@ -119,12 +119,12 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 	// 		"type":       "templateAnswer",
 	// 	}
 
-	// if secondLastUser.DeviceInfo.DeviceToken != "" && secondLastUser.DeviceInfo.DeviceType != "" {
-	// 	err = utils.SendNotificationToUser(secondLastUser.DeviceInfo.DeviceToken, secondLastUser.DeviceInfo.DeviceType, title, body, notifData)
-	// 	if err != nil {
-	// 		return nil, gqlerror.Errorf("Failed to send notification to second last user: %v", err)
+	// 	if secondLastUser.DeviceInfo.DeviceToken != "" && secondLastUser.DeviceInfo.DeviceType != "" {
+	// 		err = utils.SendNotificationToUser(secondLastUser.DeviceInfo.DeviceToken, secondLastUser.DeviceInfo.DeviceType, title, body, notifData)
+	// 		if err != nil {
+	// 			return nil, gqlerror.Errorf("Failed to send notification to second last user: %v", err)
+	// 		}
 	// 	}
-	// }
 	// }
 
 	websocket.SendTemplateData(db, playWithFriendTemplateObjId, secondLastUserObjId)

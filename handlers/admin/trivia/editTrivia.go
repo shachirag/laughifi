@@ -7,6 +7,7 @@ import (
 	"laughifi/entity"
 	"laughifi/graph/model"
 	"laughifi/utils"
+	"path/filepath"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -38,8 +39,12 @@ func EditTrivia(ctx context.Context, db *database.DB, triviaId string, input mod
 	var dareForYouUrl string
 	if input.NewDareForWrongAnswerFile != nil {
 		file := input.NewDareForWrongAnswerFile.File
+
+		fileHeader := input.NewDareForWrongAnswerFile.Filename
+
+		fileExtension := filepath.Ext(fileHeader)
 		id := primitive.NewObjectID()
-		fileName := fmt.Sprintf("dare/%v.jpg", id.Hex())
+		fileName := fmt.Sprintf("dare/%v%v", id.Hex(), fileExtension)
 
 		dareForYouUrl, err = utils.UploadToS3(fileName, file)
 		if err != nil {

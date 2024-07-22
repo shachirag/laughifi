@@ -24,7 +24,8 @@ func Signup(ctx context.Context, db *database.DB, sesClient *ses.Client, data mo
 	smallEmail := strings.ToLower(data.Email)
 
 	filter := bson.M{
-		"email": smallEmail,
+		"email":     smallEmail,
+		"isDeleted": false,
 	}
 
 	exists, err := customerColl.CountDocuments(ctx, filter)
@@ -42,7 +43,7 @@ func Signup(ctx context.Context, db *database.DB, sesClient *ses.Client, data mo
 	otpData := entity.OtpEntity{
 		Id:        id,
 		Otp:       otp,
-		Email:    smallEmail,
+		Email:     smallEmail,
 		CreatedAt: time.Now().UTC(),
 	}
 

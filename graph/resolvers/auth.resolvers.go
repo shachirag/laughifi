@@ -82,6 +82,15 @@ func (r *mutationResolver) ResetPassword(ctx context.Context, input model.ResetP
 	return resetPasswordPayload, nil
 }
 
+// DeleteAccount is the resolver for the deleteAccount field.
+func (r *mutationResolver) DeleteAccount(ctx context.Context) (*model.Response, error) {
+	payload, err := auth.DeleteAccount(ctx, r.DB)
+	if err != nil {
+		return nil, err
+	}
+	return payload, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

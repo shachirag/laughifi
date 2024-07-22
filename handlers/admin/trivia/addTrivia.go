@@ -7,6 +7,7 @@ import (
 	"laughifi/entity"
 	"laughifi/graph/model"
 	"laughifi/utils"
+	"path/filepath"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -36,7 +37,10 @@ func AddTrivia(ctx context.Context, db *database.DB, data model.TriviaRequestInp
 	var dareForYouURL string
 	if data.DareForWrongAnswerFile != nil {
 		dareForYouFile := data.DareForWrongAnswerFile.File
-		dareForYouFileName := fmt.Sprintf("dare/%v.gif", id.Hex())
+		fileHeader := data.DareForWrongAnswerFile.Filename
+
+		fileExtension := filepath.Ext(fileHeader)
+		dareForYouFileName := fmt.Sprintf("dare/%v%v", id.Hex(), fileExtension)
 
 		dareForYouURL, err = utils.UploadToS3(dareForYouFileName, dareForYouFile)
 		if err != nil {

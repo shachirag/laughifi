@@ -25,7 +25,10 @@ func ForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Client,
 
 	smallEmail := strings.ToLower(input.Email)
 
-	filter := bson.M{"email": smallEmail}
+	filter := bson.M{
+		"email":     smallEmail,
+		"isDeleted": false,
+	}
 
 	err := customerColl.FindOne(ctx, filter).Decode(&user)
 	if err != nil {

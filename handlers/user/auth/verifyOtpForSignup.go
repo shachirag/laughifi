@@ -58,7 +58,8 @@ func VerifyOtpForSignup(ctx context.Context, db *database.DB, data model.VerifyO
 	}
 
 	filter := bson.M{
-		"email": strings.ToLower(data.Email),
+		"email":     strings.ToLower(data.Email),
+		"isDeleted": false,
 	}
 
 	exists, err := customerColl.CountDocuments(ctx, filter)
@@ -75,7 +76,12 @@ func VerifyOtpForSignup(ctx context.Context, db *database.DB, data model.VerifyO
 	customer = entity.CustomerEntity{
 		Id:        id,
 		Name:      data.Name,
+		IsDeleted: false,
 		Email:     smallEmail,
+		DeviceInfo: entity.DeviceInfo{
+			DeviceToken: data.DeviceInfo.DeviceToken,
+			DeviceType:  data.DeviceInfo.DeviceType,
+		},
 		Password:  string(hashedPassword),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),

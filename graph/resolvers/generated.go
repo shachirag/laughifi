@@ -213,6 +213,7 @@ type ComplexityRoot struct {
 		CancelFriendRequest            func(childComplexity int, input model.SendFriendRequestInput) int
 		Category                       func(childComplexity int, input model.CategoryRequestInput) int
 		ChangePassword                 func(childComplexity int, input model.ChangePasswordRequestInput) int
+		DeleteAccount                  func(childComplexity int) int
 		DeleteAdminTemplate            func(childComplexity int, id string) int
 		DeleteCategory                 func(childComplexity int, id string) int
 		DeleteTrivia                   func(childComplexity int, id string) int
@@ -429,6 +430,7 @@ type MutationResolver interface {
 	ForgotPassword(ctx context.Context, input model.ForgotPasswordRequestInput) (*model.Response, error)
 	VerifyOtpForResetPassword(ctx context.Context, input model.VerifyOtpForResetPasswordRequestInput) (*model.Response, error)
 	ResetPassword(ctx context.Context, input model.ResetPasswordRequestInput) (*model.Response, error)
+	DeleteAccount(ctx context.Context) (*model.Response, error)
 	AdminLogin(ctx context.Context, input model.AdminLoginRequestInput) (*model.AdminLoginResponse, error)
 	AdminForgotPassword(ctx context.Context, input model.ForgotPasswordRequestInput) (*model.Response, error)
 	AdminVerifyOtpForResetPassword(ctx context.Context, input model.VerifyOtpForResetPasswordRequestInput) (*model.Response, error)
@@ -1288,6 +1290,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ChangePassword(childComplexity, args["input"].(model.ChangePasswordRequestInput)), true
+
+	case "Mutation.deleteAccount":
+		if e.complexity.Mutation.DeleteAccount == nil {
+			break
+		}
+
+		return e.complexity.Mutation.DeleteAccount(childComplexity), true
 
 	case "Mutation.deleteAdminTemplate":
 		if e.complexity.Mutation.DeleteAdminTemplate == nil {
@@ -2496,6 +2505,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAnswersInput,
 		ec.unmarshalInputCategoryRequestInput,
 		ec.unmarshalInputChangePasswordRequestInput,
+		ec.unmarshalInputDeviceInfo,
 		ec.unmarshalInputEditAdminTemplateRequestInput,
 		ec.unmarshalInputEditCategoryRequestInput,
 		ec.unmarshalInputEditProfileRequestInput,
@@ -2783,11 +2793,13 @@ type Mutation {
     input: VerifyOtpForResetPasswordRequestInput!
   ): Response!
   resetPassword(input: ResetPasswordRequestInput!): Response!
+  deleteAccount: Response!
 }
 
 input LoginRequestInput {
   email: String!
   password: String!
+  deviceInfo: DeviceInfo!
 }
 
 input SocialLoginRequestInput {
@@ -2795,6 +2807,7 @@ input SocialLoginRequestInput {
   type: String!
   email: String
   name: String!
+  deviceInfo: DeviceInfo!
 }
 
 input SignUpRequestInput {
@@ -2806,6 +2819,12 @@ input VerifyOtpForSignUpRequestInput {
   email: String!
   password: String!
   otp: String!
+  deviceInfo: DeviceInfo!
+}
+
+input DeviceInfo {
+  deviceToken: String!
+  deviceType: String!
 }
 
 input ForgotPasswordRequestInput {
@@ -2840,7 +2859,8 @@ type Response {
 
 input ResendOtpRequestInput {
   email: String!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 	{Name: "../schema/category.graphqls", Input: `extend type Mutation {
   category(input: CategoryRequestInput!): Response!
   editCategory(id: ID!, input: EditCategoryRequestInput!): Response!
@@ -9026,6 +9046,54 @@ func (ec *executionContext) fieldContext_Mutation_resetPassword(ctx context.Cont
 	if fc.Args, err = ec.field_Mutation_resetPassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteAccount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteAccount(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Response)
+	fc.Result = res
+	return ec.marshalNResponse2ᚖlaughifiᚋgraphᚋmodelᚐResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteAccount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "message":
+				return ec.fieldContext_Response_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Response", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -18545,6 +18613,40 @@ func (ec *executionContext) unmarshalInputChangePasswordRequestInput(ctx context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputDeviceInfo(ctx context.Context, obj interface{}) (model.DeviceInfo, error) {
+	var it model.DeviceInfo
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"deviceToken", "deviceType"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "deviceToken":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deviceToken"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DeviceToken = data
+		case "deviceType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deviceType"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DeviceType = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEditAdminTemplateRequestInput(ctx context.Context, obj interface{}) (model.EditAdminTemplateRequestInput, error) {
 	var it model.EditAdminTemplateRequestInput
 	asMap := map[string]interface{}{}
@@ -18852,7 +18954,7 @@ func (ec *executionContext) unmarshalInputLoginRequestInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"email", "password"}
+	fieldsInOrder := [...]string{"email", "password", "deviceInfo"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -18873,6 +18975,13 @@ func (ec *executionContext) unmarshalInputLoginRequestInput(ctx context.Context,
 				return it, err
 			}
 			it.Password = data
+		case "deviceInfo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deviceInfo"))
+			data, err := ec.unmarshalNDeviceInfo2ᚖlaughifiᚋgraphᚋmodelᚐDeviceInfo(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DeviceInfo = data
 		}
 	}
 
@@ -19049,7 +19158,7 @@ func (ec *executionContext) unmarshalInputSocialLoginRequestInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"socialId", "type", "email", "name"}
+	fieldsInOrder := [...]string{"socialId", "type", "email", "name", "deviceInfo"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19084,6 +19193,13 @@ func (ec *executionContext) unmarshalInputSocialLoginRequestInput(ctx context.Co
 				return it, err
 			}
 			it.Name = data
+		case "deviceInfo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deviceInfo"))
+			data, err := ec.unmarshalNDeviceInfo2ᚖlaughifiᚋgraphᚋmodelᚐDeviceInfo(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DeviceInfo = data
 		}
 	}
 
@@ -19288,7 +19404,7 @@ func (ec *executionContext) unmarshalInputVerifyOtpForSignUpRequestInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "email", "password", "otp"}
+	fieldsInOrder := [...]string{"name", "email", "password", "otp", "deviceInfo"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -19323,6 +19439,13 @@ func (ec *executionContext) unmarshalInputVerifyOtpForSignUpRequestInput(ctx con
 				return it, err
 			}
 			it.Otp = data
+		case "deviceInfo":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deviceInfo"))
+			data, err := ec.unmarshalNDeviceInfo2ᚖlaughifiᚋgraphᚋmodelᚐDeviceInfo(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DeviceInfo = data
 		}
 	}
 
@@ -20611,6 +20734,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "resetPassword":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_resetPassword(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteAccount":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteAccount(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -23399,6 +23529,11 @@ func (ec *executionContext) unmarshalNCategoryRequestInput2laughifiᚋgraphᚋmo
 func (ec *executionContext) unmarshalNChangePasswordRequestInput2laughifiᚋgraphᚋmodelᚐChangePasswordRequestInput(ctx context.Context, v interface{}) (model.ChangePasswordRequestInput, error) {
 	res, err := ec.unmarshalInputChangePasswordRequestInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNDeviceInfo2ᚖlaughifiᚋgraphᚋmodelᚐDeviceInfo(ctx context.Context, v interface{}) (*model.DeviceInfo, error) {
+	res, err := ec.unmarshalInputDeviceInfo(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNEditAdminTemplateRequestInput2laughifiᚋgraphᚋmodelᚐEditAdminTemplateRequestInput(ctx context.Context, v interface{}) (model.EditAdminTemplateRequestInput, error) {

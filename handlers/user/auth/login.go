@@ -21,7 +21,10 @@ func LoginCustomer(ctx context.Context, db *database.DB, input model.LoginReques
 
 	smallEmail := strings.ToLower(input.Email)
 
-	filter := bson.M{"email": smallEmail}
+	filter := bson.M{
+		"email":     smallEmail,
+		"isDeleted": false,
+	}
 
 	var customer entity.CustomerEntity
 	err := customerColl.FindOne(ctx, filter).Decode(&customer)
@@ -30,6 +33,18 @@ func LoginCustomer(ctx context.Context, db *database.DB, input model.LoginReques
 			return nil, gqlerror.Errorf("Invalid credentials")
 		}
 		return nil, gqlerror.Errorf("Error occurred while fetching user: " + err.Error())
+	}
+
+	updateData := bson.M{
+		"$set": bson.M{
+			"deviceInfo.deviceToken": input.DeviceInfo.DeviceToken,
+			"deviceInfo.deviceType":  input.DeviceInfo.DeviceType,
+		},
+	}
+
+	_, err = customerColl.UpdateOne(ctx, filter, updateData)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to update token")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(customer.Password), []byte(strings.TrimSpace(input.Password)))

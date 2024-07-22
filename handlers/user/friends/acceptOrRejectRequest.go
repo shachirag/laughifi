@@ -75,6 +75,7 @@ func AcceptRejectRequest(ctx context.Context, db *database.DB, userId string, da
 			if err != nil {
 				return nil, gqlerror.Errorf("Failed to add current user to the other user's friends list")
 			}
+
 		}
 
 		if data.Status == "friend-removed" {

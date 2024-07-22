@@ -171,5 +171,6 @@ func getCustomerOperations() map[string]bool {
 		"AcceptRejectTrivia":        true,
 		"AddTriviaAnswer":           true,
 		"GetAllCategory":            true,
+		"DeleteAccount":             true,
 	}
 }

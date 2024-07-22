@@ -129,8 +129,8 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 	// for _, friend := range friends {
 	// 	if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
 	// 		err := utils.SendNotificationToUser(
-	// 			friendDetails[friend.Id.Hex()].DeviceToken,
-	// 			friendDetails[friend.Id.Hex()].DeviceType,
+	// 			friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken,
+	// 			friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType,
 	// 			title,
 	// 			body,
 	// 			notifData,
@@ -155,7 +155,6 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 	// 				title,
 	// 				body,
 	// 				notifData,
-	// 				friend.Id,
 	// 			)
 	// 			if err != nil {
 	// 				errChan <- gqlerror.Errorf("Failed to send notification to friend: %v", err)

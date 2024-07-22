@@ -31,9 +31,9 @@ func SocialLoginCustomer(ctx context.Context, db *database.DB, input model.Socia
 	filter := bson.M{}
 	switch input.Type {
 	case "apple":
-		filter = bson.M{"socialDetails.appleId": input.SocialID}
+		filter = bson.M{"socialDetails.appleId": input.SocialID, "isDeleted": false}
 	case "google":
-		filter = bson.M{"socialDetails.googleId": input.SocialID}
+		filter = bson.M{"socialDetails.googleId": input.SocialID, "isDeleted": false}
 	default:
 		return nil, gqlerror.Errorf("Unsupported social login type")
 	}
@@ -46,7 +46,7 @@ func SocialLoginCustomer(ctx context.Context, db *database.DB, input model.Socia
 	err = customerColl.FindOne(ctx, filter).Decode(&customer)
 	if err != nil {
 		if err == mongo.ErrNoDocuments && input.Email != nil {
-			filter = bson.M{"email": smallEmail}
+			filter = bson.M{"email": smallEmail, "isDeleted": false}
 			err = customerColl.FindOne(ctx, filter).Decode(&customer)
 			if err != nil {
 				if err == mongo.ErrNoDocuments {
@@ -63,7 +63,10 @@ func SocialLoginCustomer(ctx context.Context, db *database.DB, input model.Socia
 		}
 	}
 
-	update := bson.M{}
+	update := bson.M{
+		"deviceInfo.deviceToken": input.DeviceInfo.DeviceToken,
+		"deviceInfo.deviceType":  input.DeviceInfo.DeviceType,
+	}
 
 	if customer != nil {
 
@@ -87,6 +90,16 @@ func SocialLoginCustomer(ctx context.Context, db *database.DB, input model.Socia
 				return nil, gqlerror.Errorf("Failed to update user details: " + err.Error())
 			}
 		}
+	}
+
+	deviceInfoUpdate := bson.M{
+		"deviceInfo.deviceToken": input.DeviceInfo.DeviceToken,
+		"deviceInfo.deviceType":  input.DeviceInfo.DeviceType,
+	}
+
+	_, err = customerColl.UpdateOne(ctx, bson.M{"_id": customer.Id}, bson.M{"$set": deviceInfoUpdate})
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to update user details: " + err.Error())
 	}
 
 	var hasPassword bool
@@ -134,7 +147,7 @@ func socialSignup(ctx context.Context, db *database.DB, data *model.SocialLoginR
 		smallEmail = strings.ToLower(*data.Email)
 	}
 
-	filter := bson.M{"email": smallEmail}
+	filter := bson.M{"email": smallEmail, "isDeleted": false}
 	exists, err := userColl.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, gqlerror.Errorf("Error checking existing user: " + err.Error())
@@ -146,9 +159,14 @@ func socialSignup(ctx context.Context, db *database.DB, data *model.SocialLoginR
 	id := primitive.NewObjectID()
 
 	customer := &entity.CustomerEntity{
-		Id:        id,
-		Email:     smallEmail,
-		Name:      data.Name,
+		Id:    id,
+		Email: smallEmail,
+		Name:  data.Name,
+		DeviceInfo: entity.DeviceInfo{
+			DeviceToken: data.DeviceInfo.DeviceToken,
+			DeviceType:  data.DeviceInfo.DeviceType,
+		},
+		IsDeleted: false,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 	}
