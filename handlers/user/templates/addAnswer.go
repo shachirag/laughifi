@@ -2,9 +2,11 @@ package templates
 
 import (
 	"context"
+	"fmt"
 	"laughifi/database"
 	"laughifi/entity"
 	"laughifi/graph/model"
+	"laughifi/utils"
 	"laughifi/utils/websocket"
 	"strings"
 	"time"
@@ -29,6 +31,12 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 	if err != nil {
 		return nil, gqlerror.Errorf("invalid friend Id")
 	}
+
+	user, err := fetchUserByID(ctx, db, sendedUserObjId)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to fetch second last user details")
+	}
+
 
 	filter := bson.M{
 		"_id": playWithFriendTemplateObjId,
@@ -106,26 +114,26 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		secondLastUserObjId = secondLastUser.Id
 	}
 
-	// if secondLastUserObjId != primitive.NilObjectID && len(playWithFriendTemplate.Answers) > 1 {
-	// 	secondLastUser, err := fetchUserByID(ctx, db, secondLastUserObjId)
-	// 	if err != nil {
-	// 		return nil, gqlerror.Errorf("Failed to fetch second last user details")
-	// 	}
+	if secondLastUserObjId != primitive.NilObjectID && len(playWithFriendTemplate.Answers) > 1 {
+		secondLastUser, err := fetchUserByID(ctx, db, secondLastUserObjId)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to fetch second last user details")
+		}
 
-	// 	title := "Template Answer Update"
-	// 	body := fmt.Sprintf("%s has answered the template", secondLastUser.Name)
-	// 	notifData := map[string]string{
-	// 		"templateId": playWithFriendTemplateObjId.Hex(),
-	// 		"type":       "templateAnswer",
-	// 	}
+		title := "Template Answer Update"
+		body := fmt.Sprintf("%s has answered the template", user.Name)
+		notifData := map[string]string{
+			"templateId": playWithFriendTemplateObjId.Hex(),
+			"type":       "templateAnswer",
+		}
 
-	// 	if secondLastUser.DeviceInfo.DeviceToken != "" && secondLastUser.DeviceInfo.DeviceType != "" {
-	// 		err = utils.SendNotificationToUser(secondLastUser.DeviceInfo.DeviceToken, secondLastUser.DeviceInfo.DeviceType, title, body, notifData)
-	// 		if err != nil {
-	// 			return nil, gqlerror.Errorf("Failed to send notification to second last user: %v", err)
-	// 		}
-	// 	}
-	// }
+		if secondLastUser.DeviceInfo.DeviceToken != "" && secondLastUser.DeviceInfo.DeviceType != "" {
+			err = utils.SendNotificationToUser(secondLastUser.DeviceInfo.DeviceToken, secondLastUser.DeviceInfo.DeviceType, title, body, notifData)
+			if err != nil {
+				return nil, gqlerror.Errorf("Failed to send notification to second last user: %v", err)
+			}
+		}
+	}
 
 	websocket.SendTemplateData(db, playWithFriendTemplateObjId, secondLastUserObjId)
 

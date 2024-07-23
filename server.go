@@ -34,13 +34,13 @@ func main() {
 	s3 := database.GetS3Uploader()
 	ses := database.GetSesClient()
 	apiClient := database.GetApiClient()
-	// messagingClient := database.GetFirebaseMessagingClient()
+	messagingClient := database.GetFirebaseMessagingClient()
 	resolver := &graph.Resolver{
 		DB:        db,
 		S3Client:  s3,
 		SESClient: ses,
 		ApiClient: apiClient,
-		// MessagingClient: messagingClient,
+		MessagingClient: messagingClient,
 	}
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
