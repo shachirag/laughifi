@@ -121,28 +121,70 @@ func AddTriviaAnswer(ctx context.Context, db *database.DB, ownGameId string, ans
 		return nil, gqlerror.Errorf("Failed to fetch friend details: %v", err)
 	}
 
-	if status == "answered" {
+	// if status == "answered" {
+	// 	title := "Trivia Game Update"
+	// 	body := fmt.Sprintf("All answers have been submitted for %s", ownGame.GameName)
+	// 	notifData := map[string]string{
+	// 		"gameId": ownGameObjID.Hex(),
+	// 		"type":   "allTriviaAnswerSubmitted",
+	// 	}
+
+	// 	errCh := make(chan error, len(ownGame.Friends))
+
+	// 	for _, friend := range ownGame.Friends {
+	// 		if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
+	// 			friendDetails := friendDetails[friend.Id.Hex()]
+	// 			go func(friendID primitive.ObjectID) {
+	// 				utils.SendNotificationToUser(friendDetails.DeviceInfo.DeviceToken, friendDetails.DeviceInfo.DeviceType, title, body, notifData)
+	// 			}(friend.Id)
+	// 		}
+	// 	}
+
+	// 	for i := 0; i < len(ownGame.Friends)-1; i++ {
+	// 		if err := <-errCh; err != nil {
+	// 			return nil, gqlerror.Errorf("Failed to send notification to friend: %v", err)
+	// 		}
+	// 	}
+	// } else {
+	// 	title := "Trivia Game Update"
+	// 	body := fmt.Sprintf("%s has answered the trivia game %s.", user.Name, ownGame.GameName)
+	// 	notifData := map[string]string{
+	// 		"type":   "triviaAnswer",
+	// 		"gameId": ownGameObjID.Hex(),
+	// 	}
+
+	// 	errCh := make(chan error, len(ownGame.Friends))
+
+	// 	for _, friend := range ownGame.Friends {
+	// 		if friend.Id == user.Id {
+	// 			continue
+	// 		}
+	// 		if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
+	// 			friendDetails := friendDetails[friend.Id.Hex()]
+	// 			go func(friendID primitive.ObjectID) {
+	// 				utils.SendNotificationToUser(friendDetails.DeviceInfo.DeviceToken, friendDetails.DeviceInfo.DeviceType, title, body, notifData)
+	// 			}(friend.Id)
+	// 		}
+	// 	}
+
+	// 	for i := 0; i < len(ownGame.Friends)-1; i++ {
+	// 		if err := <-errCh; err != nil {
+	// 			return nil, gqlerror.Errorf("Failed to send notification to friend: %v", err)
+	// 		}
+	// 	}
+	// }
+
+	if status == "pending" {
 		title := "Trivia Game Update"
 		body := fmt.Sprintf("All answers have been submitted for %s", ownGame.GameName)
-		notifData := map[string]string{
+		data := map[string]string{
 			"gameId": ownGameObjID.Hex(),
 			"type":   "allTriviaAnswerSubmitted",
 		}
 
-		errCh := make(chan error, len(ownGame.Friends))
-
 		for _, friend := range ownGame.Friends {
 			if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
-				friendDetails := friendDetails[friend.Id.Hex()]
-				go func(friendID primitive.ObjectID) {
-					utils.SendNotificationToUser(friendDetails.DeviceInfo.DeviceToken, friendDetails.DeviceInfo.DeviceType, title, body, notifData)
-				}(friend.Id)
-			}
-		}
-
-		for i := 0; i < len(ownGame.Friends)-1; i++ {
-			if err := <-errCh; err != nil {
-				return nil, gqlerror.Errorf("Failed to send notification to friend: %v", err)
+				utils.SendNotificationToUser(friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken, friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType, title, body, data)
 			}
 		}
 	} else {
@@ -153,45 +195,15 @@ func AddTriviaAnswer(ctx context.Context, db *database.DB, ownGameId string, ans
 			"gameId": ownGameObjID.Hex(),
 		}
 
-		errCh := make(chan error, len(ownGame.Friends))
-
 		for _, friend := range ownGame.Friends {
-			if friend.Id == user.Id {
-				continue
-			}
 			if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
-				friendDetails := friendDetails[friend.Id.Hex()]
-				go func(friendID primitive.ObjectID) {
-					utils.SendNotificationToUser(friendDetails.DeviceInfo.DeviceToken, friendDetails.DeviceInfo.DeviceType, title, body, notifData)
-				}(friend.Id)
-			}
-		}
-
-		for i := 0; i < len(ownGame.Friends)-1; i++ {
-			if err := <-errCh; err != nil {
-				return nil, gqlerror.Errorf("Failed to send notification to friend: %v", err)
+				utils.SendNotificationToUser(friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken, friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType, title, body, notifData)
 			}
 		}
 	}
 
-	// if status == "answered" {
-	// 	title := "Trivia Game Update"
-	// 	body := fmt.Sprintf("All answers have been submitted for %s", ownGame.GameName)
-	// 	data := map[string]string{
-	// 		"gameId": ownGameObjID.Hex(),
-	// 		"type":   "allTriviaAnswerSubmitted",
-	// 	}
-
-	// 	for _, friend := range ownGame.Friends {
-	// 		err := utils.SendNotificationToUser(friend.DeviceInfo.DeviceToken, friend.DeviceInfo.DeviceType, title, body, data)
-	// 		if err != nil {
-	// 			return nil, gqlerror.Errorf("Failed to send notification: %s", err.Error())
-	// 		}
-	// 	}
-	// }
-
 	for _, friend := range ownGame.Friends {
-		websocket.SendTriviaData(db, ownGameObjID, friend.Id)
+		go websocket.SendTriviaData(db, ownGameObjID, friend.Id)
 	}
 
 	return &model.Response{
