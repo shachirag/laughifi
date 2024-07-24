@@ -20,8 +20,8 @@ func (r *mutationResolver) OwnGame(ctx context.Context, input model.OwnGameReque
 }
 
 // GetTriva is the resolver for the getTriva field.
-func (r *queryResolver) GetTriva(ctx context.Context) ([]*model.TriviaListing, error) {
-	payload, err := trivia.GetTrivia(ctx, r.DB)
+func (r *queryResolver) GetTriva(ctx context.Context, page int, limit int) (*model.HostTriviaPaginationResponse, error) {
+	payload, err := trivia.GetTrivia(ctx, r.DB, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -38,8 +38,8 @@ func (r *queryResolver) GetTrivaDetail(ctx context.Context, id string) (*model.T
 }
 
 // GetAnsweredTrivia is the resolver for the getAnsweredTrivia field.
-func (r *queryResolver) GetAnsweredTrivia(ctx context.Context) ([]*model.AnsweredTrivia, error) {
-	payload, err := trivia.GetAnsweredTrivia(ctx, r.DB)
+func (r *queryResolver) GetAnsweredTrivia(ctx context.Context, page int, limit int) (*model.AnsweredTriviaPaginationResponse, error) {
+	payload, err := trivia.GetAnsweredTrivia(ctx, r.DB, page, limit)
 	if err != nil {
 		return nil, err
 	}

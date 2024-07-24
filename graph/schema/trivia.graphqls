@@ -9,13 +9,29 @@ input OwnGameRequestInput {
 }
 
 extend type Query {
-  getTriva: [TriviaListing!]!
+  getTriva(page: Int!, limit: Int!): HostTriviaPaginationResponse!
   getTrivaDetail(id: ID!): TriviaDetail!
-  getAnsweredTrivia: [AnsweredTrivia!]!
+  getAnsweredTrivia(page: Int!, limit: Int!): AnsweredTriviaPaginationResponse!
   getRequestedTrivia: [RequestedTrivia!]!
   AcceptRejectTrivia(id: ID!, status: String!): Response!
   addTriviaAnswer(id: ID!, answer: String!, role: String!): Response!
   getAllCategory(search: String!): [GetAllCategories!]!
+}
+
+type HostTriviaPaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  trivias: [TriviaListing!]!
+}
+
+type AnsweredTriviaPaginationResponse {
+  total: Int!
+  perPage: Int!
+  currentPage: Int!
+  totalPages: Int!
+  trivias: [AnsweredTrivia!]!
 }
 
 type TriviaListing {

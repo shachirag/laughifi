@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"fmt"
 	"laughifi/database"
 
 	"firebase.google.com/go/messaging"
@@ -16,7 +15,7 @@ func SendNotificationToUser(
 	title string,
 	body string,
 	data map[string]string,
-) error {
+) {
 
 	var message *messaging.Message = &messaging.Message{
 		Data: data,
@@ -27,10 +26,5 @@ func SendNotificationToUser(
 		Token: deviceToken,
 	}
 
-	_, err := database.GetFirebaseMessagingClient().Send(ctx, message)
-	if err != nil {
-		return fmt.Errorf("Error sending notification: %v\n", err)
-	}
-
-	return nil
+	database.GetFirebaseMessagingClient().Send(ctx, message)
 }

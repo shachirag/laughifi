@@ -6,21 +6,29 @@ import (
 	"laughifi/entity"
 	"laughifi/graph/model"
 	"laughifi/utils"
+	"math"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetTrivia(ctx context.Context, db *database.DB) ([]*model.TriviaListing, error) {
-	var (
-		ownGameColl = db.GetCollection("ownGame")
-	)
+func GetTrivia(ctx context.Context, db *database.DB, page int, limit int) (*model.HostTriviaPaginationResponse, error) {
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 15
+	}
 
 	userData, err := utils.ExtractUserFromContext(ctx, db)
 	if err != nil {
 		return nil, err
 	}
+
+	ownGameColl := db.GetCollection("ownGame")
 
 	filter := bson.M{
 		"friends": bson.M{
@@ -32,35 +40,108 @@ func GetTrivia(ctx context.Context, db *database.DB) ([]*model.TriviaListing, er
 		},
 	}
 
-	sortOptions := options.Find().SetSort(bson.M{"updatedAt": -1})
+	skip := (page - 1) * limit
+	findOptions := options.Find().SetSkip(int64(skip)).SetLimit(int64(limit)).SetSort(bson.M{"updatedAt": -1})
 
-	cursor, err := ownGameColl.Find(ctx, filter, sortOptions)
+	cursor, err := ownGameColl.Find(ctx, filter, findOptions)
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to fetch categories")
+		if err == mongo.ErrNoDocuments {
+			return &model.HostTriviaPaginationResponse{
+				Total:       0,
+				PerPage:     limit,
+				CurrentPage: page,
+				TotalPages:  0,
+				Trivias:     []*model.TriviaListing{},
+			}, nil
+		}
+		return nil, gqlerror.Errorf("Failed to fetch filled trivia")
 	}
 	defer cursor.Close(ctx)
 
-	var triviaData []*model.TriviaListing
+	var trivias []*model.TriviaListing
 	for cursor.Next(ctx) {
 		var ownGame entity.OwnGameEntity
-		if err := cursor.Decode(&ownGame); err != nil {
-			return nil, gqlerror.Errorf("Failed to deocde ownGames")
+		err := cursor.Decode(&ownGame)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to decode trivia")
 		}
 
-		triviaData = append(triviaData, &model.TriviaListing{
+		categoriesRes := model.TriviaListing{
 			ID:           ownGame.Id.Hex(),
 			CategoryName: ownGame.Category.Name,
 			GameName:     ownGame.GameName,
 			Status:       ownGame.Status,
 			Role:         "host",
-		})
+		}
 
+		trivias = append(trivias, &categoriesRes)
 	}
 
-	if len(triviaData) == 0 {
-		return []*model.TriviaListing{}, nil
+	totalCount, err := ownGameColl.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to count filled trivias")
 	}
 
-	return triviaData, nil
+	response := model.HostTriviaPaginationResponse{
+		Total:       int(totalCount),
+		PerPage:     limit,
+		CurrentPage: page,
+		TotalPages:  int(math.Ceil(float64(totalCount) / float64(limit))),
+		Trivias:     trivias,
+	}
 
+	return &response, nil
 }
+
+// func GetTrivia(ctx context.Context, db *database.DB) ([]*model.TriviaListing, error) {
+// 	var (
+// 		ownGameColl = db.GetCollection("ownGame")
+// 	)
+
+// 	userData, err := utils.ExtractUserFromContext(ctx, db)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	filter := bson.M{
+// 		"friends": bson.M{
+// 			"$elemMatch": bson.M{
+// 				"id":           userData.Id,
+// 				"playedStatus": "accepted",
+// 				"role":         "host",
+// 			},
+// 		},
+// 	}
+
+// 	sortOptions := options.Find().SetSort(bson.M{"updatedAt": -1})
+
+// 	cursor, err := ownGameColl.Find(ctx, filter, sortOptions)
+// 	if err != nil {
+// 		return nil, gqlerror.Errorf("Failed to fetch categories")
+// 	}
+// 	defer cursor.Close(ctx)
+
+// 	var triviaData []*model.TriviaListing
+// 	for cursor.Next(ctx) {
+// 		var ownGame entity.OwnGameEntity
+// 		if err := cursor.Decode(&ownGame); err != nil {
+// 			return nil, gqlerror.Errorf("Failed to deocde ownGames")
+// 		}
+
+// 		triviaData = append(triviaData, &model.TriviaListing{
+// 			ID:           ownGame.Id.Hex(),
+// 			CategoryName: ownGame.Category.Name,
+// 			GameName:     ownGame.GameName,
+// 			Status:       ownGame.Status,
+// 			Role:         "host",
+// 		})
+
+// 	}
+
+// 	if len(triviaData) == 0 {
+// 		return []*model.TriviaListing{}, nil
+// 	}
+
+// 	return triviaData, nil
+
+// }

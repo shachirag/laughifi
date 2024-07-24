@@ -12,16 +12,16 @@ import (
 func GetDashboardCounts(ctx context.Context, db *database.DB) (*model.GetDashboardData, error) {
 
 	var (
-		wouldYouRatherColl = db.GetCollection("wouldYouRather")
-		categoryColl       = db.GetCollection("category")
-		templatesColl      = db.GetCollection("template")
+		triviaColl    = db.GetCollection("trivia")
+		categoryColl  = db.GetCollection("category")
+		templatesColl = db.GetCollection("template")
 	)
 
-	wouldYouRatherFilter := bson.M{"isDeleted": false}
+	triviaFilter := bson.M{"isDeleted": false}
 	categoryFilter := bson.M{"isDeleted": false}
 	templateFilter := bson.M{"isDeleted": false}
 
-	wouldYouRatherCount, err1 := wouldYouRatherColl.CountDocuments(ctx, wouldYouRatherFilter)
+	triviaCount, err1 := triviaColl.CountDocuments(ctx, triviaFilter)
 	categoryCount, err2 := categoryColl.CountDocuments(ctx, categoryFilter)
 	templateCount, err3 := templatesColl.CountDocuments(ctx, templateFilter)
 
@@ -30,8 +30,8 @@ func GetDashboardCounts(ctx context.Context, db *database.DB) (*model.GetDashboa
 	}
 
 	return &model.GetDashboardData{
-		TemplatesCount:      int(templateCount),
-		CategoryCount:       int(categoryCount),
-		WouldYouRatherCount: int(wouldYouRatherCount),
+		TemplatesCount: int(templateCount),
+		CategoryCount:  int(categoryCount),
+		TotalTrivia:    int(triviaCount),
 	}, nil
 }

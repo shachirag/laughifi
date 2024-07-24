@@ -150,16 +150,13 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 			wg.Add(1)
 			go func(friend entity.Friend) {
 				defer wg.Done()
-				err := utils.SendNotificationToUser(
+				utils.SendNotificationToUser(
 					friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken,
 					friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType,
 					title,
 					body,
 					notifData,
 				)
-				if err != nil {
-					errChan <- gqlerror.Errorf("Failed to send notification to friend: %v", err)
-				}
 			}(friend)
 		}
 	}

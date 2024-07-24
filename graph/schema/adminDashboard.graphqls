@@ -4,6 +4,6 @@ extend type Query {
 
 type GetDashboardData {
   templatesCount: Int!
-  wouldYouRatherCount: Int!
+  totalTrivia: Int!
   categoryCount: Int!
 }

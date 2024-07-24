@@ -37,7 +37,6 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		return nil, gqlerror.Errorf("Failed to fetch second last user details")
 	}
 
-
 	filter := bson.M{
 		"_id": playWithFriendTemplateObjId,
 	}
@@ -128,10 +127,7 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		}
 
 		if secondLastUser.DeviceInfo.DeviceToken != "" && secondLastUser.DeviceInfo.DeviceType != "" {
-			err = utils.SendNotificationToUser(secondLastUser.DeviceInfo.DeviceToken, secondLastUser.DeviceInfo.DeviceType, title, body, notifData)
-			if err != nil {
-				return nil, gqlerror.Errorf("Failed to send notification to second last user: %v", err)
-			}
+			utils.SendNotificationToUser(secondLastUser.DeviceInfo.DeviceToken, secondLastUser.DeviceInfo.DeviceType, title, body, notifData)
 		}
 	}
 

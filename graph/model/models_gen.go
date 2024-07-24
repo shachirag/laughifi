@@ -87,6 +87,14 @@ type AnsweredTrivia struct {
 	Role         string `json:"role"`
 }
 
+type AnsweredTriviaPaginationResponse struct {
+	Total       int               `json:"total"`
+	PerPage     int               `json:"perPage"`
+	CurrentPage int               `json:"currentPage"`
+	TotalPages  int               `json:"totalPages"`
+	Trivias     []*AnsweredTrivia `json:"trivias"`
+}
+
 type AnswersData struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -229,9 +237,17 @@ type GetAllCategories struct {
 }
 
 type GetDashboardData struct {
-	TemplatesCount      int `json:"templatesCount"`
-	WouldYouRatherCount int `json:"wouldYouRatherCount"`
-	CategoryCount       int `json:"categoryCount"`
+	TemplatesCount int `json:"templatesCount"`
+	TotalTrivia    int `json:"totalTrivia"`
+	CategoryCount  int `json:"categoryCount"`
+}
+
+type HostTriviaPaginationResponse struct {
+	Total       int              `json:"total"`
+	PerPage     int              `json:"perPage"`
+	CurrentPage int              `json:"currentPage"`
+	TotalPages  int              `json:"totalPages"`
+	Trivias     []*TriviaListing `json:"trivias"`
 }
 
 type LaughifiUserPaginationResponse struct {

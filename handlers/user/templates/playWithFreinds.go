@@ -100,10 +100,7 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 				friend := friendDetails[friendID.Hex()]
 
 				if friend.DeviceInfo.DeviceToken != "" && friend.DeviceInfo.DeviceType != "" {
-					err = utils.SendNotificationToUser(friend.DeviceInfo.DeviceToken, friend.DeviceInfo.DeviceType, title, body, notifData)
-					if err != nil {
-						errCh <- fmt.Errorf("Failed to send notification to friend %s: %v", friend.Id.Hex(), err)
-					}
+					utils.SendNotificationToUser(friend.DeviceInfo.DeviceToken, friend.DeviceInfo.DeviceType, title, body, notifData)
 				}
 			}(friendObjID)
 		}
