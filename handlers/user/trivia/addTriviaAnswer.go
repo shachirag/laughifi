@@ -183,7 +183,7 @@ func AddTriviaAnswer(ctx context.Context, db *database.DB, ownGameId string, ans
 		}
 
 		for _, friend := range ownGame.Friends {
-			if friend.Id != user.Id && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
+			if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
 				utils.SendNotificationToUser(friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken, friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType, title, body, data)
 			}
 		}
