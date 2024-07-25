@@ -42,6 +42,7 @@ func main() {
 		ApiClient: apiClient,
 		MessagingClient: messagingClient,
 	}
+	
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
