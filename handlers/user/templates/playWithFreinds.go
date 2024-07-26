@@ -56,10 +56,17 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 		}
 	}
 
+	friendDetails, err := fetchFriendDetails(ctx, db, friendObjIDs)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to fetch friend details: %v", err)
+	}
+
+	var notifData map[string]string
+
 	var insertDocuments []interface{}
 	for _, friendObjID := range friendObjIDs {
 		id := primitive.NewObjectID()
-
+		friend := friendDetails[friendObjID.Hex()]
 		templatePlayWithFriend := entity.TemplatePlayWithFriendEntity{
 			Id:         id,
 			ShareIds:   []primitive.ObjectID{user.Id, friendObjID},
@@ -71,6 +78,14 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 			UpdatedAt:  time.Now().UTC(),
 		}
 
+		notifData = map[string]string{
+			"templateId": id.Hex(),
+			"type":       "templateShared",
+			"userId":     friend.Id.Hex(),
+			"userName":   friend.Name,
+			"userImage":  friend.Image,
+		}
+
 		insertDocuments = append(insertDocuments, templatePlayWithFriend)
 
 	}
@@ -80,37 +95,18 @@ func TemplatePlayWithFriends(ctx context.Context, db *database.DB, data model.Te
 		return nil, gqlerror.Errorf("Failed to share templates with friends: %v", err)
 	}
 
-	friendDetails, err := fetchFriendDetails(ctx, db, friendObjIDs)
-	if err != nil {
-		return nil, gqlerror.Errorf("Failed to fetch friend details: %v", err)
-	}
+	// friendDetails, err := fetchFriendDetails(ctx, db, friendObjIDs)
+	// if err != nil {
+	// 	return nil, gqlerror.Errorf("Failed to fetch friend details: %v", err)
+	// }
 
 	title := "Template Shared"
 	body := fmt.Sprintf("%s has shared a template with you", user.Name)
-	notifData := map[string]string{
-		"templateId": templateObjId.Hex(),
-		"type":       "templateShared",
-	}
-
-	errCh := make(chan error, len(friendObjIDs))
-
 	for _, friendObjID := range friendObjIDs {
 		if friendObjID != user.Id {
-			go func(friendID primitive.ObjectID) {
-				friend := friendDetails[friendID.Hex()]
-
-				if friend.DeviceInfo.DeviceToken != "" && friend.DeviceInfo.DeviceType != "" {
-					utils.SendNotificationToUser(friend.DeviceInfo.DeviceToken, friend.DeviceInfo.DeviceType, title, body, notifData)
-				}
-			}(friendObjID)
-		}
-	}
-
-	for i := 0; i < len(friendObjIDs)-1; i++ {
-		select {
-		case err := <-errCh:
-			if err != nil {
-				return nil, gqlerror.Errorf(err.Error())
+			friend := friendDetails[friendObjID.Hex()]
+			if friend.DeviceInfo.DeviceToken != "" && friend.DeviceInfo.DeviceType != "" {
+				utils.SendNotificationToUser(friend.DeviceInfo.DeviceToken, friend.DeviceInfo.DeviceType, title, body, notifData)
 			}
 		}
 	}

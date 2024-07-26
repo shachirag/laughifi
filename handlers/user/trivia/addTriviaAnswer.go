@@ -174,7 +174,7 @@ func AddTriviaAnswer(ctx context.Context, db *database.DB, ownGameId string, ans
 	// 	}
 	// }
 
-	if status == "pending" {
+	if status == "answered" {
 		title := "Trivia Game Update"
 		body := fmt.Sprintf("All answers have been submitted for %s", ownGame.GameName)
 		data := map[string]string{

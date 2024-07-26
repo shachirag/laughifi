@@ -124,6 +124,9 @@ func AddAnswer(ctx context.Context, db *database.DB, data model.AddAnswerRequest
 		notifData := map[string]string{
 			"templateId": playWithFriendTemplateObjId.Hex(),
 			"type":       "templateAnswer",
+			"userId":     secondLastUser.Id.Hex(),
+			"userName":   secondLastUser.Name,
+			"userImage":  secondLastUser.Image,
 		}
 
 		if secondLastUser.DeviceInfo.DeviceToken != "" && secondLastUser.DeviceInfo.DeviceType != "" {

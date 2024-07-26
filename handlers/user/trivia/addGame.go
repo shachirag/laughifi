@@ -8,7 +8,6 @@ import (
 	"laughifi/utils"
 	"math/rand"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -127,48 +126,45 @@ func OwnGame(ctx context.Context, db *database.DB, data model.OwnGameRequestInpu
 		"gameId": id.Hex(),
 	}
 
-	// for _, friend := range friends {
-	// 	if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
-	// 		err := utils.SendNotificationToUser(
-	// 			friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken,
-	// 			friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType,
-	// 			title,
-	// 			body,
-	// 			notifData,
-	// 		)
-	// 		if err != nil {
-	// 			return nil, gqlerror.Errorf("Failed to send notification to friend: %v", err)
-	// 		}
-	// 	}
-	// }
-
-	var wg sync.WaitGroup
-	errChan := make(chan error, len(friends))
-
 	for _, friend := range friends {
 		if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
-			wg.Add(1)
-			go func(friend entity.Friend) {
-				defer wg.Done()
-				utils.SendNotificationToUser(
-					friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken,
-					friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType,
-					title,
-					body,
-					notifData,
-				)
-			}(friend)
+			utils.SendNotificationToUser(
+				friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken,
+				friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType,
+				title,
+				body,
+				notifData,
+			)
 		}
 	}
 
-	go func() {
-		wg.Wait()
-		close(errChan)
-	}()
+	// var wg sync.WaitGroup
+	// errChan := make(chan error, len(friends))
 
-	if len(errChan) > 0 {
-		return nil, <-errChan
-	}
+	// for _, friend := range friends {
+	// 	if friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken != "" && friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType != "" {
+	// 		wg.Add(1)
+	// 		go func(friend entity.Friend) {
+	// 			defer wg.Done()
+	// 			utils.SendNotificationToUser(
+	// 				friendDetails[friend.Id.Hex()].DeviceInfo.DeviceToken,
+	// 				friendDetails[friend.Id.Hex()].DeviceInfo.DeviceType,
+	// 				title,
+	// 				body,
+	// 				notifData,
+	// 			)
+	// 		}(friend)
+	// 	}
+	// }
+
+	// go func() {
+	// 	wg.Wait()
+	// 	close(errChan)
+	// }()
+
+	// if len(errChan) > 0 {
+	// 	return nil, <-errChan
+	// }
 
 	return &model.Response{
 		Message: "Owned Game successfully shared",
