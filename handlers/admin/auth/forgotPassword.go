@@ -19,8 +19,8 @@ import (
 func AdminForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Client, input model.ForgotPasswordRequestInput) (*model.Response, error) {
 	var (
 		adminColl = db.GetCollection("admin")
-		otpColl      = db.GetCollection("otp")
-		user         entity.CustomerEntity
+		otpColl   = db.GetCollection("otp")
+		user      entity.CustomerEntity
 	)
 
 	smallEmail := strings.ToLower(input.Email)
@@ -35,7 +35,8 @@ func AdminForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Cl
 		return nil, gqlerror.Errorf("Internal server error while fetching the admin.")
 	}
 
-	otp := utils.Generate6DigitOtp()
+	// otp := utils.Generate6DigitOtp()
+	otp := "111111"
 
 	otpData := entity.OtpEntity{
 		Id:        primitive.NewObjectID(),

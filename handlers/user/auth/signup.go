@@ -39,7 +39,8 @@ func Signup(ctx context.Context, db *database.DB, sesClient *ses.Client, data mo
 
 	id := primitive.NewObjectID()
 
-	otp := utils.Generate6DigitOtp()
+	// otp := utils.Generate6DigitOtp()s
+	otp := "111111"
 	otpData := entity.OtpEntity{
 		Id:        id,
 		Otp:       otp,

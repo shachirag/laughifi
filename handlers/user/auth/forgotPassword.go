@@ -38,7 +38,8 @@ func ForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Client,
 		return nil, gqlerror.Errorf("Internal server error while fetching the user.")
 	}
 
-	otp := utils.Generate6DigitOtp()
+	// otp := utils.Generate6DigitOtp()
+	otp := "111111"
 
 	otpData := entity.OtpEntity{
 		Id:        primitive.NewObjectID(),

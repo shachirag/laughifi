@@ -32,7 +32,8 @@ func ResendOtp(ctx context.Context, db *database.DB, sesClient *ses.Client, inpu
 
 	}
 
-	newOTP := utils.Generate6DigitOtp()
+	// newOTP := utils.Generate6DigitOtp()
+	newOTP := "111111"
 
 	otpData.Otp = newOTP
 	otpData.CreatedAt = time.Now().UTC()
