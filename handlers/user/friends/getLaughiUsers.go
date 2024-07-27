@@ -42,6 +42,7 @@ func GetLaughifiCustomers(ctx context.Context, db *database.DB, page int, limit 
 		"_id": bson.M{
 			"$nin": excludeIDs,
 		},
+		"isDeleted": false,
 	}
 
 	if search != "blank" {
