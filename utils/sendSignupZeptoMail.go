@@ -72,22 +72,23 @@ func getSignupEmailData() string {
     <table>
       <tr>
         <td style="border: none">
-          <h2 style="margin-bottom: 0">Reset Your Laughify Password</h2>
+          <h2 style="margin-bottom: 0">
+            Verify Your Email for Laughify Sign-Up
+          </h2>
         </td>
       </tr>
       <tr>
         <td colspan="2" style="padding: 10px">
           <p>Dear [Recipient's Name],</p>
-          <p>We received a request to reset your Laughify password.</p>
+          <p>Thank you for choosing to sign up with Laughify!</p>
+
           <p>
-            Please use the One-Time Password (OTP) provided below to reset your password:
+            To complete your registration, please verify your email address by entering the One-Time Password (OTP) provided below:
           </p>
           <p>Your OTP Code: [OTP Code]</p>
+          <p>This code is valid for the next 10 minutes.</p>
           <p>
-            This code is valid for the next 10 minutes.
-          </p>
-          <p>
-            If you did not request a password reset, please ignore this email or contact our support team immediately.
+            If you did not initiate this sign-up, please ignore this email or contact our support team immediately.
           </p>
           <p>
             Best Regards,<br />
@@ -109,5 +110,6 @@ func getSignupEmailData() string {
     </table>
   </body>
 </html>
+
 `
 }
