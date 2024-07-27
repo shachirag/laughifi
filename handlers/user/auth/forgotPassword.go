@@ -38,8 +38,8 @@ func ForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Client,
 		return nil, gqlerror.Errorf("Internal server error while fetching the user.")
 	}
 
-	// otp := utils.Generate6DigitOtp()
-	otp := "111111"
+	otp := utils.Generate6DigitOtp()
+	// otp := "111111"
 
 	otpData := entity.OtpEntity{
 		Id:        primitive.NewObjectID(),
@@ -50,12 +50,18 @@ func ForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Client,
 
 	_, err = otpColl.InsertOne(ctx, otpData)
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to store OTP in the database")
+		return nil, gqlerror.Errorf("Failed to store OTP in the database" + err.Error())
+
 	}
 
-	_, err = utils.SendEmail(sesClient, user.Name, otp)
+	// _, err = utils.SendEmail(sesClient, user.Name, otp)
+	// if err != nil {
+	// 	return nil, gqlerror.Errorf("Internal server error while sending the email")
+	// }
+
+	err = utils.SendForgotPasswordEmail(user.Email, user.Name, otp)
 	if err != nil {
-		return nil, gqlerror.Errorf("Internal server error while sending the email")
+		return nil, gqlerror.Errorf("Internal server error while sending the email" + err.Error())
 	}
 
 	return &model.Response{

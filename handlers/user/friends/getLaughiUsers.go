@@ -16,7 +16,6 @@ import (
 )
 
 func GetLaughifiCustomers(ctx context.Context, db *database.DB, page int, limit int, search string) (*model.LaughifiUserPaginationResponse, error) {
-
 	if page < 1 {
 		page = 1
 	}
@@ -62,46 +61,91 @@ func GetLaughifiCustomers(ctx context.Context, db *database.DB, page int, limit 
 	}
 	defer cursor.Close(ctx)
 
-	var templates []*model.Friend
+	var customers []entity.CustomerEntity
+	customerIDs := make([]primitive.ObjectID, 0)
 	for cursor.Next(ctx) {
 		var customer entity.CustomerEntity
 		if err := cursor.Decode(&customer); err != nil {
 			return nil, gqlerror.Errorf("Failed to decode customer: %v", err)
 		}
+		customers = append(customers, customer)
+		customerIDs = append(customerIDs, customer.Id)
+	}
 
-		friendFilter := bson.M{
-			"userId": customer.Id,
-			"friendsList": bson.M{
-				"$elemMatch": bson.M{
-					"id":     user.Id,
-					"status": "friend-request-pending",
+	// Determine pending friend requests from the current user to customers
+	getRequestFilter := bson.M{
+		"userId": user.Id,
+		"friendsList": bson.M{
+			"$elemMatch": bson.M{
+				"id": bson.M{
+					"$in": customerIDs,
 				},
+				"status": "friend-request-pending",
 			},
-		}
+		},
+	}
 
-		var friendsList entity.FriendsList
-		err = db.GetCollection("friendsList").FindOne(ctx, friendFilter).Decode(&friendsList)
-		if err != nil {
-			if err == mongo.ErrNoDocuments {
-				customerRes := &model.Friend{
-					ID:     customer.Id.Hex(),
-					Name:   customer.Name,
-					Image:  customer.Image,
-					Status: false,
-				}
-				templates = append(templates, customerRes)
-				continue
+	cursor, err = db.GetCollection("friendsList").Find(ctx, getRequestFilter)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to fetch pending friend requests: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	friendRequestStatus := make(map[primitive.ObjectID]bool)
+	for cursor.Next(ctx) {
+		var friendsList entity.FriendListEntity
+		if err := cursor.Decode(&friendsList); err != nil {
+			return nil, gqlerror.Errorf("Failed to decode friends list: %v", err)
+		}
+		for _, friend := range friendsList.FriendsList {
+			if friend.Status == "friend-request-pending" {
+				friendRequestStatus[friend.Id] = true
 			}
-			return nil, gqlerror.Errorf("Failed to fetch friend: %v", err)
 		}
+	}
 
-		customerRes := &model.Friend{
-			ID:     customer.Id.Hex(),
-			Name:   customer.Name,
-			Image:  customer.Image,
-			Status: true,
+	// Determine the current user's status in the context of customers
+	statusFilter := bson.M{
+		"userId": bson.M{
+			"$in": customerIDs,
+		},
+		"friendsList": bson.M{
+			"$elemMatch": bson.M{
+				"id": user.Id,
+			},
+		},
+	}
+
+	cursor, err = db.GetCollection("friendsList").Find(ctx, statusFilter)
+	if err != nil {
+		return nil, gqlerror.Errorf("Failed to fetch current user status: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	customerStatus := make(map[primitive.ObjectID]string)
+	for cursor.Next(ctx) {
+		var friendsList entity.FriendListEntity
+		if err := cursor.Decode(&friendsList); err != nil {
+			return nil, gqlerror.Errorf("Failed to decode friends list: %v", err)
 		}
+		for _, friend := range friendsList.FriendsList {
+			if friend.Id == user.Id {
+				customerStatus[friendsList.UserId] = friend.Status
+			}
+		}
+	}
 
+	var templates []*model.FriendLaughifiUsers
+	for _, customer := range customers {
+		getRequest := friendRequestStatus[customer.Id]
+
+		customerRes := &model.FriendLaughifiUsers{
+			ID:         customer.Id.Hex(),
+			Name:       customer.Name,
+			Image:      customer.Image,
+			Status:     customerStatus[customer.Id] == "friend-request-pending",
+			GetRequest: getRequest,
+		}
 		templates = append(templates, customerRes)
 	}
 

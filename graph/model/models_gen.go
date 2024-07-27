@@ -198,6 +198,14 @@ type FriendAnswers struct {
 	Value string `json:"value"`
 }
 
+type FriendLaughifiUsers struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Image      string `json:"image"`
+	Status     bool   `json:"status"`
+	GetRequest bool   `json:"getRequest"`
+}
+
 type FriendPaginationResponse struct {
 	Total       int       `json:"total"`
 	PerPage     int       `json:"perPage"`
@@ -251,11 +259,11 @@ type HostTriviaPaginationResponse struct {
 }
 
 type LaughifiUserPaginationResponse struct {
-	Total       int       `json:"total"`
-	PerPage     int       `json:"perPage"`
-	CurrentPage int       `json:"currentPage"`
-	TotalPages  int       `json:"totalPages"`
-	Users       []*Friend `json:"users"`
+	Total       int                    `json:"total"`
+	PerPage     int                    `json:"perPage"`
+	CurrentPage int                    `json:"currentPage"`
+	TotalPages  int                    `json:"totalPages"`
+	Users       []*FriendLaughifiUsers `json:"users"`
 }
 
 type LoginRequestInput struct {
@@ -354,7 +362,7 @@ type SocialLoginRequestInput struct {
 	SocialID   string      `json:"socialId"`
 	Type       string      `json:"type"`
 	Email      *string     `json:"email,omitempty"`
-	Name       string      `json:"name"`
+	Name       *string     `json:"name,omitempty"`
 	DeviceInfo *DeviceInfo `json:"deviceInfo"`
 }
 

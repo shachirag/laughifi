@@ -158,10 +158,15 @@ func socialSignup(ctx context.Context, db *database.DB, data *model.SocialLoginR
 
 	id := primitive.NewObjectID()
 
+	var name string
+	if data.Name != nil {
+		name = *data.Name
+	}
+
 	customer := &entity.CustomerEntity{
 		Id:    id,
 		Email: smallEmail,
-		Name:  data.Name,
+		Name:  name,
 		DeviceInfo: entity.DeviceInfo{
 			DeviceToken: data.DeviceInfo.DeviceToken,
 			DeviceType:  data.DeviceInfo.DeviceType,

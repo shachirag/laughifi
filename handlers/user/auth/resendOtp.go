@@ -32,8 +32,8 @@ func ResendOtp(ctx context.Context, db *database.DB, sesClient *ses.Client, inpu
 
 	}
 
-	// newOTP := utils.Generate6DigitOtp()
-	newOTP := "111111"
+	newOTP := utils.Generate6DigitOtp()
+	// newOTP := "111111"
 
 	otpData.Otp = newOTP
 	otpData.CreatedAt = time.Now().UTC()
@@ -51,9 +51,10 @@ func ResendOtp(ctx context.Context, db *database.DB, sesClient *ses.Client, inpu
 	// 	return nil, gqlerror.Errorf("Failed to fetch user")
 	// }
 
-	_, err = utils.SendEmail(sesClient, "", newOTP)
+	err = utils.SendForgotPasswordEmail(smallEmail, "User", newOTP)
 	if err != nil {
-		return nil, gqlerror.Errorf("Internal server error while sending the email")
+		return nil, gqlerror.Errorf("Internal server error while sending the email"+ err.Error())
+
 	}
 
 	return &model.Response{

@@ -5,6 +5,14 @@ type Friend {
   status: Boolean!
 }
 
+type FriendLaughifiUsers {
+  id: ID!
+  name: String!
+  image: String!
+  status: Boolean!
+  getRequest: Boolean!
+}
+
 type FriendPaginationResponse {
   total: Int!
   perPage: Int!
@@ -18,7 +26,7 @@ type LaughifiUserPaginationResponse {
   perPage: Int!
   currentPage: Int!
   totalPages: Int!
-  users: [Friend!]!
+  users: [FriendLaughifiUsers!]!
 }
 
 extend type Query {

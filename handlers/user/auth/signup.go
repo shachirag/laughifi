@@ -39,8 +39,8 @@ func Signup(ctx context.Context, db *database.DB, sesClient *ses.Client, data mo
 
 	id := primitive.NewObjectID()
 
-	// otp := utils.Generate6DigitOtp()s
-	otp := "111111"
+	otp := utils.Generate6DigitOtp()
+	// otp := "111111"
 	otpData := entity.OtpEntity{
 		Id:        id,
 		Otp:       otp,
@@ -53,9 +53,15 @@ func Signup(ctx context.Context, db *database.DB, sesClient *ses.Client, data mo
 		return nil, gqlerror.Errorf("Failed to insert otp")
 	}
 
-	_, err = utils.SendEmail(sesClient, data.Email, otp)
+	// _, err = utils.SendEmail(sesClient, data.Email, otp)
+	// if err != nil {
+	// 	return nil, gqlerror.Errorf("Error sending OTP to email: " + err.Error())
+	// }
+
+	err = utils.SendForgotPasswordEmail(smallEmail, "User", otp)
 	if err != nil {
-		return nil, gqlerror.Errorf("Error sending OTP to email: " + err.Error())
+		return nil, gqlerror.Errorf("Internal server error while sending the email" + err.Error())
+
 	}
 
 	return &model.Response{
