@@ -20,14 +20,14 @@ func AdminForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Cl
 	var (
 		adminColl = db.GetCollection("admin")
 		otpColl   = db.GetCollection("otp")
-		user      entity.CustomerEntity
+		admin     entity.AdminEntity
 	)
 
 	smallEmail := strings.ToLower(input.Email)
 
 	filter := bson.M{"email": smallEmail}
 
-	err := adminColl.FindOne(ctx, filter).Decode(&user)
+	err := adminColl.FindOne(ctx, filter).Decode(&admin)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, gqlerror.Errorf("admin not found")
@@ -50,7 +50,7 @@ func AdminForgotPassword(ctx context.Context, db *database.DB, sesClient *ses.Cl
 		return nil, gqlerror.Errorf("Failed to store OTP in the database")
 	}
 
-	err = utils.SendForgotPasswordEmail(user.Email, user.Name, otp)
+	err = utils.SendForgotPasswordEmail(admin.Email, admin.FirstName+" "+admin.LastName, otp)
 	if err != nil {
 		return nil, gqlerror.Errorf("Internal server error while sending the email" + err.Error())
 	}
