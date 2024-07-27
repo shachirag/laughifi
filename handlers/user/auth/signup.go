@@ -58,7 +58,7 @@ func Signup(ctx context.Context, db *database.DB, sesClient *ses.Client, data mo
 	// 	return nil, gqlerror.Errorf("Error sending OTP to email: " + err.Error())
 	// }
 
-	err = utils.SendForgotPasswordEmail(smallEmail, "User", otp)
+	err = utils.SendSignupEmail(smallEmail, "User", otp)
 	if err != nil {
 		return nil, gqlerror.Errorf("Internal server error while sending the email" + err.Error())
 

@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-func SendForgotPasswordEmail(userEmail string, userName string, otp string) error {
-	emailBody := getEmailData()
+func SendSignupEmail(userEmail string, userName string, otp string) error {
+	emailBody := getSignupEmailData()
 	emailBody = strings.ReplaceAll(emailBody, "[Recipient's Name]", userName)
 	emailBody = strings.ReplaceAll(emailBody, "[OTP Code]", otp)
 	senderEmail := os.Getenv("SENDER_EMAIL")
@@ -21,7 +21,7 @@ func SendForgotPasswordEmail(userEmail string, userName string, otp string) erro
 				Address: userEmail,
 			},
 		}},
-		Subject:  "OTP for reset password.",
+		Subject:  "OTP for Signup.",
 		HTMLBody: emailBody,
 	}
 
@@ -33,7 +33,7 @@ func SendForgotPasswordEmail(userEmail string, userName string, otp string) erro
 	return nil
 }
 
-func getEmailData() string {
+func getSignupEmailData() string {
 	return `<!DOCTYPE html>
 <html lang="en">
   <head>
