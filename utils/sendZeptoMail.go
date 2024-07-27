@@ -11,10 +11,10 @@ func SendForgotPasswordEmail(userEmail string, userName string, otp string) erro
 	emailBody = strings.ReplaceAll(emailBody, "[APP_URL]", os.Getenv("AWS_S3_BUCKET_URL"))
 	emailBody = strings.ReplaceAll(emailBody, "[User Name]", userName)
 	emailBody = strings.ReplaceAll(emailBody, "[Generated OTP]", otp)
-
+	senderEmail := os.Getenv("SENDER_EMAIL")
 	emailData := Email{
 		From: EmailFrom{
-			Address: "mail@laughify.app",
+			Address: senderEmail,
 			Name:    "Laughifi",
 		},
 		To: []EmailTo{{
