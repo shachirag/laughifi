@@ -14,7 +14,7 @@ func SendSignupEmail(userEmail string, userName string, otp string) error {
 	emailData := Email{
 		From: EmailFrom{
 			Address: senderEmail,
-			Name:    "Laughifi",
+			Name:    "Laughify",
 		},
 		To: []EmailTo{{
 			EmailAddress: EmailAddress{

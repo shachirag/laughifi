@@ -14,7 +14,7 @@ func SendForgotPasswordEmail(userEmail string, userName string, otp string) erro
 	emailData := Email{
 		From: EmailFrom{
 			Address: senderEmail,
-			Name:    "Laughifi",
+			Name:    "Laughify",
 		},
 		To: []EmailTo{{
 			EmailAddress: EmailAddress{
