@@ -36,7 +36,8 @@ func SendTriviaData(db *database.DB, ownGameId primitive.ObjectID, customerId pr
 	}
 
 	filter := bson.M{
-		"roleId": customerId,
+		"triviaId": ownGameId,
+		"roleId":   customerId,
 	}
 
 	abc, _ := json.Marshal(filter)
@@ -57,4 +58,3 @@ func SendTriviaData(db *database.DB, ownGameId primitive.ObjectID, customerId pr
 		}
 	}
 }
-

@@ -42,11 +42,12 @@ func SendTemplateData(db *database.DB, templateId primitive.ObjectID, customerId
 	}
 
 	filter := bson.M{
-		"roleId": customerId,
+		"templateId": templateId,
+		"roleId":     customerId,
 	}
 
-	// abc, _ := json.Marshal(filter)
-	// fmt.Println(string(abc))
+	abc, _ := json.Marshal(filter)
+	fmt.Println(string(abc))
 
 	cur, err := db.GetCollection("websocketConnection").Find(ctx, filter)
 	if err == nil {

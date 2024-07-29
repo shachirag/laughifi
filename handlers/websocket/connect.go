@@ -14,8 +14,10 @@ import (
 )
 
 type ConnectionData struct {
-	ConnectionID string `json:"connectionId"`
-	Token        string `json:"token"`
+	ConnectionID string             `json:"connectionId"`
+	Token        string             `json:"token"`
+	Id           primitive.ObjectID `json:"id" bson:"id"`
+	Type         string             `json:"type" bson:"type"`
 }
 
 var ctx = context.Background()
@@ -40,6 +42,15 @@ func WebsocketConnect(db *database.DB) http.HandlerFunc {
 			ConnectionId: connData.ConnectionID,
 			RoleId:       data.ID,
 			Role:         data.Role,
+		}
+
+		switch connData.Type {
+		case "trivia":
+			webconnection.GameType = &connData.Type
+			webconnection.TriviaId = &connData.Id
+		case "template":
+			webconnection.GameType = &connData.Type
+			webconnection.TemplateId = &connData.Id
 		}
 
 		collection := db.GetCollection("websocketConnection")
