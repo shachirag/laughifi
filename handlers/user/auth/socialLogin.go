@@ -185,9 +185,38 @@ func socialSignup(ctx context.Context, db *database.DB, data *model.SocialLoginR
 		return nil, gqlerror.Errorf("Unsupported social login type")
 	}
 
-	_, err = userColl.InsertOne(ctx, customer)
+	session, err := db.GetMongoClient().StartSession()
 	if err != nil {
-		return nil, gqlerror.Errorf("Failed to insert new customer: " + err.Error())
+		return nil, gqlerror.Errorf("Failed to start session")
+	}
+	defer session.EndSession(ctx)
+
+	callback := func(sessCtx mongo.SessionContext) (interface{}, error) {
+
+		_, err = db.GetCollection("customer").InsertOne(sessCtx, customer)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to insert customer")
+		}
+
+		friendList := entity.FriendListEntity{
+			Id:          primitive.NewObjectID(),
+			UserId:      customer.Id,
+			FriendsList: []entity.FriendsList{},
+			CreatedAt:   time.Now().UTC(),
+			UpdatedAt:   time.Now().UTC(),
+		}
+
+		_, err = db.GetCollection("friendsList").InsertOne(sessCtx, friendList)
+		if err != nil {
+			return nil, gqlerror.Errorf("Failed to create friends list")
+		}
+
+		return nil, nil
+	}
+
+	_, err = session.WithTransaction(ctx, callback)
+	if err != nil {
+		return nil, gqlerror.Errorf("Transaction failed: %v", err)
 	}
 
 	return customer, nil
