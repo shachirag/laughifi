@@ -35,6 +35,7 @@ func GetTemplateDto(db *database.DB, templateId primitive.ObjectID) *TemplateSer
 	var answers []Answers
 	for _, ans := range playWithFriendTemplate.Answers {
 		answers = append(answers, Answers{
+			Id:    ans.Id,
 			Key:   ans.Key,
 			Value: ans.Value,
 		})
@@ -62,6 +63,7 @@ type TemplateServerToClientDto struct {
 }
 
 type Answers struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Id    primitive.ObjectID `json:"id"`
+	Key   string             `json:"key"`
+	Value string             `json:"value"`
 }

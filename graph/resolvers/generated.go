@@ -141,6 +141,7 @@ type ComplexityRoot struct {
 	}
 
 	FriendAnswers struct {
+		ID    func(childComplexity int) int
 		Key   func(childComplexity int) int
 		Value func(childComplexity int) int
 	}
@@ -165,6 +166,7 @@ type ComplexityRoot struct {
 		Answers  func(childComplexity int) int
 		Category func(childComplexity int) int
 		ID       func(childComplexity int) int
+		Status   func(childComplexity int) int
 		Template func(childComplexity int) int
 		Title    func(childComplexity int) int
 	}
@@ -919,6 +921,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Friend.Status(childComplexity), true
 
+	case "FriendAnswers.id":
+		if e.complexity.FriendAnswers.ID == nil {
+			break
+		}
+
+		return e.complexity.FriendAnswers.ID(childComplexity), true
+
 	case "FriendAnswers.key":
 		if e.complexity.FriendAnswers.Key == nil {
 			break
@@ -1023,6 +1032,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FriendTemplateDetail.ID(childComplexity), true
+
+	case "FriendTemplateDetail.status":
+		if e.complexity.FriendTemplateDetail.Status == nil {
+			break
+		}
+
+		return e.complexity.FriendTemplateDetail.Status(childComplexity), true
 
 	case "FriendTemplateDetail.template":
 		if e.complexity.FriendTemplateDetail.Template == nil {
@@ -3245,6 +3261,7 @@ type FriendTemplateDetail {
   category: String!
   template: String!
   answers: [FriendAnswers!]!
+  status: String!
 }
 
 type AddAnswerResponse {
@@ -3262,6 +3279,7 @@ type FriendTemplates {
 }
 
 type FriendAnswers {
+  id: ID!
   key: String!
   value: String!
 }
@@ -7129,6 +7147,50 @@ func (ec *executionContext) fieldContext_Friend_status(_ context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _FriendAnswers_id(ctx context.Context, field graphql.CollectedField, obj *model.FriendAnswers) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendAnswers_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendAnswers_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendAnswers",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FriendAnswers_key(ctx context.Context, field graphql.CollectedField, obj *model.FriendAnswers) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_FriendAnswers_key(ctx, field)
 	if err != nil {
@@ -7882,12 +7944,58 @@ func (ec *executionContext) fieldContext_FriendTemplateDetail_answers(_ context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_FriendAnswers_id(ctx, field)
 			case "key":
 				return ec.fieldContext_FriendAnswers_key(ctx, field)
 			case "value":
 				return ec.fieldContext_FriendAnswers_value(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FriendAnswers", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FriendTemplateDetail_status(ctx context.Context, field graphql.CollectedField, obj *model.FriendTemplateDetail) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FriendTemplateDetail_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FriendTemplateDetail_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FriendTemplateDetail",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8342,6 +8450,8 @@ func (ec *executionContext) fieldContext_FriendTemplates_answers(_ context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_FriendAnswers_id(ctx, field)
 			case "key":
 				return ec.fieldContext_FriendAnswers_key(ctx, field)
 			case "value":
@@ -12746,6 +12856,8 @@ func (ec *executionContext) fieldContext_Query_getFriendTemplatesDetail(ctx cont
 				return ec.fieldContext_FriendTemplateDetail_template(ctx, field)
 			case "answers":
 				return ec.fieldContext_FriendTemplateDetail_answers(ctx, field)
+			case "status":
+				return ec.fieldContext_FriendTemplateDetail_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type FriendTemplateDetail", field.Name)
 		},
@@ -21141,6 +21253,11 @@ func (ec *executionContext) _FriendAnswers(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("FriendAnswers")
+		case "id":
+			out.Values[i] = ec._FriendAnswers_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "key":
 			out.Values[i] = ec._FriendAnswers_key(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -21325,6 +21442,11 @@ func (ec *executionContext) _FriendTemplateDetail(ctx context.Context, sel ast.S
 			}
 		case "answers":
 			out.Values[i] = ec._FriendTemplateDetail_answers(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._FriendTemplateDetail_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

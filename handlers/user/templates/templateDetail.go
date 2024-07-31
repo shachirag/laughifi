@@ -44,6 +44,7 @@ func GetTemplateDetail(ctx context.Context, db *database.DB, templateId string) 
 	var answers []*model.FriendAnswers
 	for _, ans := range playWithFriendTemplate.Answers {
 		answers = append(answers, &model.FriendAnswers{
+			ID:    ans.Id.Hex(),
 			Key:   ans.Key,
 			Value: ans.Value,
 		})
@@ -51,6 +52,7 @@ func GetTemplateDetail(ctx context.Context, db *database.DB, templateId string) 
 
 	return &model.FriendTemplateDetail{
 		ID:       playWithFriendTemplate.Id.Hex(),
+		Status:   playWithFriendTemplate.Status,
 		Template: template.Template,
 		Category: template.Category.Name,
 		Title:    template.Title,

@@ -194,6 +194,7 @@ type Friend struct {
 }
 
 type FriendAnswers struct {
+	ID    string `json:"id"`
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
@@ -220,6 +221,7 @@ type FriendTemplateDetail struct {
 	Category string           `json:"category"`
 	Template string           `json:"template"`
 	Answers  []*FriendAnswers `json:"answers"`
+	Status   string           `json:"status"`
 }
 
 type FriendTemplatePaginationResponse struct {

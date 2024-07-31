@@ -45,6 +45,7 @@ type FriendTemplateDetail {
   category: String!
   template: String!
   answers: [FriendAnswers!]!
+  status: String!
 }
 
 type AddAnswerResponse {
@@ -62,6 +63,7 @@ type FriendTemplates {
 }
 
 type FriendAnswers {
+  id: ID!
   key: String!
   value: String!
 }
