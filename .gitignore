@@ -1,1 +1,2 @@
+.env
 echo firebase-sa-creds.json >> .gitignore
