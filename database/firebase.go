@@ -17,8 +17,7 @@ var (
 
 func StartFirebase() error {
 	wd, _ := os.Getwd()
-	saPath := ""
-	// saPath := path.Join(wd, "firebase-sa-creds.json")
+	saPath := path.Join(wd, "firebase-sa-creds.json")
 	sa := option.WithCredentialsFile(saPath)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
